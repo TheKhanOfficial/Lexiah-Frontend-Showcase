@@ -3,7 +3,9 @@ node_modules/
 .vscode/
 __pycache__/
 .env.*
-
+# Next.js build
+.next
+.next/
 
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
