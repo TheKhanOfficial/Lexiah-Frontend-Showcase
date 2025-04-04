@@ -5,7 +5,6 @@ export async function getAIResponse(text: string) {
     body: JSON.stringify({ text }),
   });
 
-  console.log(`brooooo`);
   const data = await res.json();
   return data.output;
 }
