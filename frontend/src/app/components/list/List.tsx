@@ -2,27 +2,32 @@
 import { useState, ReactNode } from "react";
 import { AddNewItem } from "./AddNewItem";
 
-interface ListProps<T> {
+interface ListProps<T extends { id: string }> {
   title: string;
   items: T[];
   renderItem: (item: T, index: number) => ReactNode;
-  onAddItem?: () => void;
+  onAddItem?: (name: string, file?: File) => void;
+  onRename?: (id: string, newName: string) => void;
+  onDelete?: (id: string) => void;
   addItemText?: string;
   emptyMessage?: string;
-  sortBy?: keyof T; // New prop to specify which field to sort by
-  sortDirection?: "asc" | "desc"; // New prop to specify sort direction
+  sortBy?: keyof T;
+  sortDirection?: "asc" | "desc";
+  fileUploadEnabled?: boolean;
 }
 
-export function List<T>({
+export function List<T extends { id: string }>({
   title,
   items,
   renderItem,
-  onAddItem = true,
+  onAddItem,
+  onRename,
+  onDelete,
   addItemText = "Add New",
   emptyMessage = "No items yet",
   sortBy,
   sortDirection = "desc",
-  fileUploadEnabled,
+  fileUploadEnabled = false,
 }: ListProps<T>) {
   // Sort items if sortBy is provided
   const sortedItems = sortBy
@@ -61,7 +66,7 @@ export function List<T>({
       </div>
 
       <>
-        {/* Move AddNewItem to the top */}
+        {/* AddNewItem at the top */}
         {onAddItem && (
           <div className="border-b border-gray-200">
             <AddNewItem
