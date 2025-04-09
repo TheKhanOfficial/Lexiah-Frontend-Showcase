@@ -9,86 +9,81 @@ interface ListProps<T> {
   onAddItem?: () => void;
   addItemText?: string;
   emptyMessage?: string;
-  isCollapsible?: boolean;
+  sortBy?: keyof T; // New prop to specify which field to sort by
+  sortDirection?: "asc" | "desc"; // New prop to specify sort direction
 }
 
 export function List<T>({
   title,
   items,
   renderItem,
-  onAddItem,
+  onAddItem = true,
   addItemText = "Add New",
   emptyMessage = "No items yet",
-  isCollapsible = true,
+  sortBy,
+  sortDirection = "desc",
+  fileUploadEnabled,
 }: ListProps<T>) {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  // Sort items if sortBy is provided
+  const sortedItems = sortBy
+    ? [...items].sort((a, b) => {
+        const aValue = a[sortBy];
+        const bValue = b[sortBy];
 
-  const toggleCollapse = () => {
-    setIsCollapsed(!isCollapsed);
-  };
+        // Check if values are dates and compare them
+        if (typeof aValue === "string" && typeof bValue === "string") {
+          const aDate = new Date(aValue as string).getTime();
+          const bDate = new Date(bValue as string).getTime();
+
+          if (!isNaN(aDate) && !isNaN(bDate)) {
+            return sortDirection === "desc" ? bDate - aDate : aDate - bDate;
+          }
+        }
+
+        // Default string comparison
+        if (typeof aValue === "string" && typeof bValue === "string") {
+          return sortDirection === "desc"
+            ? bValue.localeCompare(aValue)
+            : aValue.localeCompare(bValue);
+        }
+
+        // Default comparison for other types
+        return sortDirection === "desc"
+          ? (bValue as any) - (aValue as any)
+          : (aValue as any) - (bValue as any);
+      })
+    : items;
 
   return (
     <div className="flex flex-col h-full">
       <div className="flex justify-between items-center p-4 border-b border-gray-200">
         <h2 className="font-semibold text-gray-700">{title}</h2>
-        {isCollapsible && (
-          <button
-            onClick={toggleCollapse}
-            className="p-1 rounded-md hover:bg-gray-100"
-            aria-label={isCollapsed ? "Expand" : "Collapse"}
-          >
-            {isCollapsed ? (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            ) : (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            )}
-          </button>
-        )}
       </div>
 
-      {!isCollapsed && (
-        <>
-          <div className="flex-grow overflow-y-auto">
-            {items.length === 0 ? (
-              <div className="flex items-center justify-center h-full p-4 text-gray-500">
-                {emptyMessage}
-              </div>
-            ) : (
-              <ul className="divide-y divide-gray-200">
-                {items.map((item, index) => renderItem(item, index))}
-              </ul>
-            )}
+      <>
+        {/* Move AddNewItem to the top */}
+        {onAddItem && (
+          <div className="border-b border-gray-200">
+            <AddNewItem
+              onClick={onAddItem}
+              text={addItemText}
+              fileUploadEnabled={fileUploadEnabled}
+            />
           </div>
+        )}
 
-          {onAddItem && (
-            <div className="border-t border-gray-200">
-              <AddNewItem onClick={onAddItem} text={addItemText} />
+        <div className="flex-grow overflow-y-auto">
+          {sortedItems.length === 0 ? (
+            <div className="flex items-center justify-center h-full p-4 text-gray-500">
+              {emptyMessage}
             </div>
+          ) : (
+            <ul className="divide-y divide-gray-200">
+              {sortedItems.map((item, index) => renderItem(item, index))}
+            </ul>
           )}
-        </>
-      )}
+        </div>
+      </>
     </div>
   );
 }
