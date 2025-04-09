@@ -1,5 +1,5 @@
 // components/list/List.tsx
-import { useState, ReactNode } from "react";
+import { ReactNode } from "react";
 import { AddNewItem } from "./AddNewItem";
 
 interface ListProps<T extends { id: string }> {
@@ -61,34 +61,32 @@ export function List<T extends { id: string }>({
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex justify-between items-center p-4 border-b border-gray-200">
+      <div className="p-4 border-b border-gray-200">
         <h2 className="font-semibold text-gray-700">{title}</h2>
       </div>
 
-      <>
-        {/* AddNewItem at the top */}
-        {onAddItem && (
-          <div className="border-b border-gray-200">
-            <AddNewItem
-              onClick={onAddItem}
-              text={addItemText}
-              fileUploadEnabled={fileUploadEnabled}
-            />
-          </div>
-        )}
-
-        <div className="flex-grow overflow-y-auto">
-          {sortedItems.length === 0 ? (
-            <div className="flex items-center justify-center h-full p-4 text-gray-500">
-              {emptyMessage}
-            </div>
-          ) : (
-            <ul className="divide-y divide-gray-200">
-              {sortedItems.map((item, index) => renderItem(item, index))}
-            </ul>
-          )}
+      {/* AddNewItem at the top */}
+      {onAddItem && (
+        <div className="border-b border-gray-200">
+          <AddNewItem
+            onClick={onAddItem}
+            text={addItemText}
+            fileUploadEnabled={fileUploadEnabled}
+          />
         </div>
-      </>
+      )}
+
+      <div className="flex-grow overflow-y-auto">
+        {sortedItems.length === 0 ? (
+          <div className="flex items-center justify-center h-full p-4 text-gray-500">
+            {emptyMessage}
+          </div>
+        ) : (
+          <ul className="divide-y divide-gray-200">
+            {sortedItems.map((item, index) => renderItem(item, index))}
+          </ul>
+        )}
+      </div>
     </div>
   );
 }

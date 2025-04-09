@@ -14,18 +14,23 @@ export function Header({ children }: HeaderProps) {
     setIsVisible(!isVisible);
   };
 
-  // This renders just the toggle button when header is hidden
+  // No header at all when hidden, just the toggle button with top at window edge
   if (!isVisible) {
     return (
-      <div className="h-10 w-full bg-white shadow-sm flex justify-end items-center px-4">
-        <ToggleHideShow isVisible={isVisible} onToggle={toggleVisibility} />
+      <div className="absolute top-0 right-4 z-20">
+        <ToggleHideShow
+          isVisible={isVisible}
+          onToggle={toggleVisibility}
+          visibleDirection="up"
+          hiddenDirection="down"
+        />
       </div>
     );
   }
 
   // Full header when visible
   return (
-    <header className="w-full bg-white shadow-sm">
+    <header className="w-full bg-white shadow-sm relative z-10">
       <div className="h-16 px-4 flex justify-between items-center">
         {/* Logo on the left */}
         <div className="flex items-center">
@@ -38,8 +43,17 @@ export function Header({ children }: HeaderProps) {
         {/* Buttons on the right */}
         <div className="flex items-center space-x-2">
           <ToggleFullscreen />
-          <ToggleHideShow isVisible={isVisible} onToggle={toggleVisibility} />
         </div>
+      </div>
+
+      {/* Toggle button positioned exactly at the bottom edge of the header */}
+      <div className="absolute -bottom-5 right-4">
+        <ToggleHideShow
+          isVisible={isVisible}
+          onToggle={toggleVisibility}
+          visibleDirection="up"
+          hiddenDirection="down"
+        />
       </div>
     </header>
   );
