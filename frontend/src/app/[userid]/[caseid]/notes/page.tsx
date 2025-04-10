@@ -19,7 +19,11 @@ export default function NotesPage() {
   ];
 
   const handleInputSubmit = async (text: string, isDocumentSearch: boolean) => {
-    router.push(`/${userId}/${caseId}/chat`);
+    // Encode the text to be safe in a URL
+    const encodedText = encodeURIComponent(text);
+
+    // Navigate to chat with the text as a search parameter
+    router.push(`/${userId}/${caseId}/chat?message=${encodedText}`);
   };
 
   return (

@@ -21,6 +21,11 @@
       "static/chunks/main-app.js",
       "static/chunks/app/[userid]/[caseid]/chat/page.js"
     ],
+    "/[userid]/[caseid]/notes/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/[userid]/[caseid]/notes/page.js"
+    ],
     "/_not-found/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",

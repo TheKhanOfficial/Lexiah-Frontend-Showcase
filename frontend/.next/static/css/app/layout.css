@@ -938,6 +938,9 @@
     -webkit-user-select: none;
     user-select: none;
   }
+  .running {
+    animation-play-state: running;
+  }
   .focus-within\:outline-none {
     &:focus-within {
       --tw-outline-style: none;
