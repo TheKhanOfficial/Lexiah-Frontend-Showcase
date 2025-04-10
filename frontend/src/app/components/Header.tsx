@@ -1,32 +1,16 @@
 // components/Header.tsx
-import { useState } from "react";
 import { ToggleFullscreen } from "./ToggleFullscreen";
 import { ToggleHideShow } from "./ToggleHideShow";
 
 interface HeaderProps {
   children?: React.ReactNode;
+  isVisible: boolean;
+  onToggle: () => void;
 }
 
-export function Header({ children }: HeaderProps) {
-  const [isVisible, setIsVisible] = useState(true);
-
-  const toggleVisibility = () => {
-    setIsVisible(!isVisible);
-  };
-
-  // No header at all when hidden, just the toggle button with top at window edge
-  if (!isVisible) {
-    return (
-      <div className="absolute top-0 right-4 z-20">
-        <ToggleHideShow
-          isVisible={isVisible}
-          onToggle={toggleVisibility}
-          visibleDirection="up"
-          hiddenDirection="down"
-        />
-      </div>
-    );
-  }
+export function Header({ children, isVisible, onToggle }: HeaderProps) {
+  // Now use the props directly instead of internal state
+  // Remove the useState and toggleVisibility function
 
   // Full header when visible
   return (
@@ -50,7 +34,7 @@ export function Header({ children }: HeaderProps) {
       <div className="absolute -bottom-5 right-4">
         <ToggleHideShow
           isVisible={isVisible}
-          onToggle={toggleVisibility}
+          onToggle={onToggle}
           visibleDirection="up"
           hiddenDirection="down"
         />
