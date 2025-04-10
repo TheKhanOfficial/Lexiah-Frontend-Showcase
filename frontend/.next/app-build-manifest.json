@@ -6,25 +6,15 @@
       "static/css/app/layout.css",
       "static/chunks/app/layout.js"
     ],
-    "/[userid]/[caseid]/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/[userid]/[caseid]/page.js"
-    ],
-    "/[userid]/[caseid]/documents/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/[userid]/[caseid]/documents/page.js"
-    ],
     "/[userid]/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/[userid]/page.js"
     ],
-    "/[userid]/[caseid]/notes/page": [
+    "/[userid]/[caseid]/documents/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/[userid]/[caseid]/notes/page.js"
+      "static/chunks/app/[userid]/[caseid]/documents/page.js"
     ],
     "/[userid]/[caseid]/chat/page": [
       "static/chunks/webpack.js",
