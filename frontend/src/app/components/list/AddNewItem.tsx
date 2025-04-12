@@ -1,17 +1,27 @@
 // components/list/AddNewItem.tsx
-import { useState, useRef, ReactNode } from "react";
+import { useState, useRef } from "react";
 import { createPortal } from "react-dom";
-import { supabase } from "@/utils/supabase";
+import { addCase, addDocument, addNote } from "@/utils/supabase";
+
+export type ItemType = "case" | "document" | "note";
 
 interface AddNewItemProps {
-  onClick: (name: string, file?: File) => void;
+  userId: string;
+  caseId?: string; // Optional - only needed for documents and notes
+  itemType: ItemType;
+  onSuccess?: (newItem: any) => void; // Callback after successful addition
+  onError?: (error: Error) => void; // Callback for error handling
   text?: string;
   fileUploadEnabled?: boolean;
   fileTypes?: string; // e.g. ".pdf,.doc,.docx,application/msword"
 }
 
 export function AddNewItem({
-  onClick,
+  userId,
+  caseId,
+  itemType,
+  onSuccess,
+  onError,
   text = "Add New",
   fileUploadEnabled = false,
   fileTypes = ".pdf,.doc,.docx,.txt",
@@ -19,24 +29,90 @@ export function AddNewItem({
   const [showModal, setShowModal] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const userID = `53917586-97ad-49b6-9bd6-51c441316425`;
 
   const handleOpenModal = () => {
     setShowModal(true);
     setInputValue("");
     setSelectedFile(null);
+    setErrorMessage(null);
+    setIsLoading(false);
   };
 
   const handleCloseModal = () => {
+    if (isLoading) return; // Prevent closing while loading
     setShowModal(false);
   };
 
-  const handleSubmit = () => {
-    if (inputValue.trim()) {
-      // Pass both name and file (if present) to the callback
-      onClick(inputValue.trim(), selectedFile || undefined);
+  // Helper function to ensure we always have a proper Error object
+  const ensureError = (error: unknown): Error => {
+    if (error instanceof Error) return error;
+
+    let message = "Unknown error occurred";
+    if (typeof error === "string") {
+      message = error;
+    } else if (error && typeof error === "object") {
+      try {
+        message = JSON.stringify(error) || "Unknown error object";
+      } catch {
+        message = "Error object cannot be stringified";
+      }
+    }
+
+    return new Error(message);
+  };
+
+  const handleSubmit = async () => {
+    if (!inputValue.trim() || isLoading) return;
+
+    setIsLoading(true);
+    setErrorMessage(null);
+
+    try {
+      let result;
+
+      // Handle different item types
+      switch (itemType) {
+        case "case":
+          result = await addCase(userId, inputValue.trim());
+          break;
+        case "document":
+          if (!caseId)
+            throw new Error("Case ID is required for adding documents");
+          result = await addDocument(
+            userId,
+            caseId,
+            inputValue.trim(),
+            selectedFile || undefined
+          );
+          break;
+        case "note":
+          if (!caseId) throw new Error("Case ID is required for adding notes");
+          result = await addNote(userId, caseId, inputValue.trim());
+          break;
+        default:
+          throw new Error(`Unsupported item type: ${itemType}`);
+      }
+
+      // Call success callback with the newly created item
+      if (onSuccess) onSuccess(result);
+
+      // Close modal on success
       handleCloseModal();
+    } catch (e) {
+      // Ensure we always have a proper Error object
+      const error = ensureError(e);
+
+      // Log and display the error
+      console.error(`Error adding ${itemType}:`, error.message);
+      setErrorMessage(error.message);
+
+      // Call error callback if provided
+      if (onError) onError(error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -98,6 +174,13 @@ export function AddNewItem({
             >
               <h2 className="text-xl font-semibold mb-4">{text}</h2>
 
+              {errorMessage && (
+                <div className="mb-4 bg-red-50 border-l-4 border-red-500 p-4 text-red-700">
+                  <p className="font-medium">Error</p>
+                  <p>{errorMessage}</p>
+                </div>
+              )}
+
               <div className="mb-4">
                 <label
                   htmlFor="name-input"
@@ -114,6 +197,7 @@ export function AddNewItem({
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                   placeholder="Enter name"
                   autoFocus
+                  disabled={isLoading}
                 />
               </div>
 
@@ -124,7 +208,7 @@ export function AddNewItem({
                     htmlFor="file-input"
                     className="block text-sm font-medium text-gray-700 mb-1"
                   >
-                    File (optional)
+                    File {itemType === "document" ? "" : "(optional)"}
                   </label>
 
                   {!selectedFile ? (
@@ -158,6 +242,7 @@ export function AddNewItem({
                               className="sr-only"
                               accept={fileTypes}
                               onChange={handleFileChange}
+                              disabled={isLoading}
                             />
                           </label>
                           <p className="pl-1">or drag and drop</p>
@@ -191,6 +276,7 @@ export function AddNewItem({
                         type="button"
                         className="ml-2 text-sm text-red-500 hover:text-red-700"
                         onClick={clearSelectedFile}
+                        disabled={isLoading}
                       >
                         Remove
                       </button>
@@ -201,17 +287,44 @@ export function AddNewItem({
 
               <div className="flex justify-end space-x-2">
                 <button
-                  className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-100"
+                  className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-100 disabled:opacity-50"
                   onClick={handleCloseModal}
+                  disabled={isLoading}
                 >
                   Cancel
                 </button>
                 <button
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:bg-indigo-300"
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:bg-indigo-300 disabled:cursor-not-allowed flex items-center"
                   onClick={handleSubmit}
-                  disabled={!inputValue.trim()}
+                  disabled={!inputValue.trim() || isLoading}
                 >
-                  Create
+                  {isLoading ? (
+                    <>
+                      <svg
+                        className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      Creating...
+                    </>
+                  ) : (
+                    "Create"
+                  )}
                 </button>
               </div>
             </div>
