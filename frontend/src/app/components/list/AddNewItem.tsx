@@ -1,6 +1,7 @@
 // components/list/AddNewItem.tsx
 import { useState, useRef, ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { supabase } from "@/utils/supabase";
 
 interface AddNewItemProps {
   onClick: (name: string, file?: File) => void;
@@ -19,6 +20,7 @@ export function AddNewItem({
   const [inputValue, setInputValue] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const userID = `53917586-97ad-49b6-9bd6-51c441316425`;
 
   const handleOpenModal = () => {
     setShowModal(true);
