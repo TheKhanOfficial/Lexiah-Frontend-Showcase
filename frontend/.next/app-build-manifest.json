@@ -25,11 +25,6 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/[userid]/[caseid]/chat/page.js"
-    ],
-    "/[userid]/[caseid]/documents/[docid]/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/[userid]/[caseid]/documents/[docid]/page.js"
     ]
   }
 }

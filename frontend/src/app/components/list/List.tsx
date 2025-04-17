@@ -9,15 +9,15 @@ interface ListProps<T extends { id: string }> {
   userId: string;
   caseId?: string;
   itemType: ItemType;
-  onItemAdded?: (newItem: any) => void;
-  onRename?: (id: string, newName: string) => void;
-  onDelete?: (id: string) => void;
+  onItemAdded?: (newItem: any) => void; // Callback after successful addition
   addItemText?: string;
   emptyMessage?: string;
   sortBy?: keyof T;
   sortDirection?: "asc" | "desc";
   fileUploadEnabled?: boolean;
   isLoading?: boolean;
+  onAddItemRequest?: () => void; // New prop to handle add item request externally
+  onAddItemError?: (error: Error) => void; // Callback for error handling
 }
 
 export function List<T extends { id: string }>({
@@ -28,8 +28,8 @@ export function List<T extends { id: string }>({
   caseId,
   itemType,
   onItemAdded,
-  onRename,
-  onDelete,
+  onAddItemRequest,
+  onAddItemError,
   addItemText = "Add New",
   emptyMessage = "No items yet",
   sortBy,
@@ -81,6 +81,12 @@ export function List<T extends { id: string }>({
   const handleItemError = (error: Error) => {
     console.error("Error adding item:", error);
     setErrorMessage(error.message);
+
+    // Pass error to parent if callback exists
+    if (onAddItemError) {
+      onAddItemError(error);
+    }
+
     // Clear error after 5 seconds
     setTimeout(() => setErrorMessage(null), 5000);
   };
