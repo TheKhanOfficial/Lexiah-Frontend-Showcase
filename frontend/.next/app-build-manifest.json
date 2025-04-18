@@ -19,23 +19,8 @@
     "/[userid]/[caseid]/documents/[docid]/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/[userid]/[caseid]/documents/[docid]/page.js",
-      "static/css/app/[userid]/[caseid]/documents/[docid]/page.css"
-    ],
-    "/[userid]/[caseid]/notes/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/[userid]/[caseid]/notes/page.js"
-    ],
-    "/[userid]/[caseid]/chat/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/[userid]/[caseid]/chat/page.js"
-    ],
-    "/_not-found/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/_not-found/page.js"
+      "static/css/app/[userid]/[caseid]/documents/[docid]/page.css",
+      "static/chunks/app/[userid]/[caseid]/documents/[docid]/page.js"
     ]
   }
 }

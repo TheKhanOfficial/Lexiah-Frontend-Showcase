@@ -36,10 +36,11 @@ export default function DocumentViewerPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const viewerContainerRef = useRef<HTMLDivElement>(null);
+  const observerRef = useRef<IntersectionObserver | null>(null); // 👈 This was missing
+  const lastManualJump = useRef(false); // 👈 So was this
 
   // Refs for each page to enable scrolling
   const pageRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const observerRef = useRef<IntersectionObserver | null>(null);
 
   // Fetch document metadata
   const { data: document, isLoading: isLoadingMeta } = useQuery<DocumentData>({
@@ -81,6 +82,56 @@ export default function DocumentViewerPage() {
     loadDocument();
   }, [document]);
 
+  // Track which page is most visible while scrolling
+  useEffect(() => {
+    if (!numPages) return;
+
+    if (observerRef.current) observerRef.current.disconnect();
+
+    const intersectionRatios = new Map<number, number>();
+
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const pageIdx = parseInt(
+            entry.target.getAttribute("data-page-idx") || "0",
+            10
+          );
+          intersectionRatios.set(pageIdx, entry.intersectionRatio);
+        });
+
+        let maxRatio = 0;
+        let visiblePage = pageNumber;
+
+        intersectionRatios.forEach((ratio, idx) => {
+          if (ratio > maxRatio) {
+            maxRatio = ratio;
+            visiblePage = idx + 1;
+          }
+        });
+
+        // Update page number ONLY IF NOT manually jumped
+        if (!lastManualJump.current && visiblePage !== pageNumber) {
+          setPageNumber(visiblePage);
+          setInputValue(visiblePage.toString());
+        }
+      },
+      {
+        root: viewerContainerRef.current,
+        threshold: [0.3, 0.5, 0.7],
+      }
+    );
+
+    pageRefs.current.forEach((ref, idx) => {
+      if (ref) {
+        ref.setAttribute("data-page-idx", idx.toString());
+        observerRef.current?.observe(ref);
+      }
+    });
+
+    return () => observerRef.current?.disconnect();
+  }, [numPages, pageNumber]);
+
   // Handle PDF load success
   function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
     console.log("PDF file type from Supabase:", document.file_type);
@@ -94,75 +145,40 @@ export default function DocumentViewerPage() {
     pageRefs.current = Array(numPages).fill(null);
   }
 
-  // Setup intersection observer for tracking visible pages
   useEffect(() => {
-    if (!numPages) return;
+    const container = viewerContainerRef.current;
+    if (!container || !numPages) return;
 
-    // Cleanup previous observer
-    if (observerRef.current) {
-      observerRef.current.disconnect();
-    }
+    let timeout: NodeJS.Timeout;
 
-    // Create a map to track intersection ratios
-    const intersectionRatios = new Map<number, number>();
+    const handleScroll = () => {
+      clearTimeout(timeout);
 
-    // Create new observer
-    observerRef.current = new IntersectionObserver(
-      (entries) => {
-        // Update intersection ratios for each observed element
-        entries.forEach((entry) => {
-          const pageIdx = parseInt(
-            entry.target.getAttribute("data-page-idx") || "0",
-            10
+      let closestPage = 1;
+      let closestOffset = Infinity;
+
+      pageRefs.current.forEach((ref, index) => {
+        if (ref) {
+          const offset = Math.abs(
+            ref.getBoundingClientRect().top -
+              container.getBoundingClientRect().top
           );
-          intersectionRatios.set(pageIdx, entry.intersectionRatio);
-        });
-
-        // Find page with highest visibility ratio
-        let maxRatio = 0;
-        let visiblePage = pageNumber;
-
-        intersectionRatios.forEach((ratio, idx) => {
-          if (ratio > maxRatio) {
-            maxRatio = ratio;
-            visiblePage = idx + 1; // Convert from 0-based index to 1-based page number
+          if (offset < closestOffset) {
+            closestOffset = offset;
+            closestPage = index + 1;
           }
-        });
-
-        // Only update if the visible page has changed
-        if (visiblePage !== pageNumber) {
-          setPageNumber(visiblePage);
-          setInputValue(visiblePage.toString());
         }
-      },
-      {
-        root: viewerContainerRef.current,
-        threshold: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
-      }
-    );
+      });
 
-    // Observe all page elements
-    pageRefs.current.forEach((ref, idx) => {
-      if (ref) {
-        ref.setAttribute("data-page-idx", idx.toString());
-        observerRef.current?.observe(ref);
-      }
-    });
-
-    // Cleanup function
-    return () => {
-      if (observerRef.current) {
-        observerRef.current.disconnect();
+      if (closestPage !== pageNumber) {
+        setPageNumber(closestPage);
+        setInputValue(closestPage.toString());
       }
     };
-  }, [numPages, pageRefs.current, pageNumber]);
 
-  // Scroll to the selected page when page number changes
-  useEffect(() => {
-    if (pageNumber > 0 && pageRefs.current[pageNumber - 1]) {
-      pageRefs.current[pageNumber - 1]?.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [pageNumber]);
+    container.addEventListener("scroll", handleScroll);
+    return () => container.removeEventListener("scroll", handleScroll);
+  }, [numPages, pageNumber]);
 
   // Navigation controls
   const goToPrevPage = () => {
@@ -181,26 +197,33 @@ export default function DocumentViewerPage() {
     }
   };
 
-  // Handle input change
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setInputValue(val);
 
-    // Only switch page if it's a valid number within range
     const page = parseInt(val);
     if (!isNaN(page) && page >= 1 && page <= (numPages || 1)) {
-      setPageNumber(page);
+      const el = pageRefs.current[page - 1];
+      if (el && viewerContainerRef.current) {
+        lastManualJump.current = true;
+
+        // Instantly jump with no animation
+        viewerContainerRef.current.scrollTop = el.offsetTop;
+
+        setPageNumber(page); // make sure number updates
+        setTimeout(() => {
+          lastManualJump.current = false;
+        }, 300); // let it stabilize
+      }
     }
   };
 
-  // Handle input blur or enter key
   const handleInputCommit = () => {
     const newPage = parseInt(inputValue);
     if (!isNaN(newPage) && newPage >= 1 && newPage <= (numPages || 1)) {
       setPageNumber(newPage);
     } else {
-      // Reset to valid value
-      setInputValue(pageNumber.toString());
+      setInputValue(pageNumber.toString()); // reset to valid
     }
   };
 
