@@ -58,13 +58,8 @@ export default function DocumentViewerPage() {
         // Get the file from Supabase storage
         const fileData = await getDocumentFile(document.file_path);
 
-        // Convert the blob to an ArrayBuffer
         const arrayBuffer = await fileData.arrayBuffer();
-
-        // Convert ArrayBuffer to Uint8Array which react-pdf can use
-        const uint8Array = new Uint8Array(arrayBuffer);
-
-        setPdfData(uint8Array);
+        setPdfData(arrayBuffer); // pass raw buffer directly
       } catch (err) {
         console.error("Error loading document:", err);
         setError("Failed to load document. Please try again later.");
@@ -78,6 +73,9 @@ export default function DocumentViewerPage() {
 
   // Handle PDF load success
   function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
+    console.log("PDF file type from Supabase:", document.file_type);
+    console.log("Public URL:", document.public_url);
+
     setNumPages(numPages);
     setPageNumber(1);
   }
@@ -281,7 +279,7 @@ export default function DocumentViewerPage() {
       <div className="flex-1 overflow-auto bg-gray-200 flex justify-center">
         <div className="p-4">
           <Document
-            file={{ data: pdfData }} // ✅ wrap it!
+            file={pdfData} // now passing ArrayBuffer directly
             onLoadSuccess={onDocumentLoadSuccess}
             loading={
               <div className="flex items-center justify-center h-full">
