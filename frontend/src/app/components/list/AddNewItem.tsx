@@ -1,6 +1,7 @@
 // components/list/AddNewItem.tsx
 import { useState, useRef } from "react";
 import { createPortal } from "react-dom";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { addCase, addDocument, addNote } from "@/utils/supabase";
 
 export type ItemType = "case" | "document" | "note";
@@ -26,25 +27,12 @@ export function AddNewItem({
   fileUploadEnabled = false,
   fileTypes = ".pdf,.doc,.docx,.txt",
 }: AddNewItemProps) {
+  const queryClient = useQueryClient();
   const [showModal, setShowModal] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleOpenModal = () => {
-    setShowModal(true);
-    setInputValue("");
-    setSelectedFile(null);
-    setErrorMessage(null);
-    setIsLoading(false);
-  };
-
-  const handleCloseModal = () => {
-    if (isLoading) return; // Prevent closing while loading
-    setShowModal(false);
-  };
 
   // Helper function to ensure we always have a proper Error object
   const ensureError = (error: unknown): Error => {
@@ -64,55 +52,109 @@ export function AddNewItem({
     return new Error(message);
   };
 
-  const handleSubmit = async () => {
-    if (!inputValue.trim() || isLoading) return;
+  // Create mutations for different item types
+  const caseMutation = useMutation({
+    mutationFn: ({ name }: { name: string }) => addCase(userId, name),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["cases", userId] });
+      if (onSuccess) onSuccess(data);
+      handleCloseModal();
+    },
+    onError: (error) => {
+      const err = ensureError(error);
+      setErrorMessage(err.message);
+      if (onError) onError(err);
+    },
+  });
 
-    setIsLoading(true);
+  const documentMutation = useMutation({
+    mutationFn: ({ name, file }: { name: string; file?: File }) => {
+      if (!caseId) throw new Error("Case ID is required for adding documents");
+      return addDocument(userId, caseId, name, file);
+    },
+    onSuccess: (data) => {
+      if (caseId) {
+        queryClient.invalidateQueries({
+          queryKey: ["documents", userId, caseId],
+        });
+      }
+      if (onSuccess) onSuccess(data);
+      handleCloseModal();
+    },
+    onError: (error) => {
+      const err = ensureError(error);
+      setErrorMessage(err.message);
+      if (onError) onError(err);
+    },
+  });
+
+  const noteMutation = useMutation({
+    mutationFn: ({ name, file }: { name: string; file?: File }) => {
+      if (!caseId) throw new Error("Case ID is required for adding notes");
+      return addNote(userId, caseId, name, file);
+    },
+    onSuccess: (data) => {
+      if (caseId) {
+        queryClient.invalidateQueries({ queryKey: ["notes", userId, caseId] });
+      }
+      if (onSuccess) onSuccess(data);
+      handleCloseModal();
+    },
+    onError: (error) => {
+      const err = ensureError(error);
+      setErrorMessage(err.message);
+      if (onError) onError(err);
+    },
+  });
+
+  const isLoading =
+    caseMutation.isPending ||
+    documentMutation.isPending ||
+    noteMutation.isPending;
+
+  const handleOpenModal = () => {
+    setShowModal(true);
+    setInputValue("");
+    setSelectedFile(null);
+    setErrorMessage(null);
+  };
+
+  const handleCloseModal = () => {
+    if (isLoading) return; // Prevent closing while loading
+    setShowModal(false);
+  };
+
+  const handleSubmit = () => {
+    if (!inputValue.trim() || isLoading) return;
     setErrorMessage(null);
 
     try {
-      let result;
-
-      // Handle different item types
+      // Execute the appropriate mutation based on item type
       switch (itemType) {
         case "case":
-          result = await addCase(userId, inputValue.trim());
+          caseMutation.mutate({ name: inputValue.trim() });
           break;
         case "document":
-          if (!caseId)
-            throw new Error("Case ID is required for adding documents");
-          result = await addDocument(
-            userId,
-            caseId,
-            inputValue.trim(),
-            selectedFile || undefined
-          );
+          documentMutation.mutate({
+            name: inputValue.trim(),
+            file: selectedFile || undefined,
+          });
           break;
         case "note":
-          if (!caseId) throw new Error("Case ID is required for adding notes");
-          result = await addNote(userId, caseId, inputValue.trim());
+          noteMutation.mutate({
+            name: inputValue.trim(),
+            file: selectedFile || undefined,
+          });
+
           break;
         default:
           throw new Error(`Unsupported item type: ${itemType}`);
       }
-
-      // Call success callback with the newly created item
-      if (onSuccess) onSuccess(result);
-
-      // Close modal on success
-      handleCloseModal();
     } catch (e) {
-      // Ensure we always have a proper Error object
+      // This catch will only handle synchronous errors, but mutation errors are handled in onError
       const error = ensureError(e);
-
-      // Log and display the error
-      console.error(`Error adding ${itemType}:`, error.message);
       setErrorMessage(error.message);
-
-      // Call error callback if provided
       if (onError) onError(error);
-    } finally {
-      setIsLoading(false);
     }
   };
 

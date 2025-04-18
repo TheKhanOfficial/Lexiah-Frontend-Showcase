@@ -1,25 +1,32 @@
 "use client";
 // app/[userid]/[caseid]/documents/page.tsx
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { MainLayout } from "@/app/components/MainLayout";
 import { WorkspaceTabs } from "@/app/components/WorkspaceTabs";
 import { InputBar } from "@/app/components/InputBar";
 import { List } from "@/app/components/list/List";
 import { ListItem } from "@/app/components/list/ListItem";
+import { RenameDeleteModal } from "@/app/components/modals/RenameDeleteModal";
 import { useRouter, useParams } from "next/navigation";
-import { fetchDocuments } from "@/utils/supabase";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  fetchDocuments,
+  renameDocument,
+  deleteDocument,
+} from "@/utils/supabase";
 import Link from "next/link";
 
 // Define Document type
 interface Document {
   id: string;
   name: string;
-  created_at: string;
+  created_at?: string;
   updated_at?: string;
   file_path?: string;
   file_type?: string;
   file_size?: number;
+  public_url?: string;
 }
 
 export default function DocumentsPage() {
@@ -29,9 +36,18 @@ export default function DocumentsPage() {
     (params.userid as string) || "53917586-97ad-49b6-9bd6-51c441316425"; // Fallback to test user ID
   const caseId = params.caseid as string;
 
-  const [documents, setDocuments] = useState<Document[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // React Query client
+  const queryClient = useQueryClient();
+
+  // Modal state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showRenameModal, setShowRenameModal] = useState(false);
+  const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(
+    null
+  );
+  const [renameValue, setRenameValue] = useState("");
+  const [isModalLoading, setIsModalLoading] = useState(false);
+  const [modalError, setModalError] = useState<string | null>(null);
 
   const tabs = [
     { id: "documents", label: "Documents", path: "documents" },
@@ -39,49 +55,126 @@ export default function DocumentsPage() {
     { id: "chat", label: "Chat", path: "chat" },
   ];
 
-  // Load documents on component mount
-  useEffect(() => {
-    const loadDocuments = async () => {
-      if (!caseId) return;
+  // Fetch documents with React Query
+  const {
+    data: documents = [],
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["documents", userId, caseId],
+    queryFn: () => fetchDocuments(userId, caseId),
+    staleTime: 0,
+    refetchOnWindowFocus: false,
+    enabled: !!caseId,
+  });
 
-      setIsLoading(true);
-      setError(null);
+  // Mutations
+  const deleteDocumentMutation = useMutation({
+    mutationFn: (id: string) => deleteDocument(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["documents", userId, caseId],
+      });
+      setShowDeleteModal(false);
+    },
+  });
 
-      try {
-        const fetchedDocuments = await fetchDocuments(userId, caseId);
-        setDocuments(fetchedDocuments);
-      } catch (err) {
-        console.error("Error loading documents:", err);
-        setError(
-          err instanceof Error ? err.message : "Failed to load documents"
-        );
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadDocuments();
-  }, [userId, caseId]);
+  const renameDocumentMutation = useMutation({
+    mutationFn: ({ id, newName }: { id: string; newName: string }) =>
+      renameDocument(id, newName),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["documents", userId, caseId],
+      });
+      setShowRenameModal(false);
+    },
+  });
 
   // Handle document addition
-  const handleDocumentAdded = (newDocument: Document) => {
-    setDocuments((prevDocs) => [newDocument, ...prevDocs]);
+  const handleDocumentAdded = () => {
+    queryClient.invalidateQueries({ queryKey: ["documents", userId, caseId] });
   };
 
-  // Handle document rename
-  const handleDocumentRenamed = (id: string, newName: string) => {
-    setDocuments((prevDocs) =>
-      prevDocs.map((doc) => (doc.id === id ? { ...doc, name: newName } : doc))
+  // Handle rename request
+  const handleRenameRequest = (id: string) => {
+    const documentToRename = documents.find((doc) => doc.id === id);
+    if (documentToRename) {
+      setSelectedDocumentId(id);
+      setRenameValue(documentToRename.name);
+      setShowRenameModal(true);
+      setModalError(null);
+    }
+  };
+
+  // Handle delete request
+  const handleDeleteRequest = (id: string) => {
+    setSelectedDocumentId(id);
+    setShowDeleteModal(true);
+    setModalError(null);
+  };
+
+  // Handle confirming deletion
+  const handleConfirmDelete = async () => {
+    console.log(`Deleted!`);
+    if (isModalLoading || !selectedDocumentId) return;
+
+    setIsModalLoading(true);
+    setModalError(null);
+
+    try {
+      await deleteDocumentMutation.mutateAsync(selectedDocumentId);
+    } catch (error) {
+      setModalError(
+        error instanceof Error
+          ? error.message
+          : "An error occurred while deleting"
+      );
+    } finally {
+      setIsModalLoading(false);
+    }
+  };
+
+  // Handle confirming rename
+  const handleConfirmRename = async () => {
+    console.log(
+      "Renaming Document:",
+      selectedDocumentId,
+      "New name:",
+      renameValue
     );
-  };
 
-  // Handle document deletion
-  const handleDocumentDeleted = (id: string) => {
-    setDocuments((prevDocs) => prevDocs.filter((doc) => doc.id !== id));
+    if (
+      isModalLoading ||
+      !selectedDocumentId ||
+      renameValue.trim() === "" ||
+      renameValue.trim() ===
+        documents.find((d) => d.id === selectedDocumentId)?.name
+    )
+      return;
+
+    setIsModalLoading(true);
+    setModalError(null);
+
+    try {
+      await renameDocumentMutation.mutateAsync({
+        id: selectedDocumentId,
+        newName: renameValue.trim(),
+      });
+    } catch (error) {
+      setModalError(
+        error instanceof Error
+          ? error.message
+          : "An error occurred while renaming"
+      );
+    } finally {
+      setIsModalLoading(false);
+    }
   };
 
   // Format date
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return "Unknown date";
+
     const date = new Date(dateString);
     return date.toLocaleDateString("en-US", {
       year: "numeric",
@@ -99,7 +192,12 @@ export default function DocumentsPage() {
     router.push(`/${userId}/${caseId}/chat?message=${encodedText}`);
   };
 
-  // Render the document list or empty state
+  // Handle errors from AddNewItem
+  const handleAddItemError = (error: Error) => {
+    // Pass through
+  };
+
+  // Render the document list
   const renderDocumentsList = () => {
     if (error) {
       return (
@@ -107,10 +205,14 @@ export default function DocumentsPage() {
           <h3 className="text-lg font-medium text-red-800 mb-2">
             Error loading documents
           </h3>
-          <p className="text-red-700">{error}</p>
+          <p className="text-red-700">{(error as Error).message}</p>
           <button
             className="mt-4 px-4 py-2 bg-red-100 border border-red-300 text-red-800 rounded-md hover:bg-red-200"
-            onClick={() => window.location.reload()}
+            onClick={() =>
+              queryClient.invalidateQueries({
+                queryKey: ["documents", userId, caseId],
+              })
+            }
           >
             Try Again
           </button>
@@ -126,6 +228,7 @@ export default function DocumentsPage() {
         caseId={caseId}
         itemType="document"
         onItemAdded={handleDocumentAdded}
+        onAddItemError={handleAddItemError}
         addItemText="Add New Document"
         fileUploadEnabled={true}
         sortBy="created_at"
@@ -144,12 +247,12 @@ export default function DocumentsPage() {
               itemType="document"
               title={document.name}
               subtitle={`Added: ${formatDate(document.created_at)}`}
-              onRenameSuccess={handleDocumentRenamed}
-              onDeleteSuccess={handleDocumentDeleted}
+              onRename={handleRenameRequest}
+              onDelete={handleDeleteRequest}
               rightContent={
                 document.file_type && (
                   <span className="px-2 py-1 text-xs bg-gray-100 rounded-md">
-                    {document.file_type.toUpperCase()}
+                    {document.file_type.split("/").pop()?.toUpperCase()}
                   </span>
                 )
               }
@@ -160,6 +263,10 @@ export default function DocumentsPage() {
     );
   };
 
+  // Find the selected document name for display in modal
+  const selectedDocumentName =
+    documents.find((d) => d.id === selectedDocumentId)?.name || "";
+
   return (
     <MainLayout>
       <div className="flex flex-col h-full">
@@ -169,6 +276,35 @@ export default function DocumentsPage() {
 
         <InputBar onSubmit={handleInputSubmit} />
       </div>
+
+      {/* Replace inline modals with our new component */}
+      {showDeleteModal && (
+        <RenameDeleteModal
+          showModal={true}
+          onClose={() => setShowDeleteModal(false)}
+          onConfirm={handleConfirmDelete}
+          isLoading={isModalLoading}
+          modalError={modalError}
+          type="delete"
+          itemType="document"
+          itemName={selectedDocumentName}
+        />
+      )}
+
+      {showRenameModal && (
+        <RenameDeleteModal
+          showModal={true}
+          onClose={() => setShowRenameModal(false)}
+          onConfirm={handleConfirmRename}
+          isLoading={isModalLoading}
+          modalError={modalError}
+          type="rename"
+          itemType="document"
+          itemName={selectedDocumentName}
+          inputValue={renameValue}
+          setInputValue={setRenameValue}
+        />
+      )}
     </MainLayout>
   );
 }
