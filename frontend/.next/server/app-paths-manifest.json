@@ -1,7 +1,9 @@
 {
+  "/_not-found/page": "app/_not-found/page.js",
   "/favicon.ico/route": "app/favicon.ico/route.js",
   "/[userid]/page": "app/[userid]/page.js",
-  "/[userid]/[caseid]/documents/[docid]/page": "app/[userid]/[caseid]/documents/[docid]/page.js",
   "/[userid]/[caseid]/documents/page": "app/[userid]/[caseid]/documents/page.js",
-  "/[userid]/[caseid]/notes/page": "app/[userid]/[caseid]/notes/page.js"
+  "/[userid]/[caseid]/documents/[docid]/page": "app/[userid]/[caseid]/documents/[docid]/page.js",
+  "/[userid]/[caseid]/notes/page": "app/[userid]/[caseid]/notes/page.js",
+  "/[userid]/[caseid]/chat/page": "app/[userid]/[caseid]/chat/page.js"
 }
