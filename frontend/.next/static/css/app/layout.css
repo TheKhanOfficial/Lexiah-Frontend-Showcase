@@ -352,9 +352,6 @@
   .right-0 {
     right: calc(var(--spacing) * 0);
   }
-  .right-1\/3 {
-    right: calc(1/3 * 100%);
-  }
   .right-2 {
     right: calc(var(--spacing) * 2);
   }
@@ -367,17 +364,11 @@
   .-bottom-5 {
     bottom: calc(var(--spacing) * -5);
   }
-  .-left-6 {
-    left: calc(var(--spacing) * -6);
-  }
   .left-0 {
     left: calc(var(--spacing) * 0);
   }
   .left-2 {
     left: calc(var(--spacing) * 2);
-  }
-  .left-2\/3 {
-    left: calc(2/3 * 100%);
   }
   .left-auto {
     left: auto;
@@ -393,6 +384,24 @@
   }
   .z-\[100\] {
     z-index: 100;
+  }
+  .\!container {
+    width: 100% !important;
+    @media (width >= 40rem) {
+      max-width: 40rem !important;
+    }
+    @media (width >= 48rem) {
+      max-width: 48rem !important;
+    }
+    @media (width >= 64rem) {
+      max-width: 64rem !important;
+    }
+    @media (width >= 80rem) {
+      max-width: 80rem !important;
+    }
+    @media (width >= 96rem) {
+      max-width: 96rem !important;
+    }
   }
   .container {
     width: 100%;
@@ -456,9 +465,6 @@
   }
   .-ml-1 {
     margin-left: calc(var(--spacing) * -1);
-  }
-  .-ml-6 {
-    margin-left: calc(var(--spacing) * -6);
   }
   .-ml-7 {
     margin-left: calc(var(--spacing) * -7);
@@ -538,17 +544,11 @@
   .w-0 {
     width: calc(var(--spacing) * 0);
   }
-  .w-1\/3 {
-    width: calc(1/3 * 100%);
-  }
   .w-1\/4 {
     width: calc(1/4 * 100%);
   }
   .w-2 {
     width: calc(var(--spacing) * 2);
-  }
-  .w-2\/3 {
-    width: calc(2/3 * 100%);
   }
   .w-3\.5 {
     width: calc(var(--spacing) * 3.5);
@@ -573,9 +573,6 @@
   }
   .w-16 {
     width: calc(var(--spacing) * 16);
-  }
-  .w-80 {
-    width: calc(var(--spacing) * 80);
   }
   .w-full {
     width: 100%;
@@ -1089,10 +1086,6 @@
     outline-style: var(--tw-outline-style);
     outline-width: 1px;
   }
-  .blur {
-    --tw-blur: blur(8px);
-    filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,);
-  }
   .filter {
     filter: var(--tw-blur,) var(--tw-brightness,) var(--tw-contrast,) var(--tw-grayscale,) var(--tw-hue-rotate,) var(--tw-invert,) var(--tw-saturate,) var(--tw-sepia,) var(--tw-drop-shadow,);
   }
@@ -1361,11 +1354,6 @@
   .disabled\:text-gray-300 {
     &:disabled {
       color: var(--color-gray-300);
-    }
-  }
-  .disabled\:opacity-30 {
-    &:disabled {
-      opacity: 30%;
     }
   }
   .disabled\:opacity-50 {
