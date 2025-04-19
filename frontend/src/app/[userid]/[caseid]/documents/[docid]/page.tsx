@@ -10,6 +10,7 @@ import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 import "react-pdf/dist/esm/Page/TextLayer.css";
 import { MainLayout } from "@/app/components/MainLayout";
 import { InputBar } from "@/app/components/InputBar";
+import { ToggleHideShow } from "@/app/components/ToggleHideShow";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
@@ -35,6 +36,8 @@ export default function DocumentViewerPage() {
   const [pdfData, setPdfData] = useState<Uint8Array | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [showAISummary, setShowAISummary] = useState<boolean>(true); // State for toggle
+  const [showPDFViewer, setShowPDFViewer] = useState<boolean>(true); // State for second toggle
   const viewerContainerRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<IntersectionObserver | null>(null); // 👈 This was missing
   const lastManualJump = useRef(false); // 👈 So was this
@@ -59,18 +62,19 @@ export default function DocumentViewerPage() {
 
   // Load the PDF file when document metadata is available
   useEffect(() => {
-    if (!document?.file_path) return;
+    if (!document?.file_path || !showPDFViewer) return;
 
     const loadDocument = async () => {
       try {
         setLoading(true);
         setError(null);
 
-        // Get the file from Supabase storage
         const fileData = await getDocumentFile(document.file_path);
-
         const arrayBuffer = await fileData.arrayBuffer();
-        setPdfData(arrayBuffer); // pass raw buffer directly
+
+        // Clone the buffer to avoid detached ArrayBuffer issue
+        const freshBuffer = arrayBuffer.slice(0); // Clone
+        setPdfData(freshBuffer);
       } catch (err) {
         console.error("Error loading document:", err);
         setError("Failed to load document. Please try again later.");
@@ -80,7 +84,7 @@ export default function DocumentViewerPage() {
     };
 
     loadDocument();
-  }, [document]);
+  }, [document, showPDFViewer]);
 
   // Track which page is most visible while scrolling
   useEffect(() => {
@@ -241,6 +245,16 @@ export default function DocumentViewerPage() {
   const zoomOut = () => setScale((prev) => Math.max(prev - 0.2, 0.5));
   const resetZoom = () => setScale(1);
 
+  // Toggle AI Summary panel
+  const toggleAISummary = () => {
+    setShowAISummary(!showAISummary);
+  };
+
+  // Toggle PDF viewer panel
+  const togglePDFViewer = () => {
+    setShowPDFViewer(!showPDFViewer);
+  };
+
   // Render loading state
   if (isLoadingMeta || loading) {
     return (
@@ -321,157 +335,174 @@ export default function DocumentViewerPage() {
   return (
     <MainLayout>
       <div className="flex flex-col h-full">
-        {/* PDF Navigation toolbar */}
-        <div className="bg-gray-100 border-b border-gray-200 px-4 py-2 flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <h3 className="text-sm font-medium text-gray-700 truncate max-w-xs md:max-w-md">
-              {document.name}
-            </h3>
-            <div className="text-sm text-gray-500">
-              <input
-                type="text"
-                value={inputValue}
-                onChange={handleInputChange}
-                onBlur={handleInputCommit}
-                onKeyPress={(e) => e.key === "Enter" && handleInputCommit()}
-                className="w-16 border rounded px-2 py-1 text-sm"
-              />
-              <span className="ml-1">of {numPages}</span>
+        {/* Split view container */}
+        <div className="flex flex-1 overflow-hidden relative">
+          {/* PDF Viewer with auto-sizing */}
+          {showPDFViewer && (
+            <div className={showAISummary ? "auto" : "w-full"}>
+              {/* PDF Navigation toolbar */}
+              <div className="bg-gray-100 border-b border-gray-200 px-4 py-2 flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <h3 className="text-sm font-medium text-gray-700 truncate max-w-xs md:max-w-md">
+                    {document.name}
+                  </h3>
+                  <div className="text-sm text-gray-500">
+                    <input
+                      type="text"
+                      value={inputValue}
+                      onChange={handleInputChange}
+                      onBlur={handleInputCommit}
+                      onKeyPress={(e) =>
+                        e.key === "Enter" && handleInputCommit()
+                      }
+                      className="w-16 border rounded px-2 py-1 text-sm"
+                    />
+                    <span className="ml-1">of {numPages}</span>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  {/* Left and right arrows removed as requested */}
+                  <div className="h-6 border-l border-gray-300 mx-2"></div>
+                  <button
+                    onClick={zoomOut}
+                    className="p-1 rounded-md hover:bg-gray-200"
+                    aria-label="Zoom out"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M5 10a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={resetZoom}
+                    className="text-xs px-2 py-1 rounded-md hover:bg-gray-200"
+                  >
+                    {Math.round(scale * 100)}%
+                  </button>
+                  <button
+                    onClick={zoomIn}
+                    className="p-1 rounded-md hover:bg-gray-200"
+                    aria-label="Zoom in"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </button>
+
+                  <a
+                    href={document.public_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs px-2 py-1 bg-indigo-100 text-indigo-700 rounded-md hover:bg-indigo-200"
+                  >
+                    Download
+                  </a>
+                </div>
+              </div>
+
+              <div
+                ref={viewerContainerRef}
+                className="h-full overflow-auto bg-gray-200 flex justify-center"
+              >
+                <div className="p-4">
+                  <Document
+                    file={pdfData}
+                    onLoadSuccess={onDocumentLoadSuccess}
+                    loading={
+                      <div className="flex items-center justify-center h-full">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
+                      </div>
+                    }
+                    error={
+                      <div className="bg-red-50 p-4 rounded-md">
+                        <p className="text-red-500">
+                          Error loading PDF. The file might be corrupted.
+                        </p>
+                      </div>
+                    }
+                  >
+                    {Array.from(new Array(numPages), (_, index) => (
+                      <div
+                        key={`page_container_${index + 1}`}
+                        ref={(el) => (pageRefs.current[index] = el)}
+                      >
+                        <Page
+                          key={`page_${index + 1}`}
+                          pageNumber={index + 1}
+                          scale={scale}
+                          renderTextLayer={true}
+                          renderAnnotationLayer={true}
+                          className="shadow-lg mb-4"
+                        />
+                      </div>
+                    ))}
+                  </Document>
+                </div>
+              </div>
             </div>
-          </div>
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={goToPrevPage}
-              disabled={pageNumber <= 1}
-              className="p-1 rounded-md hover:bg-gray-200 disabled:opacity-30 disabled:cursor-not-allowed"
-              aria-label="Previous page"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </button>
-            <button
-              onClick={goToNextPage}
-              disabled={pageNumber >= (numPages || 1)}
-              className="p-1 rounded-md hover:bg-gray-200 disabled:opacity-30 disabled:cursor-not-allowed"
-              aria-label="Next page"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </button>
-            <div className="h-6 border-l border-gray-300 mx-2"></div>
-            <button
-              onClick={zoomOut}
-              className="p-1 rounded-md hover:bg-gray-200"
-              aria-label="Zoom out"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M5 10a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </button>
-            <button
-              onClick={resetZoom}
-              className="text-xs px-2 py-1 rounded-md hover:bg-gray-200"
-            >
-              {Math.round(scale * 100)}%
-            </button>
-            <button
-              onClick={zoomIn}
-              className="p-1 rounded-md hover:bg-gray-200"
-              aria-label="Zoom in"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </button>
+          )}
 
-            <a
-              href={document.public_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs px-2 py-1 bg-indigo-100 text-indigo-700 rounded-md hover:bg-indigo-200"
-            >
-              Download
-            </a>
+          {/* PDF toggle button - fixed position on right edge when shown, left edge when hidden */}
+          <div
+            className={`fixed ${
+              showPDFViewer ? "right-auto left-auto" : "left-0"
+            } top-2/3 z-50 bg-yellow-300`}
+          >
+            <ToggleHideShow
+              isVisible={showPDFViewer}
+              onToggle={togglePDFViewer}
+              hiddenDirection="right"
+              visibleDirection="left"
+            />
           </div>
-        </div>
 
-        {/* PDF Viewer */}
-        <div
-          ref={viewerContainerRef}
-          className="flex-1 overflow-auto bg-gray-200 flex justify-center"
-        >
-          <div className="p-4">
-            <Document
-              file={pdfData}
-              onLoadSuccess={onDocumentLoadSuccess}
-              loading={
-                <div className="flex items-center justify-center h-full">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
+          {/* Toggle button and AI Summary */}
+          {showAISummary ? (
+            <div className="auto h-full relative">
+              {/* Toggle button positioned higher up */}
+              <div className="absolute left-0 top-24 -ml-7 z-10">
+                <ToggleHideShow
+                  isVisible={showAISummary}
+                  onToggle={toggleAISummary}
+                  hiddenDirection="left"
+                  visibleDirection="right"
+                />
+              </div>
+
+              {/* AI Summary content */}
+              <div className="h-full border-l border-gray-300 overflow-auto bg-white p-4">
+                <div className="h-full flex items-center justify-center text-xl font-semibold text-gray-500">
+                  PLACEHOLDER TEXT 😤
                 </div>
-              }
-              error={
-                <div className="bg-red-50 p-4 rounded-md">
-                  <p className="text-red-500">
-                    Error loading PDF. The file might be corrupted.
-                  </p>
-                </div>
-              }
-            >
-              {Array.from(new Array(numPages), (_, index) => (
-                <div
-                  key={`page_container_${index + 1}`}
-                  ref={(el) => (pageRefs.current[index] = el)}
-                >
-                  <Page
-                    key={`page_${index + 1}`}
-                    pageNumber={index + 1}
-                    scale={scale}
-                    renderTextLayer={true}
-                    renderAnnotationLayer={true}
-                    className="shadow-lg mb-4"
-                  />
-                </div>
-              ))}
-            </Document>
-          </div>
+              </div>
+            </div>
+          ) : (
+            <div className="absolute right-0 top-24 z-10">
+              <ToggleHideShow
+                isVisible={showAISummary}
+                onToggle={toggleAISummary}
+                hiddenDirection="left"
+                visibleDirection="right"
+              />
+            </div>
+          )}
         </div>
 
         {/* Input Bar */}
