@@ -112,7 +112,6 @@
     --color-red-600: oklch(57.7% 0.245 27.325);
     --color-red-700: oklch(50.5% 0.213 27.518);
     --color-red-800: oklch(44.4% 0.177 26.899);
-    --color-yellow-300: oklch(90.5% 0.182 98.111);
     --color-blue-100: oklch(93.2% 0.032 255.585);
     --color-blue-800: oklch(42.4% 0.199 265.638);
     --color-indigo-50: oklch(96.2% 0.018 272.314);
@@ -340,11 +339,11 @@
   .top-1\/2 {
     top: calc(1/2 * 100%);
   }
-  .top-2\/3 {
-    top: calc(2/3 * 100%);
-  }
   .top-4 {
     top: calc(var(--spacing) * 4);
+  }
+  .top-10 {
+    top: calc(var(--spacing) * 10);
   }
   .top-24 {
     top: calc(var(--spacing) * 24);
@@ -358,8 +357,14 @@
   .right-4 {
     right: calc(var(--spacing) * 4);
   }
-  .right-auto {
-    right: auto;
+  .right-8 {
+    right: calc(var(--spacing) * 8);
+  }
+  .right-10 {
+    right: calc(var(--spacing) * 10);
+  }
+  .right-12 {
+    right: calc(var(--spacing) * 12);
   }
   .-bottom-5 {
     bottom: calc(var(--spacing) * -5);
@@ -369,9 +374,6 @@
   }
   .left-2 {
     left: calc(var(--spacing) * 2);
-  }
-  .left-auto {
-    left: auto;
   }
   .z-10 {
     z-index: 10;
@@ -385,23 +387,8 @@
   .z-\[100\] {
     z-index: 100;
   }
-  .\!container {
-    width: 100% !important;
-    @media (width >= 40rem) {
-      max-width: 40rem !important;
-    }
-    @media (width >= 48rem) {
-      max-width: 48rem !important;
-    }
-    @media (width >= 64rem) {
-      max-width: 64rem !important;
-    }
-    @media (width >= 80rem) {
-      max-width: 80rem !important;
-    }
-    @media (width >= 96rem) {
-      max-width: 96rem !important;
-    }
+  .z-\[9999\] {
+    z-index: 9999;
   }
   .container {
     width: 100%;
@@ -833,6 +820,9 @@
   .bg-red-100 {
     background-color: var(--color-red-100);
   }
+  .bg-red-500 {
+    background-color: var(--color-red-500);
+  }
   .bg-red-600 {
     background-color: var(--color-red-600);
   }
@@ -844,9 +834,6 @@
   }
   .bg-white {
     background-color: var(--color-white);
-  }
-  .bg-yellow-300 {
-    background-color: var(--color-yellow-300);
   }
   .fill-current {
     fill: currentColor;
@@ -1205,6 +1192,13 @@
     &:hover {
       @media (hover: hover) {
         background-color: var(--color-red-200);
+      }
+    }
+  }
+  .hover\:bg-red-600 {
+    &:hover {
+      @media (hover: hover) {
+        background-color: var(--color-red-600);
       }
     }
   }

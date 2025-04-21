@@ -248,6 +248,11 @@ export default function DocumentViewerPage() {
     setShowAISummary(!showAISummary);
   };
 
+  // Handle close button click - navigate back to documents page
+  const handleClose = () => {
+    router.push(`/${userId}/${caseId}/documents`);
+  };
+
   // Render loading state
   if (isLoadingMeta || loading) {
     return (
@@ -328,6 +333,30 @@ export default function DocumentViewerPage() {
   return (
     <MainLayout>
       <div className="flex flex-col h-full">
+        {/* Close button - positioned relative to the work window */}
+        <div className="absolute top-4 right-12 z-50">
+          <button
+            onClick={handleClose}
+            className="bg-gray-100 hover:bg-gray-200 rounded-full p-2 shadow-md"
+            aria-label="Close document"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6 text-gray-600"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+
         {/* Split view container */}
         <div className="flex flex-1 overflow-hidden relative">
           {/* PDF Viewer with auto-sizing */}
