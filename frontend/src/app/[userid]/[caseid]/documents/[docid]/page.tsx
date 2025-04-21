@@ -334,7 +334,7 @@ export default function DocumentViewerPage() {
     <MainLayout>
       <div className="flex flex-col h-full">
         {/* Close button - positioned relative to the work window */}
-        <div className="absolute top-4 right-12 z-50">
+        <div className="absolute top-12 right-12 z-50">
           <button
             onClick={handleClose}
             className="bg-gray-100 hover:bg-gray-200 rounded-full p-2 shadow-md"
