@@ -13,19 +13,15 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchNotes, renameNote, deleteNote } from "@/utils/supabase";
 import Link from "next/link";
 
-// Define Note type with file support
+// Define Note type with text_content instead of file support
 interface Note {
   id: string;
   user_id: string;
   case_id: string;
   name: string;
-  content: string;
+  text_content: string;
   created_at: string;
   updated_at?: string;
-  file_path?: string;
-  file_type?: string;
-  file_size?: number;
-  public_url?: string;
 }
 
 export default function NotesPage() {
@@ -221,8 +217,7 @@ export default function NotesPage() {
         sortDirection="desc"
         isLoading={isLoading}
         emptyMessage="No notes yet. Add your first note to get started."
-        fileUploadEnabled={true}
-        fileTypes=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
+        fileUploadEnabled={false}
         renderItem={(note) => (
           <Link
             href={`/${userId}/${caseId}/notes/${note.id}`}
@@ -238,11 +233,7 @@ export default function NotesPage() {
               onRename={handleRenameRequest}
               onDelete={handleDeleteRequest}
               rightContent={
-                note.file_type ? (
-                  <span className="px-2 py-1 text-xs bg-gray-100 rounded-md">
-                    {note.file_type.split("/").pop()?.toUpperCase()}
-                  </span>
-                ) : note.updated_at && note.updated_at !== note.created_at ? (
+                note.updated_at && note.updated_at !== note.created_at ? (
                   <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-md">
                     Updated
                   </span>

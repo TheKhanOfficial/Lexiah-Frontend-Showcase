@@ -89,9 +89,9 @@ export function AddNewItem({
   });
 
   const noteMutation = useMutation({
-    mutationFn: ({ name, file }: { name: string; file?: File }) => {
+    mutationFn: ({ name }: { name: string }) => {
       if (!caseId) throw new Error("Case ID is required for adding notes");
-      return addNote(userId, caseId, name, file);
+      return addNote(userId, caseId, name);
     },
     onSuccess: (data) => {
       if (caseId) {
@@ -143,9 +143,7 @@ export function AddNewItem({
         case "note":
           noteMutation.mutate({
             name: inputValue.trim(),
-            file: selectedFile || undefined,
           });
-
           break;
         default:
           throw new Error(`Unsupported item type: ${itemType}`);
@@ -243,8 +241,8 @@ export function AddNewItem({
                 />
               </div>
 
-              {/* File upload section - only shown when enabled */}
-              {fileUploadEnabled && (
+              {/* File upload section - only shown when enabled AND not for notes */}
+              {fileUploadEnabled && itemType !== "note" && (
                 <div className="mb-4">
                   <label
                     htmlFor="file-input"
