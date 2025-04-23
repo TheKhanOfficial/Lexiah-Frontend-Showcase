@@ -1,17 +1,24 @@
+"use client";
 // components/Header.tsx
 import { ToggleFullscreen } from "./ToggleFullscreen";
 import { ToggleHideShow } from "./ToggleHideShow";
+import { ToggleSplitscreen } from "./ToggleSplitscreen";
 
 interface HeaderProps {
   children?: React.ReactNode;
   isVisible: boolean;
   onToggle: () => void;
+  splitscreenCount: number;
+  onSplitscreenChange: (value: number) => void;
 }
 
-export function Header({ children, isVisible, onToggle }: HeaderProps) {
-  // Now use the props directly instead of internal state
-  // Remove the useState and toggleVisibility function
-
+export function Header({
+  children,
+  isVisible,
+  onToggle,
+  splitscreenCount,
+  onSplitscreenChange,
+}: HeaderProps) {
   // Full header when visible
   return (
     <header className="w-full bg-white shadow-sm relative z-10">
@@ -26,6 +33,10 @@ export function Header({ children, isVisible, onToggle }: HeaderProps) {
 
         {/* Buttons on the right */}
         <div className="flex items-center space-x-2">
+          <ToggleSplitscreen
+            value={splitscreenCount}
+            onChange={onSplitscreenChange}
+          />
           <ToggleFullscreen />
         </div>
       </div>

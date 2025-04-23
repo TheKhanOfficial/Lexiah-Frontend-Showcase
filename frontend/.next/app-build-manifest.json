@@ -11,31 +11,15 @@
       "static/chunks/main-app.js",
       "static/chunks/app/[userid]/page.js"
     ],
-    "/[userid]/[caseid]/documents/page": [
+    "/[userid]/[caseid]/workspace/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/[userid]/[caseid]/documents/page.js"
+      "static/chunks/app/[userid]/[caseid]/workspace/page.js"
     ],
-    "/[userid]/[caseid]/chat/page": [
+    "/_not-found/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/[userid]/[caseid]/chat/page.js"
-    ],
-    "/[userid]/[caseid]/notes/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/[userid]/[caseid]/notes/page.js"
-    ],
-    "/[userid]/[caseid]/notes/[noteid]/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/[userid]/[caseid]/notes/[noteid]/page.js"
-    ],
-    "/[userid]/[caseid]/documents/[docid]/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/css/app/[userid]/[caseid]/documents/[docid]/page.css",
-      "static/chunks/app/[userid]/[caseid]/documents/[docid]/page.js"
+      "static/chunks/app/_not-found/page.js"
     ]
   }
 }
