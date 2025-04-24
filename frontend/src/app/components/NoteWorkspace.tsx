@@ -9,23 +9,26 @@ import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchNotes, renameNote, deleteNote } from "@/utils/supabase";
 
-// Define Note type with text_content instead of file support
+// Define Note type
 interface Note {
   id: string;
-  user_id: string;
-  case_id: string;
   name: string;
-  text_content: string;
-  created_at: string;
+  created_at?: string;
   updated_at?: string;
+  content?: string;
 }
 
 interface NoteWorkspaceProps {
   userId: string;
   caseId: string;
+  onSelectNote?: (id: string) => void;
 }
 
-export default function NoteWorkspace({ userId, caseId }: NoteWorkspaceProps) {
+export default function NoteWorkspace({
+  userId,
+  caseId,
+  onSelectNote,
+}: NoteWorkspaceProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -121,8 +124,7 @@ export default function NoteWorkspace({ userId, caseId }: NoteWorkspaceProps) {
       isModalLoading ||
       !selectedNoteId ||
       renameValue.trim() === "" ||
-      renameValue.trim() ===
-        notes.find((note) => note.id === selectedNoteId)?.name
+      renameValue.trim() === notes.find((n) => n.id === selectedNoteId)?.name
     )
       return;
 
@@ -146,7 +148,9 @@ export default function NoteWorkspace({ userId, caseId }: NoteWorkspaceProps) {
   };
 
   // Format date
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return "Unknown date";
+
     const date = new Date(dateString);
     return date.toLocaleDateString("en-US", {
       year: "numeric",
@@ -155,17 +159,22 @@ export default function NoteWorkspace({ userId, caseId }: NoteWorkspaceProps) {
     });
   };
 
-  // Handle note click
-  const handleNoteClick = (noteId: string) => {
-    router.push(`/${userId}/${caseId}/notes/${noteId}`);
-  };
-
   // Handle errors from AddNewItem
   const handleAddItemError = (error: Error) => {
-    console.error("Error adding note:", error);
+    // Pass through
   };
 
-  // Render the notes list
+  // Handle note click - now uses the onSelectNote prop instead of navigation
+  const handleNoteClick = (noteId: string) => {
+    if (onSelectNote) {
+      onSelectNote(noteId);
+    } else {
+      // Fallback to router if no handler provided
+      router.push(`/${userId}/${caseId}/notes/${noteId}`);
+    }
+  };
+
+  // Render the note list
   const renderNotesList = () => {
     if (error) {
       return (
@@ -198,11 +207,11 @@ export default function NoteWorkspace({ userId, caseId }: NoteWorkspaceProps) {
         onItemAdded={handleNoteAdded}
         onAddItemError={handleAddItemError}
         addItemText="Add New Note"
-        sortBy="created_at"
+        fileUploadEnabled={false}
+        sortBy="updated_at"
         sortDirection="desc"
         isLoading={isLoading}
         emptyMessage="No notes yet. Add your first note to get started."
-        fileUploadEnabled={false}
         renderItem={(note) => (
           <div
             key={note.id}
@@ -214,16 +223,11 @@ export default function NoteWorkspace({ userId, caseId }: NoteWorkspaceProps) {
               userId={userId}
               itemType="note"
               title={note.name}
-              subtitle={`Created: ${formatDate(note.created_at)}`}
+              subtitle={`Updated: ${formatDate(
+                note.updated_at || note.created_at
+              )}`}
               onRename={handleRenameRequest}
               onDelete={handleDeleteRequest}
-              rightContent={
-                note.updated_at && note.updated_at !== note.created_at ? (
-                  <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-md">
-                    Updated
-                  </span>
-                ) : null
-              }
             />
           </div>
         )}
@@ -239,7 +243,7 @@ export default function NoteWorkspace({ userId, caseId }: NoteWorkspaceProps) {
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-auto">{renderNotesList()}</div>
 
-      {/* Delete modal */}
+      {/* Modals */}
       {showDeleteModal && (
         <RenameDeleteModal
           showModal={true}
@@ -253,7 +257,6 @@ export default function NoteWorkspace({ userId, caseId }: NoteWorkspaceProps) {
         />
       )}
 
-      {/* Rename modal */}
       {showRenameModal && (
         <RenameDeleteModal
           showModal={true}

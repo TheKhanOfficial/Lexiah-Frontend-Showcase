@@ -28,11 +28,13 @@ interface Document {
 interface DocumentWorkspaceProps {
   userId: string;
   caseId: string;
+  onSelectDocument?: (id: string) => void;
 }
 
 export default function DocumentWorkspace({
   userId,
   caseId,
+  onSelectDocument,
 }: DocumentWorkspaceProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -172,10 +174,14 @@ export default function DocumentWorkspace({
     // Pass through
   };
 
-  // Handle document click
+  // Handle document click - now uses the onSelectDocument prop instead of navigation
   const handleDocumentClick = (documentId: string) => {
-    // Now we navigate to the document viewer page
-    router.push(`/${userId}/${caseId}/documents/${documentId}`);
+    if (onSelectDocument) {
+      onSelectDocument(documentId);
+    } else {
+      // Fallback to router if no handler provided
+      router.push(`/${userId}/${caseId}/documents/${documentId}`);
+    }
   };
 
   // Render the document list
