@@ -98,6 +98,8 @@ export default function WorkspacePage() {
 
   return (
     <MainLayout
+      userId={userId}
+      caseId={caseId}
       splitscreenCount={splitscreenCount}
       onSplitscreenChange={setSplitscreenCount}
     >
