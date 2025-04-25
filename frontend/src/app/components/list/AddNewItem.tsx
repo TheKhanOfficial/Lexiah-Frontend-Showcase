@@ -25,7 +25,7 @@ export function AddNewItem({
   onError,
   text = "Add New",
   fileUploadEnabled = false,
-  fileTypes = ".pdf,.doc,.docx,.txt",
+  fileTypes = ".pdf",
 }: AddNewItemProps) {
   const queryClient = useQueryClient();
   const [showModal, setShowModal] = useState(false);
@@ -33,6 +33,8 @@ export function AddNewItem({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const MAX_FILE_SIZE_MB = 10;
+  const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 
   // Helper function to ensure we always have a proper Error object
   const ensureError = (error: unknown): Error => {
@@ -159,7 +161,18 @@ export function AddNewItem({
   // Handle file selection
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      setSelectedFile(e.target.files[0]);
+      const file = e.target.files[0];
+
+      if (file.size > MAX_FILE_SIZE_BYTES) {
+        setErrorMessage(`File size exceeds ${MAX_FILE_SIZE_MB}MB limit.`);
+        // Clear the file input
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+        return;
+      }
+
+      setSelectedFile(file);
     }
   };
 
@@ -288,7 +301,7 @@ export function AddNewItem({
                           <p className="pl-1">or drag and drop</p>
                         </div>
                         <p className="text-xs text-gray-500">
-                          PDF, DOC, DOCX, TXT up to 10MB
+                          PDF-up to {`${MAX_FILE_SIZE_MB}`}MB
                         </p>
                       </div>
                     </div>
