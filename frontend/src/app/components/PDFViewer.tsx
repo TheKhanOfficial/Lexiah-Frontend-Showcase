@@ -72,14 +72,13 @@ export default function PDFViewer({
         setLoading(true);
         setError(null);
 
-        // Get the file from Supabase storage
         const fileData = await getDocumentFile(document.file_path);
         if (!fileData) {
           throw new Error("No file data received from Supabase");
         }
 
-        const arrayBuffer = await fileData.arrayBuffer();
-        setPdfData(new Uint8Array(arrayBuffer));
+        const arrayBuffer = await fileData.arrayBuffer(); // don't slice or Uint8Array this
+        setPdfData(arrayBuffer); // just set it directly
       } catch (err) {
         console.error("Error loading document:", err);
         setError("Failed to load document. Please try again later.");
@@ -341,34 +340,34 @@ export default function PDFViewer({
 
   return (
     <div className="flex flex-col h-full">
-      {/* Close button - positioned relative to the work window */}
-      <div className="absolute top-4 right-4 z-50">
-        <button
-          onClick={onClose}
-          className="bg-gray-100 hover:bg-gray-200 rounded-full p-2 shadow-md"
-          aria-label="Close document"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-6 w-6 text-gray-600"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-        </button>
-      </div>
-
       {/* Split view container */}
       <div className="flex flex-1 overflow-hidden relative">
         {/* PDF Viewer with auto-sizing */}
         <div className={showAISummary ? "w-2/3" : "w-full"}>
+          {/* Close button - like NoteViewer */}
+          <div className="absolute top-8 right-4 z-10">
+            <button
+              onClick={onClose}
+              className="bg-gray-100 hover:bg-gray-200 rounded-full p-2 shadow-md"
+              aria-label="Close document"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6 text-gray-600"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+
           {/* PDF Navigation toolbar */}
           <div className="bg-gray-100 border-b border-gray-200 px-4 py-2 flex items-center justify-between">
             <div className="flex items-center space-x-4">
@@ -453,7 +452,7 @@ export default function PDFViewer({
                 <div className="text-gray-500 text-sm">Loading PDF file...</div>
               ) : (
                 <Document
-                  file={{ data: pdfData }}
+                  file={pdfData}
                   onLoadSuccess={onDocumentLoadSuccess}
                   loading={
                     <div className="flex items-center justify-center h-full">
@@ -520,9 +519,6 @@ export default function PDFViewer({
           </div>
         )}
       </div>
-
-      {/* Input Bar */}
-      <InputBar onSubmit={handleInputSubmit} />
     </div>
   );
 }
