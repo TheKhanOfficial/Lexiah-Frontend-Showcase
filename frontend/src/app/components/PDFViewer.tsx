@@ -343,7 +343,11 @@ export default function PDFViewer({
       {/* Split view container */}
       <div className="flex flex-1 overflow-hidden relative">
         {/* PDF Viewer with auto-sizing */}
-        <div className={showAISummary ? "w-2/3" : "w-full"}>
+        <div
+          className={`flex flex-col min-w-0 overflow-hidden ${
+            showAISummary ? "" : "flex-1"
+          }`}
+        >
           {/* Close button - like NoteViewer */}
           <div className="absolute top-8 right-4 z-10">
             <button
