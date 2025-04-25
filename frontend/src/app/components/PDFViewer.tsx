@@ -2,13 +2,14 @@
 // app/components/PDFViewer.tsx
 
 import { useState, useEffect, useRef } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase, getDocumentFile } from "@/utils/supabase";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 import "react-pdf/dist/esm/Page/TextLayer.css";
 import { InputBar } from "@/app/components/InputBar";
 import { ToggleHideShow } from "@/app/components/ToggleHideShow";
+import { getAIResponse } from "@/utils/api";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
@@ -18,6 +19,7 @@ interface DocumentData {
   file_path?: string;
   file_type?: string;
   public_url?: string;
+  summary?: string;
 }
 
 interface PDFViewerProps {
@@ -37,13 +39,25 @@ export default function PDFViewer({
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [inputValue, setInputValue] = useState("1");
   const [scale, setScale] = useState<number>(1.0);
-  const [pdfData, setPdfData] = useState<Uint8Array | null>(null);
+  const pdfDataRef = useRef<Uint8Array | null>(null); // for summary generation
+  const pdfUrlRef = useRef<string | null>(null); // for PDF rendering
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [showAISummary, setShowAISummary] = useState<boolean>(true);
   const viewerContainerRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
   const lastManualJump = useRef(false);
+
+  // Add state for PDF text and Claude summary
+  const [pdfText, setPdfText] = useState<string>("");
+  const [docSummary, setDocSummary] = useState<string>("");
+  const [isSummarizing, setIsSummarizing] = useState<boolean>(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState<boolean>(false);
+  const [showInstructionsModal, setShowInstructionsModal] =
+    useState<boolean>(false);
+  const [summaryInstructions, setSummaryInstructions] = useState<string>("");
+
+  const queryClient = useQueryClient();
 
   // Refs for each page to enable scrolling
   const pageRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -63,6 +77,30 @@ export default function PDFViewer({
     },
   });
 
+  // Mutation to save summary back to Supabase
+  const saveSummaryMutation = useMutation({
+    mutationFn: async (summary: string) => {
+      const { data, error } = await supabase
+        .from("documents")
+        .update({ summary })
+        .eq("id", docId)
+        .select();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["document", docId] });
+    },
+  });
+
+  // Set initial summary from document data
+  useEffect(() => {
+    if (document?.summary) {
+      setDocSummary(document.summary);
+    }
+  }, [document]);
+
   // Load the PDF file when document metadata is available
   useEffect(() => {
     if (!document?.file_path) return;
@@ -77,8 +115,12 @@ export default function PDFViewer({
           throw new Error("No file data received from Supabase");
         }
 
-        const arrayBuffer = await fileData.arrayBuffer(); // don't slice or Uint8Array this
-        setPdfData(arrayBuffer); // just set it directly
+        const arrayBuffer = await fileData.arrayBuffer();
+        const uint8Array = new Uint8Array(arrayBuffer);
+
+        pdfDataRef.current = uint8Array; // for summary generation
+        const blob = new Blob([uint8Array], { type: "application/pdf" });
+        pdfUrlRef.current = URL.createObjectURL(blob); // for viewer
       } catch (err) {
         console.error("Error loading document:", err);
         setError("Failed to load document. Please try again later.");
@@ -89,6 +131,137 @@ export default function PDFViewer({
 
     loadDocument();
   }, [document]);
+
+  useEffect(() => {
+    return () => {
+      if (pdfUrlRef.current) {
+        URL.revokeObjectURL(pdfUrlRef.current);
+      }
+    };
+  }, []);
+
+  // Function to generate summary
+  const generateSummary = async (customInstructions: string = "") => {
+    if (!pdfDataRef.current || !document) return;
+
+    try {
+      setIsSummarizing(true);
+      setDocSummary("Analyzing document...");
+
+      // Load PDF.js to extract text
+      const pdf = await pdfjs.getDocument({ data: pdfDataRef.current! })
+        .promise;
+
+      let fullText = "";
+
+      // Extract text from each page
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const textContent = await page.getTextContent();
+        const pageText = textContent.items
+          .map((item: any) => item.str)
+          .join(" ");
+        fullText += pageText + " ";
+      }
+
+      setPdfText(fullText);
+
+      // Split text into chunks of approximately 180k characters
+      const chunkSize = 180000;
+      const textChunks = [];
+      for (let i = 0; i < fullText.length; i += chunkSize) {
+        textChunks.push(fullText.slice(i, i + chunkSize));
+      }
+
+      console.log(
+        `Extracted ${fullText.length} characters, split into ${textChunks.length} chunks`
+      );
+
+      // Process each chunk sequentially, building on previous summaries
+      let combinedSummary = "";
+
+      for (let i = 0; i < textChunks.length; i++) {
+        const isFirstChunk = i === 0;
+        const isLastChunk = i === textChunks.length - 1;
+
+        let prompt = "";
+
+        if (isFirstChunk) {
+          prompt = `Here is the beginning of a document titled "${
+            document.name
+          }". ${
+            customInstructions
+              ? `I have specific instructions for the summary: ${customInstructions}. `
+              : ""
+          }Please provide a detailed summary of its key points:\n\n${
+            textChunks[i]
+          }`;
+        } else if (isLastChunk) {
+          prompt = `This is the final part of the document. Based on this and the previous sections (which you summarized as: "${combinedSummary}"), ${
+            customInstructions
+              ? `following these instructions: ${customInstructions}, `
+              : ""
+          }please provide a complete, cohesive summary of the entire document:\n\n${
+            textChunks[i]
+          }`;
+        } else {
+          prompt = `Continuing from the previous section (which you summarized as: "${combinedSummary}"), here is the next part of the document. ${
+            customInstructions
+              ? `Following these instructions: ${customInstructions}, `
+              : ""
+          }Please update your summary with any new key information:\n\n${
+            textChunks[i]
+          }`;
+        }
+
+        // Update summary status
+        setDocSummary(
+          `Analyzing document... (part ${i + 1} of ${textChunks.length})`
+        );
+
+        // Call Claude API to summarize this chunk
+        const chunkSummary = await getAIResponse([
+          { role: "user", content: prompt },
+        ]);
+
+        // For first chunk, use its summary as is; for later chunks, build on previous summary
+        if (isFirstChunk) {
+          combinedSummary = chunkSummary;
+        } else {
+          // Use the AI's latest output as the combined summary
+          combinedSummary = chunkSummary;
+        }
+      }
+
+      // Set the final summary
+      setDocSummary(combinedSummary);
+
+      // Save the summary to Supabase
+      await saveSummaryMutation.mutateAsync(combinedSummary);
+    } catch (err) {
+      console.error("Error summarizing document:", err);
+      setDocSummary("Error creating summary. Please try again later.");
+    } finally {
+      setIsSummarizing(false);
+      setShowInstructionsModal(false);
+      setSummaryInstructions("");
+    }
+  };
+
+  // Handler for "Generate Summary" button
+  const handleGenerateSummary = () => {
+    if (document?.summary) {
+      setShowConfirmDialog(true);
+    } else {
+      setShowInstructionsModal(true);
+    }
+  };
+
+  // Handler for submitting custom instructions
+  const handleSubmitInstructions = () => {
+    generateSummary(summaryInstructions);
+    setShowInstructionsModal(false);
+  };
 
   // Track which page is most visible while scrolling
   useEffect(() => {
@@ -305,7 +478,7 @@ export default function PDFViewer({
   const isPdf = document.file_type?.includes("pdf");
 
   // If not a PDF, show a message with download link
-  if (!isPdf || !pdfData) {
+  if (!isPdf || !pdfDataRef.current) {
     return (
       <div className="flex h-full w-full items-center justify-center">
         <div className="text-center max-w-md">
@@ -451,12 +624,12 @@ export default function PDFViewer({
             className="h-full overflow-auto bg-gray-200 flex justify-center"
           >
             <div className="p-4">
-              {/* Don’t even try rendering Document if pdfData is missing */}
-              {!pdfData ? (
+              {/* Don't even try rendering Document if pdfData is missing */}
+              {!pdfDataRef.current ? (
                 <div className="text-gray-500 text-sm">Loading PDF file...</div>
               ) : (
                 <Document
-                  file={pdfData}
+                  file={pdfUrlRef.current}
                   onLoadSuccess={onDocumentLoadSuccess}
                   loading={
                     <div className="flex items-center justify-center h-full">
@@ -494,7 +667,7 @@ export default function PDFViewer({
 
         {/* Toggle button and AI Summary */}
         {showAISummary ? (
-          <div className="w-1/3 h-full relative">
+          <div className="flex flex-col flex-1 h-full">
             {/* Toggle button positioned higher up */}
             <div className="absolute left-0 top-24 -ml-7 z-10">
               <ToggleHideShow
@@ -507,9 +680,68 @@ export default function PDFViewer({
 
             {/* AI Summary content */}
             <div className="h-full border-l border-gray-300 overflow-auto bg-white p-4">
-              <div className="h-full flex items-center justify-center text-xl font-semibold text-gray-500">
-                PLACEHOLDER TEXT
+              <div className="mb-3 flex items-center justify-between">
+                <div className="flex items-center">
+                  <h3 className="text-lg font-semibold text-gray-700">
+                    Document Summary
+                  </h3>
+                  {isSummarizing && (
+                    <div className="ml-3 animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-500"></div>
+                  )}
+                </div>
+
+                {!isSummarizing && !showConfirmDialog && (
+                  <button
+                    onClick={handleGenerateSummary}
+                    className="px-3 py-1 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-700"
+                  >
+                    Generate Summary
+                  </button>
+                )}
               </div>
+
+              {showConfirmDialog ? (
+                <div className="bg-yellow-50 p-4 rounded-md mb-4">
+                  <p className="text-sm text-yellow-800 mb-3">
+                    A summary already exists. Do you want to replace it with a
+                    new one?
+                  </p>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => {
+                        setShowConfirmDialog(false);
+                        setShowInstructionsModal(true);
+                      }}
+                      className="px-3 py-1 bg-yellow-600 text-white text-sm rounded-md hover:bg-yellow-700"
+                    >
+                      Yes, replace
+                    </button>
+                    <button
+                      onClick={() => setShowConfirmDialog(false)}
+                      className="px-3 py-1 bg-gray-200 text-gray-800 text-sm rounded-md hover:bg-gray-300"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : null}
+
+              {isSummarizing ? (
+                <p className="text-gray-600">{docSummary}</p>
+              ) : (
+                <div className="prose prose-sm">
+                  {docSummary ? (
+                    <div className="whitespace-pre-wrap text-gray-700">
+                      {docSummary}
+                    </div>
+                  ) : (
+                    <p className="text-gray-500">
+                      Click "Generate Summary" to create a summary of this
+                      document.
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         ) : (
@@ -523,6 +755,46 @@ export default function PDFViewer({
           </div>
         )}
       </div>
+
+      {/* Modal for instructions */}
+      {showInstructionsModal && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6 mx-4">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">
+              Summary Instructions
+            </h3>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Enter any special instructions for the summary (optional):
+              </label>
+              <textarea
+                value={summaryInstructions}
+                onChange={(e) => setSummaryInstructions(e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                placeholder="E.g., Focus on legal implications, highlight key dates, etc."
+                rows={4}
+              />
+            </div>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => {
+                  setShowInstructionsModal(false);
+                  setSummaryInstructions("");
+                }}
+                className="px-4 py-2 bg-gray-200 text-gray-800 text-sm rounded-md hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSubmitInstructions}
+                className="px-4 py-2 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-700"
+              >
+                Generate Summary
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
