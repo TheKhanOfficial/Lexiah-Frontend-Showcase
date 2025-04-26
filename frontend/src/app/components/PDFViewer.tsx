@@ -191,25 +191,79 @@ export default function PDFViewer({
             document.name
           }". ${
             customInstructions
-              ? `I have specific instructions for the summary: ${customInstructions}. `
+              ? `Your goal is to write the single best document summary in the history of human civilization.  Summarize the following document with maximum clarity, depth, and insight.  Capture all key facts, major arguments, subtle nuances, and critical implications without oversimplification or distortion.
+Structure the summary logically, ensuring every paragraph flows naturally into the next.
+Maintain simple, powerful prose that a professional reader can easily understand.
+Write with the precision of a master attorney and the storytelling skill of a great novelist.
+Highlight any underlying assumptions, unstated premises, contradictions, or especially important details that a less careful reader might miss.
+Imagine you are summarizing for brilliant legal minds like Alan Dershowitz and Johnnie Cochran — but also writing cleanly enough for a skilled paralegal to immediately grasp every key point without needing re-reading.
+Your tone should be confident, clear, and highly informative — never verbose, never vague.
+Prioritize fidelity to the source material above all else.
+
+Remember, Your goal is to write the single best document summary in the history of human civilization.
+              In addition, I have specific instructions for the summary: ${customInstructions}. `
               : ""
-          }Please provide a detailed summary of its key points:\n\n${
-            textChunks[i]
-          }`;
+          }Your goal is to write the single best document summary in the history of human civilization.  Summarize the following document with maximum clarity, depth, and insight.  Capture all key facts, major arguments, subtle nuances, and critical implications without oversimplification or distortion.
+Structure the summary logically, ensuring every paragraph flows naturally into the next.
+Maintain simple, powerful prose that a professional reader can easily understand.
+Write with the precision of a master attorney and the storytelling skill of a great novelist.
+Highlight any underlying assumptions, unstated premises, contradictions, or especially important details that a less careful reader might miss.
+Imagine you are summarizing for brilliant legal minds like Alan Dershowitz and Johnnie Cochran — but also writing cleanly enough for a skilled paralegal to immediately grasp every key point without needing re-reading.
+Your tone should be confident, clear, and highly informative — never verbose, never vague.
+Prioritize fidelity to the source material above all else.
+
+Remember, Your goal is to write the single best document summary in the history of human civilization.
+Begin.:\n\n${textChunks[i]}`;
         } else if (isLastChunk) {
           prompt = `This is the final part of the document. Based on this and the previous sections (which you summarized as: "${combinedSummary}"), ${
             customInstructions
-              ? `following these instructions: ${customInstructions}, `
+              ? `Your goal is to write the single best document summary in the history of human civilization.  Summarize the following document with maximum clarity, depth, and insight.  Capture all key facts, major arguments, subtle nuances, and critical implications without oversimplification or distortion.
+Structure the summary logically, ensuring every paragraph flows naturally into the next.
+Maintain simple, powerful prose that a professional reader can easily understand.
+Write with the precision of a master attorney and the storytelling skill of a great novelist.
+Highlight any underlying assumptions, unstated premises, contradictions, or especially important details that a less careful reader might miss.
+Imagine you are summarizing for brilliant legal minds like Alan Dershowitz and Johnnie Cochran — but also writing cleanly enough for a skilled paralegal to immediately grasp every key point without needing re-reading.
+Your tone should be confident, clear, and highly informative — never verbose, never vague.
+Prioritize fidelity to the source material above all else.
+
+Remember, Your goal is to write the single best document summary in the history of human civilization.Additionally, also following these instructions: ${customInstructions}, `
               : ""
-          }please provide a complete, cohesive summary of the entire document:\n\n${
+          }Your goal is to write the single best document summary in the history of human civilization.  Summarize the following document with maximum clarity, depth, and insight.  Capture all key facts, major arguments, subtle nuances, and critical implications without oversimplification or distortion.
+Structure the summary logically, ensuring every paragraph flows naturally into the next.
+Maintain simple, powerful prose that a professional reader can easily understand.
+Write with the precision of a master attorney and the storytelling skill of a great novelist.
+Highlight any underlying assumptions, unstated premises, contradictions, or especially important details that a less careful reader might miss.
+Imagine you are summarizing for brilliant legal minds like Alan Dershowitz and Johnnie Cochran — but also writing cleanly enough for a skilled paralegal to immediately grasp every key point without needing re-reading.
+Your tone should be confident, clear, and highly informative — never verbose, never vague.
+Prioritize fidelity to the source material above all else.
+
+Remember, Your goal is to write the single best document summary in the history of human civilization.:\n\n${
             textChunks[i]
           }`;
         } else {
           prompt = `Continuing from the previous section (which you summarized as: "${combinedSummary}"), here is the next part of the document. ${
             customInstructions
-              ? `Following these instructions: ${customInstructions}, `
+              ? `Your goal is to write the single best document summary in the history of human civilization.  Summarize the following document with maximum clarity, depth, and insight.  Capture all key facts, major arguments, subtle nuances, and critical implications without oversimplification or distortion.
+Structure the summary logically, ensuring every paragraph flows naturally into the next.
+Maintain simple, powerful prose that a professional reader can easily understand.
+Write with the precision of a master attorney and the storytelling skill of a great novelist.
+Highlight any underlying assumptions, unstated premises, contradictions, or especially important details that a less careful reader might miss.
+Imagine you are summarizing for brilliant legal minds like Alan Dershowitz and Johnnie Cochran — but also writing cleanly enough for a skilled paralegal to immediately grasp every key point without needing re-reading.
+Your tone should be confident, clear, and highly informative — never verbose, never vague.
+Prioritize fidelity to the source material above all else.
+
+Remember, Your goal is to write the single best document summary in the history of human civilization.In addition, also following these instructions: ${customInstructions}, `
               : ""
-          }Please update your summary with any new key information:\n\n${
+          }Your goal is to write the single best document summary in the history of human civilization.  Summarize the following document with maximum clarity, depth, and insight.  Capture all key facts, major arguments, subtle nuances, and critical implications without oversimplification or distortion.
+Structure the summary logically, ensuring every paragraph flows naturally into the next.
+Maintain simple, powerful prose that a professional reader can easily understand.
+Write with the precision of a master attorney and the storytelling skill of a great novelist.
+Highlight any underlying assumptions, unstated premises, contradictions, or especially important details that a less careful reader might miss.
+Imagine you are summarizing for brilliant legal minds like Alan Dershowitz and Johnnie Cochran — but also writing cleanly enough for a skilled paralegal to immediately grasp every key point without needing re-reading.
+Your tone should be confident, clear, and highly informative — never verbose, never vague.
+Prioritize fidelity to the source material above all else.
+
+Remember, Your goal is to write the single best document summary in the history of human civilization.:\n\n${
             textChunks[i]
           }`;
         }
@@ -517,10 +571,18 @@ export default function PDFViewer({
       <div className="flex flex-1 overflow-hidden relative">
         {/* PDF Viewer with auto-sizing */}
         <div
-          className={`flex flex-col min-w-0 overflow-hidden ${
+          className={`relative flex flex-col min-w-0 overflow-hidden ${
             showAISummary ? "" : "flex-1"
           }`}
         >
+          <div className="absolute right-0 top-24 z-10">
+            <ToggleHideShow
+              isVisible={showAISummary}
+              onToggle={toggleAISummary}
+              hiddenDirection="left"
+              visibleDirection="right"
+            />
+          </div>
           {/* Close button - like NoteViewer */}
           <div className="absolute top-8 right-4 z-10">
             <button
@@ -669,14 +731,6 @@ export default function PDFViewer({
         {showAISummary ? (
           <div className="flex flex-col flex-1 h-full">
             {/* Toggle button positioned higher up */}
-            <div className="absolute right-0 top-24 z-10">
-              <ToggleHideShow
-                isVisible={showAISummary}
-                onToggle={toggleAISummary}
-                hiddenDirection="left"
-                visibleDirection="right"
-              />
-            </div>
 
             {/* AI Summary content */}
             <div className="h-full border-l border-gray-300 overflow-auto bg-white p-4">
@@ -744,16 +798,7 @@ export default function PDFViewer({
               )}
             </div>
           </div>
-        ) : (
-          <div className="absolute right-0 top-24 z-10">
-            <ToggleHideShow
-              isVisible={showAISummary}
-              onToggle={toggleAISummary}
-              hiddenDirection="left"
-              visibleDirection="right"
-            />
-          </div>
-        )}
+        ) : null}
       </div>
 
       {/* Modal for instructions */}
