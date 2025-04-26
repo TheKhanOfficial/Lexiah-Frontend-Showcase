@@ -669,7 +669,7 @@ export default function PDFViewer({
         {showAISummary ? (
           <div className="flex flex-col flex-1 h-full">
             {/* Toggle button positioned higher up */}
-            <div className="absolute left-0 top-24 -ml-7 z-10">
+            <div className="absolute right-0 top-24 z-10">
               <ToggleHideShow
                 isVisible={showAISummary}
                 onToggle={toggleAISummary}
