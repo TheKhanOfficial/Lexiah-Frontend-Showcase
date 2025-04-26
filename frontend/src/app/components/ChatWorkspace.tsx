@@ -1,23 +1,58 @@
 "use client";
 // app/components/ChatWorkspace.tsx
 
-import {
-  useState,
-  useCallback,
-  useRef,
-  useEffect,
-  forwardRef,
-  useImperativeHandle,
-} from "react";
-import { ChatBubble } from "@/app/components/ChatBubble";
+import { useEffect, useRef, forwardRef, useImperativeHandle } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/utils/supabase";
 import { getAIResponse } from "@/utils/api";
+import { ChatBubble } from "@/app/components/ChatBubble";
 
-interface Message {
+// Helper functions for Supabase
+export async function fetchChatMessages(caseId: string) {
+  const { data, error } = await supabase
+    .from("chat_messages")
+    .select("*")
+    .eq("case_id", caseId)
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    throw error;
+  }
+
+  return data || [];
+}
+
+export async function sendChatMessage(
+  caseId: string,
+  sender: "user" | "assistant",
+  content: string
+) {
+  const { data, error } = await supabase
+    .from("chat_messages")
+    .insert([
+      {
+        case_id: caseId,
+        sender,
+        content,
+        created_at: new Date().toISOString(),
+      },
+    ])
+    .select();
+
+  if (error) {
+    throw error;
+  }
+
+  return data[0];
+}
+
+// Interface definitions
+interface ChatMessage {
   id: string;
-  role: "user" | "assistant";
+  case_id: string;
+  sender: "user" | "assistant";
   content: string;
-  timestamp?: string;
-  isTyping?: boolean;
+  created_at: string;
 }
 
 interface ChatWorkspaceProps {
@@ -32,9 +67,20 @@ export interface ChatWorkspaceHandle {
 
 const ChatWorkspace = forwardRef<ChatWorkspaceHandle, ChatWorkspaceProps>(
   function ChatWorkspace({ userId, caseId }, ref) {
-    const [messages, setMessages] = useState<Message[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
+    const queryClient = useQueryClient();
     const endOfMessagesRef = useRef<HTMLDivElement>(null);
+
+    // Fetch messages with React Query
+    const {
+      data: messages = [],
+      isLoading,
+      error,
+      refetch,
+    } = useQuery<ChatMessage[]>({
+      queryKey: ["chatMessages", caseId],
+      queryFn: () => fetchChatMessages(caseId),
+      staleTime: 0, // Always re-fetch when queryKey changes
+    });
 
     // Auto-scroll to bottom when messages change
     useEffect(() => {
@@ -43,113 +89,102 @@ const ChatWorkspace = forwardRef<ChatWorkspaceHandle, ChatWorkspaceProps>(
       }
     }, [messages]);
 
-    const formatTimestamp = useCallback(() => {
-      return new Date().toLocaleTimeString([], {
+    // Format timestamp for display
+    const formatTimestamp = (dateString: string) => {
+      return new Date(dateString).toLocaleTimeString([], {
         hour: "2-digit",
         minute: "2-digit",
       });
-    }, []);
+    };
 
+    // Handle sending a message
     const processMessage = async (text: string) => {
-      // Create user message
-      console.log("processMessage called with:", text);
+      if (!text.trim()) return;
 
-      const userMessage: Message = {
-        id: `user-${Date.now()}`,
-        role: "user",
-        content: text,
-        timestamp: formatTimestamp(),
-      };
+      try {
+        // 1. Save user message to Supabase
+        await sendChatMessage(caseId, "user", text);
+        await refetch();
 
-      // Add user message to state using functional update
-      setMessages((prevMessages) => {
-        // This gives us the most up-to-date messages array
-        // Store it locally for API call
-        const currentMessages = [...prevMessages, userMessage];
+        // 2. Save temporary "..." assistant typing indicator
+        const typingPlaceholder = await sendChatMessage(
+          caseId,
+          "assistant",
+          "..."
+        );
+        await refetch();
 
-        // Now add typing indicator
-        const withTypingIndicator = [
-          ...currentMessages,
-          {
-            id: `typing-${Date.now()}`,
-            role: "assistant",
-            content: "...",
-            isTyping: true,
-          },
-        ];
+        // 3. Get all current messages (after placeholder)
+        const currentMessages = await fetchChatMessages(caseId);
 
-        // Update state with typing indicator (for UI only)
-        setTimeout(() => {
-          // Build API request with just the real messages
-          const chatMessages = currentMessages.map((msg) => ({
-            role: msg.role,
+        const aiMessages = currentMessages
+          .filter((msg) => msg.content !== "...")
+          .map((msg) => ({
+            role: msg.sender,
             content: msg.content,
           }));
 
-          // Call API with accurate message history
-          setIsLoading(true);
-          console.log("Calling getAIResponse with:", chatMessages);
+        // 4. Actually call Claude
+        const aiReply = await getAIResponse(aiMessages);
 
-          getAIResponse(chatMessages)
-            .then((aiReply) => {
-              // Success - replace typing indicator with real response
-              setMessages((latestMessages) => {
-                // Remove any typing indicators
-                const withoutTyping = latestMessages.filter(
-                  (msg) => !msg.isTyping
-                );
+        // 5. Update the "..." message to real AI reply
+        const { error } = await supabase
+          .from("chat_messages")
+          .update({ content: aiReply })
+          .eq("id", typingPlaceholder.id);
 
-                // Add the AI reply
-                return [
-                  ...withoutTyping,
-                  {
-                    id: `assistant-${Date.now()}`,
-                    role: "assistant",
-                    content: aiReply,
-                    timestamp: formatTimestamp(),
-                  },
-                ];
-              });
-            })
-            .catch((err) => {
-              console.error("Error fetching AI response:", err);
+        if (error) throw error;
 
-              // Error case - replace typing indicator with error message
-              setMessages((latestMessages) => {
-                // Remove any typing indicators
-                const withoutTyping = latestMessages.filter(
-                  (msg) => !msg.isTyping
-                );
+        await refetch();
+      } catch (err) {
+        console.error("Error in message process:", err);
 
-                // Add error message
-                return [
-                  ...withoutTyping,
-                  {
-                    id: `error-${Date.now()}`,
-                    role: "assistant",
-                    content: "Sorry, I encountered an error. Please try again.",
-                    timestamp: formatTimestamp(),
-                  },
-                ];
-              });
-            })
-            .finally(() => {
-              setIsLoading(false);
-            });
-        }, 0);
-
-        // Return state with typing indicator for immediate UI update
-        return withTypingIndicator;
-      });
+        try {
+          await sendChatMessage(
+            caseId,
+            "assistant",
+            "Sorry, I encountered an error. Please try again."
+          );
+          await refetch();
+        } catch (nestedErr) {
+          console.error("Error saving fallback message:", nestedErr);
+        }
+      }
     };
 
     // Expose the sendMessage method to the parent component
     useImperativeHandle(ref, () => ({
       sendMessage: (text: string) => {
-        console.log("Sending message:", text);
         processMessage(text);
       },
     }));
+
+    // Loading state
+    if (isLoading) {
+      return (
+        <div className="flex h-full items-center justify-center">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-500"></div>
+        </div>
+      );
+    }
+
+    // Error state
+    if (error) {
+      return (
+        <div className="flex h-full items-center justify-center">
+          <div className="text-center text-red-500">
+            <h3 className="text-lg font-medium mb-2">Error loading messages</h3>
+            <p>{(error as Error).message}</p>
+            <button
+              onClick={() => refetch()}
+              className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      );
+    }
 
     return (
       <div className="flex flex-col h-full px-4 py-2">
@@ -165,9 +200,9 @@ const ChatWorkspace = forwardRef<ChatWorkspaceHandle, ChatWorkspaceProps>(
             {messages.map((message) => (
               <ChatBubble
                 key={message.id}
-                role={message.role}
+                role={message.sender}
                 content={message.content}
-                timestamp={message.timestamp}
+                timestamp={formatTimestamp(message.created_at)}
               />
             ))}
             <div ref={endOfMessagesRef} />
