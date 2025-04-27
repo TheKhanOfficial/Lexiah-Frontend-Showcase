@@ -65,7 +65,7 @@ export async function fetchDocumentSummaries(caseId: string) {
 
 // Helper to roughly estimate tokens from words
 function estimateTokens(text: string) {
-  return Math.ceil(text.split(/\s+/).length * 1.33);
+  return Math.ceil(text.length / 4);
 }
 
 // Added new function to clear chat messages for a specific case
@@ -175,7 +175,7 @@ const ChatWorkspace = forwardRef<ChatWorkspaceHandle, ChatWorkspaceProps>(
           0
         );
 
-        if (totalTokens > 15000) {
+        if (totalTokens > 18000) {
           // If too large, update placeholder with warning
           await supabase
             .from("chat_messages")
