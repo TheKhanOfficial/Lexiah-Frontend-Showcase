@@ -63,6 +63,11 @@ export async function fetchDocumentSummaries(caseId: string) {
   return data.map((doc) => doc.summary).filter((s) => s);
 }
 
+// Helper to roughly estimate tokens from words
+function estimateTokens(text: string) {
+  return Math.ceil(text.split(/\s+/).length * 1.33);
+}
+
 // Added new function to clear chat messages for a specific case
 export async function clearChatMessages(caseId: string) {
   const { error } = await supabase
@@ -136,30 +141,25 @@ const ChatWorkspace = forwardRef<ChatWorkspaceHandle, ChatWorkspaceProps>(
       if (!text.trim()) return;
 
       try {
-        // 1. Save user message to Supabase
         await sendChatMessage(caseId, "user", text);
         await refetch();
 
-        // 2. Save temporary "..." assistant typing indicator
         const typingPlaceholder = await sendChatMessage(
           caseId,
           "assistant",
           "..."
         );
         await refetch();
-        // Fetch document summaries
+
         const documentSummaries = await fetchDocumentSummaries(caseId);
 
-        // Build system-level summaries as assistant messages
         const summaryMessages = documentSummaries.map((summary) => ({
           role: "assistant",
           content: `Document Summary:\n${summary}`,
         }));
 
-        // Get current chat messages
         const currentMessages = await fetchChatMessages(caseId);
 
-        // Ignore typing indicator "..." messages
         const chatMessages = currentMessages
           .filter((msg) => msg.content !== "...")
           .map((msg) => ({
@@ -167,13 +167,30 @@ const ChatWorkspace = forwardRef<ChatWorkspaceHandle, ChatWorkspaceProps>(
             content: msg.content,
           }));
 
-        // 👑 FINAL MESSAGE HISTORY TO SEND
         const fullHistory = [...summaryMessages, ...chatMessages];
 
-        // Now send to Claude
+        // 🚨 3. CHECK CONTEXT SIZE BEFORE CALLING AI
+        const totalTokens = fullHistory.reduce(
+          (acc, msg) => acc + estimateTokens(msg.content),
+          0
+        );
+
+        if (totalTokens > 15000) {
+          // If too large, update placeholder with warning
+          await supabase
+            .from("chat_messages")
+            .update({
+              content:
+                "⚠️ This conversation is too long. Please clear the chat history to continue discussing.",
+            })
+            .eq("id", typingPlaceholder.id);
+
+          await refetch();
+          return;
+        }
+
         const aiReply = await getAIResponse(fullHistory);
 
-        // 5. Update the "..." message to real AI reply
         const { error } = await supabase
           .from("chat_messages")
           .update({ content: aiReply })
