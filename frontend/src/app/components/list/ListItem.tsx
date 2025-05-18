@@ -56,16 +56,32 @@ export function ListItem({
 
   return (
     <li
-      className={`cursor-pointer transition-colors duration-150 ${
-        isSelected ? "bg-gray-200" : "hover:bg-gray-50"
+      className={`cursor-pointer transition-colors duration-150  ${
+        isSelected ? "on-click" : "hover:bg-[#111827] hover:text-[#f9fafb]"
       }`}
       onClick={onClick}
     >
       <div className="px-4 py-3 flex items-center justify-between">
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-gray-900 truncate">{title}</p>
+          <p
+            className={`${
+              isSelected
+                ? "text-sm font-medium text-[#f9fafb] truncate"
+                : "text-sm font-medium text-[#111827] hover:text-[#f9fafb] truncate"
+            }`}
+          >
+            {title}
+          </p>
           {subtitle && (
-            <p className="text-xs text-gray-500 truncate">{subtitle}</p>
+            <p
+              className={`${
+                isSelected
+                  ? "text-xs text-light truncate"
+                  : "text-xs text-dark truncate hover:text-[#f9fafb]"
+              }`}
+            >
+              {subtitle}
+            </p>
           )}
         </div>
 

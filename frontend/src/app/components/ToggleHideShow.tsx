@@ -96,7 +96,7 @@ export function ToggleHideShow({
   return (
     <button
       onClick={onToggle}
-      className="p-1.5 bg-white border border-gray-200 hover:bg-gray-100 shadow-sm z-10 flex items-center justify-center"
+      className="btn-primary"
       aria-label={isVisible ? "Hide content" : "Show content"}
     >
       {getDirectionSvg()}
