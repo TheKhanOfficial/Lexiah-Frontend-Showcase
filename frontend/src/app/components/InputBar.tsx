@@ -41,35 +41,8 @@ export function InputBar({
   };
 
   return (
-    <div className="border-t border-gray-200 bg-white px-4 py-3">
+    <div className="border-t border-gray-200 bg-[#F9FAFB] px-4 py-3">
       <form onSubmit={handleSubmit} className="flex items-center">
-        <div className="mr-3">
-          <div className="flex rounded-md border border-gray-300 p-1">
-            <button
-              type="button"
-              onClick={toggleMode}
-              className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
-                !isDocumentSearch
-                  ? "bg-gray-800 text-white"
-                  : "bg-transparent text-gray-500 hover:bg-gray-100"
-              }`}
-            >
-              Chat
-            </button>
-            <button
-              type="button"
-              onClick={toggleMode}
-              className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
-                isDocumentSearch
-                  ? "bg-gray-800 text-white"
-                  : "bg-transparent text-gray-500 hover:bg-gray-100"
-              }`}
-            >
-              Document Search
-            </button>
-          </div>
-        </div>
-
         <div className="relative flex-1">
           <input
             ref={inputRef}

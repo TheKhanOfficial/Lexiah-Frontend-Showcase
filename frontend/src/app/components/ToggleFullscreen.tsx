@@ -30,7 +30,7 @@ export function ToggleFullscreen() {
   return (
     <button
       onClick={toggleFullscreen}
-      className="p-2 rounded-md hover:bg-gray-100 flex items-center justify-center"
+      className="p-2 rounded-md hover:bg-[#111827] hover:text-[#F9FAFB] flex items-center justify-center"
       aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
       style={{ width: "36px", height: "36px" }} // Fixed dimensions
     >

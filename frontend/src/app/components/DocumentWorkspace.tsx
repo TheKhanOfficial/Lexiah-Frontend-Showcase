@@ -238,7 +238,7 @@ export default function DocumentWorkspace({
               onDelete={handleDeleteRequest}
               rightContent={
                 document.file_type && (
-                  <span className="px-2 py-1 text-xs bg-gray-100 rounded-md">
+                  <span className="px-2 py-1 text-xs text-red-500 bg-[#F9FAFB] rounded-md">
                     {document.file_type.split("/").pop()?.toUpperCase()}
                   </span>
                 )

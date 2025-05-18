@@ -61,7 +61,7 @@ export function ListItem({
       }`}
       onClick={onClick}
     >
-      <div className="px-4 py-3 flex items-center justify-between">
+      <div className="p-4 flex items-center justify-between">
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium truncate">{title}</p>
 
@@ -70,7 +70,7 @@ export function ListItem({
 
         <div className="flex items-center">
           {rightContent && (
-            <div className="mr-2 flex-shrink-0">{rightContent}</div>
+            <div className="m-2 flex-shrink-0">{rightContent}</div>
           )}
 
           <div onClick={handleDropdownClick}>

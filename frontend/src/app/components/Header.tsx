@@ -25,7 +25,7 @@ export function Header({
       <div className="h-16 px-4 flex justify-between items-center">
         {/* Logo on the left */}
         <div className="flex items-center">
-          <h1 className="text-xl font-bold text-indigo-600">Lexia AI</h1>
+          <h1 className="text-xl font-bold text-red-600">Lexia AI</h1>
         </div>
 
         {/* Case name in the middle (children prop) */}

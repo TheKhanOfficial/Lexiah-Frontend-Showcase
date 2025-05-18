@@ -13,13 +13,13 @@ export function ToggleSplitscreen({ value, onChange }: ToggleSplitscreenProps) {
   const isActive = (num: number) => value === num;
 
   return (
-    <div className="flex items-center border border-gray-300 rounded">
+    <div className="flex items-center border-none outline-none rounded">
       <button
         onClick={() => onChange(1)}
-        className={`p-1 flex items-center justify-center w-8 h-8 ${
+        className={`rounded-md p-1 flex items-center justify-center w-8 h-8 ${
           isActive(1)
-            ? "bg-indigo-100 text-indigo-700"
-            : "text-gray-600 hover:bg-gray-100"
+            ? "bg-[#111827] text-[#F9FAFB]"
+            : "text-[#111827] hover:bg-[#111827] hover:text-[#F9FAFB]"
         }`}
         title="Single screen"
       >
@@ -38,14 +38,14 @@ export function ToggleSplitscreen({ value, onChange }: ToggleSplitscreenProps) {
         </svg>
       </button>
 
-      <div className="border-r border-gray-300 h-6"></div>
+      <div className="border-none h-6"></div>
 
       <button
         onClick={() => onChange(2)}
-        className={`p-1 flex items-center justify-center w-8 h-8 ${
+        className={`rounded-md p-1 flex items-center justify-center w-8 h-8 ${
           isActive(2)
-            ? "bg-indigo-100 text-indigo-700"
-            : "text-gray-600 hover:bg-gray-100"
+            ? "bg-[#111827] text-[#F9FAFB]"
+            : "text-[#111827] hover:bg-[#111827] hover:text-[#F9FAFB]"
         }`}
         title="Split screen (2)"
       >
@@ -65,14 +65,14 @@ export function ToggleSplitscreen({ value, onChange }: ToggleSplitscreenProps) {
         </svg>
       </button>
 
-      <div className="border-r border-gray-300 h-6"></div>
+      <div className="border-none h-6"></div>
 
       <button
         onClick={() => onChange(3)}
-        className={`p-1 flex items-center justify-center w-8 h-8 ${
+        className={`rounded-md p-1 flex items-center justify-center w-8 h-8 ${
           isActive(3)
-            ? "bg-indigo-100 text-indigo-700"
-            : "text-gray-600 hover:bg-gray-100"
+            ? "bg-[#111827] text-[#F9FAFB]"
+            : "text-[#111827] hover:bg-[#111827] hover:text-[#F9FAFB]"
         }`}
         title="Split screen (3)"
       >

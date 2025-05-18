@@ -74,7 +74,6 @@
     --color-indigo-50: oklch(96.2% 0.018 272.314);
     --color-indigo-100: oklch(93% 0.034 272.788);
     --color-indigo-200: oklch(87% 0.065 274.039);
-    --color-indigo-300: oklch(78.5% 0.115 274.713);
     --color-indigo-500: oklch(58.5% 0.233 277.117);
     --color-indigo-600: oklch(51.1% 0.262 276.966);
     --color-indigo-700: oklch(45.7% 0.24 277.023);
@@ -385,9 +384,6 @@
   }
   .mr-2 {
     margin-right: calc(var(--spacing) * 2);
-  }
-  .mr-3 {
-    margin-right: calc(var(--spacing) * 3);
   }
   .mb-1 {
     margin-bottom: calc(var(--spacing) * 1);
@@ -727,6 +723,10 @@
     --tw-border-style: dashed;
     border-style: dashed;
   }
+  .border-none {
+    --tw-border-style: none;
+    border-style: none;
+  }
   .border-gray-200 {
     border-color: var(--color-gray-200);
   }
@@ -757,14 +757,8 @@
   .bg-\[\#111827\] {
     background-color: #111827;
   }
-  .bg-\[\#B10000\] {
-    background-color: #B10000;
-  }
   .bg-\[\#F9FAFB\] {
     background-color: #F9FAFB;
-  }
-  .bg-\[\#f9fafb\] {
-    background-color: #f9fafb;
   }
   .bg-background {
     background-color: var(--background);
@@ -781,17 +775,11 @@
   .bg-destructive {
     background-color: var(--destructive);
   }
-  .bg-gray-50 {
-    background-color: var(--color-gray-50);
-  }
   .bg-gray-100 {
     background-color: var(--color-gray-100);
   }
   .bg-gray-200 {
     background-color: var(--color-gray-200);
-  }
-  .bg-gray-800 {
-    background-color: var(--color-gray-800);
   }
   .bg-indigo-50 {
     background-color: var(--color-indigo-50);
@@ -817,17 +805,11 @@
   .bg-red-100 {
     background-color: var(--color-red-100);
   }
-  .bg-red-500 {
-    background-color: var(--color-red-500);
-  }
   .bg-red-600 {
     background-color: var(--color-red-600);
   }
   .bg-secondary {
     background-color: var(--secondary);
-  }
-  .bg-transparent {
-    background-color: transparent;
   }
   .bg-white {
     background-color: var(--color-white);
@@ -960,8 +942,8 @@
   .text-\[\#111827\] {
     color: #111827;
   }
-  .text-\[\#f9fafb\] {
-    color: #f9fafb;
+  .text-\[\#F9FAFB\] {
+    color: #F9FAFB;
   }
   .text-gray-400 {
     color: var(--color-gray-400);
@@ -986,9 +968,6 @@
   }
   .text-indigo-200 {
     color: var(--color-indigo-200);
-  }
-  .text-indigo-500 {
-    color: var(--color-indigo-500);
   }
   .text-indigo-600 {
     color: var(--color-indigo-600);
@@ -1182,13 +1161,6 @@
       }
     }
   }
-  .hover\:bg-indigo-50 {
-    &:hover {
-      @media (hover: hover) {
-        background-color: var(--color-indigo-50);
-      }
-    }
-  }
   .hover\:bg-indigo-100 {
     &:hover {
       @media (hover: hover) {
@@ -1214,13 +1186,6 @@
     &:hover {
       @media (hover: hover) {
         background-color: color-mix(in oklab, var(--primary) 90%, transparent);
-      }
-    }
-  }
-  .hover\:bg-red-100 {
-    &:hover {
-      @media (hover: hover) {
-        background-color: var(--color-red-100);
       }
     }
   }
@@ -1252,6 +1217,13 @@
       }
     }
   }
+  .hover\:text-\[\#F9FAFB\] {
+    &:hover {
+      @media (hover: hover) {
+        color: #F9FAFB;
+      }
+    }
+  }
   .hover\:text-\[\#f9fafb\] {
     &:hover {
       @media (hover: hover) {
@@ -1280,10 +1252,10 @@
       }
     }
   }
-  .hover\:text-indigo-500 {
+  .hover\:text-red-500 {
     &:hover {
       @media (hover: hover) {
-        color: var(--color-indigo-500);
+        color: var(--color-red-500);
       }
     }
   }
@@ -1383,9 +1355,9 @@
       cursor: not-allowed;
     }
   }
-  .disabled\:bg-indigo-300 {
+  .disabled\:bg-red-300 {
     &:disabled {
-      background-color: var(--color-indigo-300);
+      background-color: var(--color-red-300);
     }
   }
   .disabled\:text-gray-300 {
@@ -1613,9 +1585,10 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+    border-radius: calc(var(--radius) - 2px);
     border-color: #111827;
     background-color: #f9fafb;
-    padding: calc(var(--spacing) * 1.5);
+    padding: calc(var(--spacing) * 2);
     color: #111827;
     --tw-shadow: 0 1px 3px 0 var(--tw-shadow-color, rgb(0 0 0 / 0.1)), 0 1px 2px -1px var(--tw-shadow-color, rgb(0 0 0 / 0.1));
     box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);

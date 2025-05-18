@@ -196,7 +196,7 @@ export function AddNewItem({
     <>
       <button
         onClick={handleOpenModal}
-        className="w-full py-3 px-4 flex items-center text-indigo-600 hover:bg-indigo-50 transition-colors duration-150"
+        className="w-full py-3 px-4 flex items-center text-red-600 hover:bg-[#111827] transition-colors duration-150"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -284,7 +284,7 @@ export function AddNewItem({
                         <div className="flex text-sm text-gray-600 justify-center">
                           <label
                             htmlFor="file-input"
-                            className="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none"
+                            className="relative cursor-pointer bg-white rounded-md font-medium text-red-600 hover:text-red-500 focus-within:outline-none"
                           >
                             <span>Upload a file</span>
                             <input
@@ -309,7 +309,7 @@ export function AddNewItem({
                     <div className="mt-1 flex items-center justify-between p-4 border border-gray-300 rounded-md">
                       <div className="flex items-center">
                         <svg
-                          className="h-6 w-6 text-indigo-500 mr-2"
+                          className="h-6 w-6 text-red-600 mr-2"
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -347,7 +347,7 @@ export function AddNewItem({
                   Cancel
                 </button>
                 <button
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:bg-indigo-300 disabled:cursor-not-allowed flex items-center"
+                  className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:bg-red-300 disabled:cursor-not-allowed flex items-center"
                   onClick={handleSubmit}
                   disabled={!inputValue.trim() || isLoading}
                 >
