@@ -63,26 +63,9 @@ export function ListItem({
     >
       <div className="px-4 py-3 flex items-center justify-between">
         <div className="flex-1 min-w-0">
-          <p
-            className={`${
-              isSelected
-                ? "text-sm font-medium text-[#f9fafb] truncate"
-                : "text-sm font-medium text-[#111827] hover:text-[#f9fafb] truncate"
-            }`}
-          >
-            {title}
-          </p>
-          {subtitle && (
-            <p
-              className={`${
-                isSelected
-                  ? "text-xs text-light truncate"
-                  : "text-xs text-dark truncate hover:text-[#f9fafb]"
-              }`}
-            >
-              {subtitle}
-            </p>
-          )}
+          <p className="text-sm font-medium truncate">{title}</p>
+
+          {subtitle && <p className="text-xs truncate">{subtitle}</p>}
         </div>
 
         <div className="flex items-center">

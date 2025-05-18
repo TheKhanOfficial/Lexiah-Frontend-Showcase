@@ -21,7 +21,7 @@ export function Header({
 }: HeaderProps) {
   // Full header when visible
   return (
-    <header className="w-full bg-white shadow-sm relative z-10">
+    <header className="w-full bg-[#F9FAFB] shadow-sm relative z-10">
       <div className="h-16 px-4 flex justify-between items-center">
         {/* Logo on the left */}
         <div className="flex items-center">
