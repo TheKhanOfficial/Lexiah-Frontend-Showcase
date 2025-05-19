@@ -93,7 +93,7 @@ export function List<T extends { id: string }>({
 
   return (
     <div className="flex flex-col h-full">
-      <div className="p-4 border-b border-gray-200">
+      <div className="p-4">
         <h2 className="font-semibold text-gray-700">{title}</h2>
       </div>
 
@@ -122,32 +122,34 @@ export function List<T extends { id: string }>({
       )}
 
       {/* AddNewItem at the top */}
-      <div className="border-b border-gray-200">
-        <AddNewItem
-          userId={userId}
-          caseId={caseId}
-          itemType={itemType}
-          onSuccess={handleItemAdded}
-          onError={handleItemError}
-          text={addItemText}
-          fileUploadEnabled={fileUploadEnabled}
-        />
-      </div>
+      <div className="flex flex-col h-full space-y-1">
+        <div>
+          <AddNewItem
+            userId={userId}
+            caseId={caseId}
+            itemType={itemType}
+            onSuccess={handleItemAdded}
+            onError={handleItemError}
+            text={addItemText}
+            fileUploadEnabled={fileUploadEnabled}
+          />
+        </div>
 
-      <div className="flex-grow overflow-y-auto">
-        {isLoading ? (
-          <div className="flex items-center justify-center h-full p-4">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-          </div>
-        ) : sortedItems.length === 0 ? (
-          <div className="flex items-center justify-center h-full p-4 text-gray-500">
-            {emptyMessage}
-          </div>
-        ) : (
-          <ul className="divide-y divide-gray-200">
-            {sortedItems.map((item, index) => renderItem(item, index))}
-          </ul>
-        )}
+        <div className="flex-grow overflow-y-auto">
+          {isLoading ? (
+            <div className="flex items-center justify-center h-full p-4">
+              <div className="animate-spin rounded-full h-8 w-8"></div>
+            </div>
+          ) : sortedItems.length === 0 ? (
+            <div className="flex items-center justify-center h-full p-4 text-gray-500">
+              {emptyMessage}
+            </div>
+          ) : (
+            <ul className="space-y-1">
+              {sortedItems.map((item, index) => renderItem(item, index))}
+            </ul>
+          )}
+        </div>
       </div>
     </div>
   );

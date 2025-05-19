@@ -125,13 +125,17 @@ body {
 
 @layer components {
   .btn-primary {
-    @apply bg-[#f9fafb] text-[#111827] border-[#111827] 
+    @apply border border-gray-300 bg-[#f9fafb] text-[#111827]
          hover:bg-[#111827] hover:text-[#f9fafb] 
          p-2 shadow-sm z-10 flex items-center justify-center rounded-md;
   }
 
   .on-click {
     @apply bg-[#111827] text-[#f9fafb];
+  }
+
+  .tab {
+    @apply px-4 py-2 text-sm font-medium border border-b-0 rounded-t-[5rem] shadow-sm focus:outline-none;
   }
 
   /*.list-item {

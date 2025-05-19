@@ -196,7 +196,7 @@ export function AddNewItem({
     <>
       <button
         onClick={handleOpenModal}
-        className="w-full py-3 px-4 flex items-center text-red-600 hover:bg-[#111827] transition-colors duration-150"
+        className="rounded-md w-full py-3 px-4 flex items-center text-red-600 hover:bg-[#111827] transition-colors duration-150"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"

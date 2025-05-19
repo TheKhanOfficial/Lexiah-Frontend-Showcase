@@ -27,10 +27,10 @@ export function WorkspaceTabs({
             className="flex-1 text-center"
           >
             <div
-              className={`py-4 px-1 border-b-2 text-sm font-medium whitespace-nowrap ${
+              className={`tab py-4 px-1 text-sm font-medium whitespace-nowrap ${
                 activeTab === tab.id
-                  ? "border-gray-800 text-gray-900 font-semibold"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  ? "border-gray-800 text-[#F9FAFB] bg-[#111827] font-semibold"
+                  : "border-transparent hover:text-[#F9FAFB] text-[#111827] hover:bg-[#111827]"
               }`}
             >
               {tab.label}

@@ -70,7 +70,7 @@ export function RenameDeleteModal({
                 value={inputValue}
                 onChange={(e) => setInputValue?.(e.target.value)}
                 onKeyDown={handleKeyDown}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
                 placeholder="Enter name"
                 autoFocus
                 disabled={isLoading}
@@ -100,7 +100,7 @@ export function RenameDeleteModal({
 
         <div className="flex justify-end space-x-2">
           <button
-            className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-100 disabled:opacity-50"
+            className="px-4 py-2 border border-gray-300 rounded-full hover:bg-gray-100 disabled:opacity-50"
             onClick={onClose}
             disabled={isLoading}
           >
@@ -110,8 +110,8 @@ export function RenameDeleteModal({
             className={`px-4 py-2 ${
               type === "delete"
                 ? "bg-red-600 hover:bg-red-700"
-                : "bg-indigo-600 hover:bg-indigo-700"
-            } text-white rounded-md disabled:bg-opacity-50 flex items-center`}
+                : "bg-red-600 hover:bg-red-700"
+            } text-white rounded-full disabled:bg-opacity-50 flex items-center`}
             onClick={onConfirm}
             disabled={
               isLoading ||

@@ -3,6 +3,7 @@
 import { ToggleFullscreen } from "./ToggleFullscreen";
 import { ToggleHideShow } from "./ToggleHideShow";
 import { ToggleSplitscreen } from "./ToggleSplitscreen";
+import Image from "next/image";
 
 interface HeaderProps {
   children?: React.ReactNode;
@@ -21,11 +22,13 @@ export function Header({
 }: HeaderProps) {
   // Full header when visible
   return (
-    <header className="w-full bg-[#F9FAFB] shadow-sm relative z-10">
-      <div className="h-16 px-4 flex justify-between items-center">
+    <header className="border-b border-gray-200 w-full bg-[#F9FAFB] shadow-sm relative z-10">
+      <div className="border-gray-200 h-16 px-4 flex justify-between items-center">
         {/* Logo on the left */}
         <div className="flex items-center">
-          <h1 className="text-xl font-bold text-red-600">Lexia AI</h1>
+          <h1 className="text-xl font-bold text-red-600">
+            <Image src="/lexiah.svg" alt="Lexiah AI" width={200} height={60} />
+          </h1>
         </div>
 
         {/* Case name in the middle (children prop) */}
@@ -42,7 +45,7 @@ export function Header({
       </div>
 
       {/* Toggle button positioned exactly at the bottom edge of the header */}
-      <div className="absolute -bottom-5 right-4">
+      <div className="absolute -bottom-8 right-4">
         <ToggleHideShow
           isVisible={isVisible}
           onToggle={onToggle}
