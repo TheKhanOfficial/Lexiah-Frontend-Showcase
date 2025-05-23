@@ -4,7 +4,7 @@ import { useState, FormEvent, useRef, useEffect } from "react";
 import { Search, Send } from "lucide-react";
 
 interface InputBarProps {
-  onSubmit: (text: string, isDocumentSearch: boolean) => void;
+  onSubmit: (text: string) => void;
   placeholder?: string;
 }
 
@@ -13,7 +13,6 @@ export function InputBar({
   placeholder = "Type a message or search query...",
 }: InputBarProps) {
   const [inputText, setInputText] = useState("");
-  const [isDocumentSearch, setIsDocumentSearch] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Focus input when component mounts
@@ -27,16 +26,8 @@ export function InputBar({
     e.preventDefault();
 
     if (inputText.trim()) {
-      onSubmit(inputText.trim(), isDocumentSearch);
+      onSubmit(inputText.trim());
       setInputText("");
-    }
-  };
-
-  const toggleMode = () => {
-    setIsDocumentSearch((prev) => !prev);
-    // Re-focus the input after toggling
-    if (inputRef.current) {
-      inputRef.current.focus();
     }
   };
 
@@ -49,9 +40,7 @@ export function InputBar({
             type="text"
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
-            placeholder={
-              isDocumentSearch ? "Search in documents..." : "Type a message..."
-            }
+            placeholder={"Type a message..."}
             className="w-full py-2 px-4 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
           />
           <button
@@ -59,11 +48,7 @@ export function InputBar({
             disabled={!inputText.trim()}
             className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 disabled:text-gray-300 disabled:hover:text-gray-300 disabled:cursor-not-allowed"
           >
-            {isDocumentSearch ? (
-              <Search className="h-5 w-5" />
-            ) : (
-              <Send className="h-5 w-5" />
-            )}
+            <Send className="h-5 w-5" />
           </button>
         </div>
       </form>
