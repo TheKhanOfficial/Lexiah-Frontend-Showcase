@@ -216,7 +216,7 @@ export default function DocumentWorkspace({
         itemType="document"
         onItemAdded={handleDocumentAdded}
         onAddItemError={handleAddItemError}
-        addItemText="Add New Document"
+        addItemText="New Document"
         fileUploadEnabled={true}
         sortBy="created_at"
         sortDirection="desc"

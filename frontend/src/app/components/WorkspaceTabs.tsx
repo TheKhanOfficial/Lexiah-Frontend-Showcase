@@ -29,8 +29,8 @@ export function WorkspaceTabs({
             <div
               className={`tab py-4 px-1 text-sm font-medium whitespace-nowrap ${
                 activeTab === tab.id
-                  ? "border-gray-800 text-[#F9FAFB] bg-[#111827] font-semibold"
-                  : "border-transparent hover:text-[#F9FAFB] text-[#111827] hover:bg-[#111827]"
+                  ? "border-[#111827] text-[#F9FAFB] bg-[#111827] font-semibold"
+                  : "border-transparent hover:text-[#F9FAFB] text-[#] hover:bg-[#111827]"
               }`}
             >
               {tab.label}

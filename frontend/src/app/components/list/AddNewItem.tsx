@@ -235,12 +235,6 @@ export function AddNewItem({
               )}
 
               <div className="mb-4">
-                <label
-                  htmlFor="name-input"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Name
-                </label>
                 <input
                   id="name-input"
                   type="text"
@@ -340,14 +334,14 @@ export function AddNewItem({
 
               <div className="flex justify-end space-x-2">
                 <button
-                  className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-100 disabled:opacity-50"
+                  className="rounded-full px-4 py-2 border border-gray-300 hover:bg-gray-100 disabled:opacity-50"
                   onClick={handleCloseModal}
                   disabled={isLoading}
                 >
                   Cancel
                 </button>
                 <button
-                  className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:bg-red-300 disabled:cursor-not-allowed flex items-center"
+                  className="px-4 py-2 bg-red-600 text-white rounded-full hover:bg-red-700 disabled:bg-red-300 disabled:cursor-not-allowed flex items-center"
                   onClick={handleSubmit}
                   disabled={!inputValue.trim() || isLoading}
                 >

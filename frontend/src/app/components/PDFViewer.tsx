@@ -10,6 +10,7 @@ import "react-pdf/dist/esm/Page/TextLayer.css";
 import { InputBar } from "@/app/components/InputBar";
 import { ToggleHideShow } from "@/app/components/ToggleHideShow";
 import { getAIResponse } from "@/utils/api";
+import ReactMarkdown from "react-markdown";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
@@ -674,7 +675,7 @@ Remember, Your goal is to write the single best document summary in the history 
                 href={document.public_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs px-2 py-1 bg-indigo-100 text-indigo-700 rounded-md hover:bg-indigo-200"
+                className="text-xs px-2 py-1 bg-red-100 text-red-500 rounded-md hover:bg-red-200"
               >
                 Download
               </a>
@@ -695,7 +696,7 @@ Remember, Your goal is to write the single best document summary in the history 
                   onLoadSuccess={onDocumentLoadSuccess}
                   loading={
                     <div className="flex items-center justify-center h-full">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-500"></div>
                     </div>
                   }
                   error={
@@ -740,14 +741,14 @@ Remember, Your goal is to write the single best document summary in the history 
                     Document Summary
                   </h3>
                   {isSummarizing && (
-                    <div className="ml-3 animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-500"></div>
+                    <div className="ml-3 animate-spin rounded-full h-4 w-4 border-b-2 border-red-500"></div>
                   )}
                 </div>
 
                 {!isSummarizing && !showConfirmDialog && (
                   <button
                     onClick={handleGenerateSummary}
-                    className="px-3 py-1 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-700"
+                    className="px-3 py-1 bg-red-500 text-white text-sm rounded-md hover:bg-red-700"
                   >
                     Generate Summary
                   </button>
@@ -755,8 +756,8 @@ Remember, Your goal is to write the single best document summary in the history 
               </div>
 
               {showConfirmDialog ? (
-                <div className="bg-yellow-50 p-4 rounded-md mb-4">
-                  <p className="text-sm text-yellow-800 mb-3">
+                <div className="bg-red-50 p-4 rounded-md mb-4">
+                  <p className="text-sm text-red-800 mb-3">
                     A summary already exists. Do you want to replace it with a
                     new one?
                   </p>
@@ -766,7 +767,7 @@ Remember, Your goal is to write the single best document summary in the history 
                         setShowConfirmDialog(false);
                         setShowInstructionsModal(true);
                       }}
-                      className="px-3 py-1 bg-yellow-600 text-white text-sm rounded-md hover:bg-yellow-700"
+                      className="px-3 py-1 bg-red-600 text-white text-sm rounded-md hover:bg-red-700"
                     >
                       Yes, replace
                     </button>
@@ -783,11 +784,9 @@ Remember, Your goal is to write the single best document summary in the history 
               {isSummarizing ? (
                 <p className="text-gray-600">{docSummary}</p>
               ) : (
-                <div className="prose prose-sm">
+                <div className="prose prose-sm max-w-none text-gray-700">
                   {docSummary ? (
-                    <div className="whitespace-pre-wrap text-gray-700">
-                      {docSummary}
-                    </div>
+                    <ReactMarkdown>{docSummary}</ReactMarkdown>
                   ) : (
                     <p className="text-gray-500">
                       Click "Generate Summary" to create a summary of this

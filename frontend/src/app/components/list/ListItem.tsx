@@ -63,7 +63,7 @@ export function ListItem({
     >
       <div className="p-4 flex items-center justify-between">
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium truncate">{title}</p>
+          <p className="text-base font-medium truncate">{title}</p>
 
           {subtitle && <p className="text-xs truncate">{subtitle}</p>}
         </div>

@@ -357,7 +357,7 @@ export default function NoteViewer({
                     saveMutation.mutate(content);
                   }
                 }}
-                className="text-xs px-3 py-1 bg-indigo-50 text-indigo-700 rounded-md hover:bg-indigo-100 disabled:opacity-50"
+                className="text-xs px-3 py-1 bg-red-50 text-red-500 rounded-md hover:bg-red-100 disabled:opacity-50"
               >
                 Save
               </button>
@@ -365,7 +365,7 @@ export default function NoteViewer({
               <div className="h-6 border-l border-gray-300 mx-2"></div>
               <button
                 onClick={exportToDocx}
-                className="text-xs px-2 py-1 bg-indigo-100 text-indigo-700 rounded-md hover:bg-indigo-200"
+                className="text-xs px-2 py-1 bg-red-100 text-red-500 rounded-md hover:bg-red-200"
               >
                 Export to .docx
               </button>
@@ -384,7 +384,7 @@ export default function NoteViewer({
               {editor ? (
                 <EditorContent editor={editor} />
               ) : (
-                <div className="text-gray-400 text-center">
+                <div className="text-[#111827] text-center">
                   Loading editor...
                 </div>
               )}

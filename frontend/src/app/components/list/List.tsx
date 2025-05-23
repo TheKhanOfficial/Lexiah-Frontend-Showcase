@@ -93,10 +93,6 @@ export function List<T extends { id: string }>({
 
   return (
     <div className="flex flex-col h-full">
-      <div className="p-4">
-        <h2 className="font-semibold text-gray-700">{title}</h2>
-      </div>
-
       {/* Error message display */}
       {errorMessage && (
         <div className="bg-red-50 border-l-4 border-red-500 p-4 m-2">
@@ -123,7 +119,7 @@ export function List<T extends { id: string }>({
 
       {/* AddNewItem at the top */}
       <div className="flex flex-col h-full space-y-1">
-        <div>
+        <div className="mt-2">
           <AddNewItem
             userId={userId}
             caseId={caseId}

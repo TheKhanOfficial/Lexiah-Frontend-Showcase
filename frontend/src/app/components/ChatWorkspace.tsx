@@ -328,14 +328,14 @@ const ChatWorkspace = forwardRef<ChatWorkspaceHandle, ChatWorkspaceProps>(
                 <div className="flex items-center justify-end space-x-3">
                   <button
                     onClick={() => setShowDeleteModal(false)}
-                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 font-medium"
+                    className="px-4 py-2 border border-gray-300 rounded-full text-gray-700 hover:bg-gray-50 font-medium"
                     disabled={isModalLoading}
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleConfirmDelete}
-                    className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 font-medium"
+                    className="px-4 py-2 bg-red-600 text-white rounded-full hover:bg-red-700 font-medium"
                     disabled={isModalLoading}
                   >
                     {isModalLoading ? (

@@ -133,9 +133,9 @@ body {
   .on-click {
     @apply bg-[#111827] text-[#f9fafb];
   }
-
   .tab {
-    @apply px-4 py-2 text-sm font-medium border border-b-0 rounded-t-[5rem] shadow-sm focus:outline-none;
+    @apply px-6 py-2 text-sm font-medium bg-[#f9fafb] focus:outline-none;
+    clip-path: polygon(0% 100%, 100% 100%, 95% 5%, 90% 0%, 10% 0%, 5% 5%);
   }
 
   /*.list-item {
