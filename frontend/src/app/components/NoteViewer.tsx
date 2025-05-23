@@ -290,10 +290,10 @@ export default function NoteViewer({
               </h3>
               <div className="text-xs text-gray-500">
                 {saveStatus === "saved" && (
-                  <span className="text-green-600">Saved</span>
+                  <span className="text-[#1e3a8a]">Saved</span>
                 )}
                 {saveStatus === "saving" && (
-                  <span className="text-yellow-600">Saving...</span>
+                  <span className="text-[#2563eb]">Saving...</span>
                 )}
                 {saveStatus === "error" && (
                   <span className="text-red-600">Error saving</span>
@@ -357,7 +357,7 @@ export default function NoteViewer({
                     saveMutation.mutate(content);
                   }
                 }}
-                className="text-xs px-3 py-1 bg-red-50 text-red-500 rounded-md hover:bg-red-100 disabled:opacity-50"
+                className="text-xs px-3 py-1 bg-[#2563eb] text-[#f9fafb] rounded-md hover:bg-[#1e3a8a] disabled:opacity-50"
               >
                 Save
               </button>
@@ -365,7 +365,7 @@ export default function NoteViewer({
               <div className="h-6 border-l border-gray-300 mx-2"></div>
               <button
                 onClick={exportToDocx}
-                className="text-xs px-2 py-1 bg-red-100 text-red-500 rounded-md hover:bg-red-200"
+                className="text-xs px-2 py-1 bg-[#2563eb] text-[#f9fafb] rounded-md hover:bg-[#1e3a8a]"
               >
                 Export to .docx
               </button>

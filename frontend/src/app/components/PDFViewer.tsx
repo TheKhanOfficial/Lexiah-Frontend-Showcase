@@ -675,7 +675,7 @@ Remember, Your goal is to write the single best document summary in the history 
                 href={document.public_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs px-2 py-1 bg-red-100 text-red-500 rounded-md hover:bg-red-200"
+                className="text-xs px-2 py-1 bg-[#2563eb] text-[#f9fafb] rounded-md hover:bg-[#1e3a8a]"
               >
                 Download
               </a>
@@ -734,7 +734,7 @@ Remember, Your goal is to write the single best document summary in the history 
             {/* Toggle button positioned higher up */}
 
             {/* AI Summary content */}
-            <div className="h-full border-l border-gray-300 overflow-auto bg-white p-4">
+            <div className="h-full border-l border-gray-300 overflow-auto bg-white px-8 py-4">
               <div className="mb-3 flex items-center justify-between">
                 <div className="flex items-center">
                   <h3 className="text-lg font-semibold text-gray-700">
@@ -748,7 +748,7 @@ Remember, Your goal is to write the single best document summary in the history 
                 {!isSummarizing && !showConfirmDialog && (
                   <button
                     onClick={handleGenerateSummary}
-                    className="px-3 py-1 bg-red-500 text-white text-sm rounded-md hover:bg-red-700"
+                    className="px-3 py-1 bg-[#2563eb] text-white text-sm rounded-md hover:bg-[#1e3a8a]"
                   >
                     Generate Summary
                   </button>

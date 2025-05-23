@@ -752,6 +752,9 @@
   .border-transparent {
     border-color: transparent;
   }
+  .bg-\[\#2563eb\] {
+    background-color: #2563eb;
+  }
   .bg-\[\#111827\] {
     background-color: #111827;
   }
@@ -938,6 +941,12 @@
   .whitespace-nowrap {
     white-space: nowrap;
   }
+  .text-\[\#1e3a8a\] {
+    color: #1e3a8a;
+  }
+  .text-\[\#2563eb\] {
+    color: #2563eb;
+  }
   .text-\[\#111827\] {
     color: #111827;
   }
@@ -1096,6 +1105,13 @@
     &:focus-within {
       --tw-outline-style: none;
       outline-style: none;
+    }
+  }
+  .hover\:bg-\[\#1e3a8a\] {
+    &:hover {
+      @media (hover: hover) {
+        background-color: #1e3a8a;
+      }
     }
   }
   .hover\:bg-\[\#111827\] {
