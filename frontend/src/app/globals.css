@@ -134,7 +134,7 @@ body {
     @apply bg-[#111827] text-[#f9fafb];
   }
   .tab {
-    @apply px-6 py-2 text-sm font-medium bg-[#f9fafb] focus:outline-none;
+    @apply px-6 py-2 text-sm font-medium bg-[#f5f3eb] focus:outline-none;
     clip-path: polygon(0% 100%, 100% 100%, 95% 5%, 90% 0%, 10% 0%, 5% 5%);
   }
 

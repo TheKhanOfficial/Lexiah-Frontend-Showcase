@@ -19,7 +19,7 @@ export function WorkspaceTabs({
 }: WorkspaceTabsProps) {
   return (
     <div className="border-b border-gray-200 w-full">
-      <div className="flex w-full">
+      <div className="flex w-full gap-px bg-[#d1d5db]">
         {tabs.map((tab) => (
           <button
             key={tab.id}
