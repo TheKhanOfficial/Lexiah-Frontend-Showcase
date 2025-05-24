@@ -124,9 +124,20 @@ const ChatWorkspace = forwardRef<ChatWorkspaceHandle, ChatWorkspaceProps>(
     // Auto-scroll to bottom when messages change
     useEffect(() => {
       if (endOfMessagesRef.current) {
-        endOfMessagesRef.current.scrollIntoView({ behavior: "smooth" });
+        // 👇 use 'auto' on initial mount
+        endOfMessagesRef.current.scrollIntoView({
+          behavior: isFirstLoad ? "auto" : "smooth",
+        });
       }
     }, [messages]);
+
+    const [isFirstLoad, setIsFirstLoad] = useState(true);
+
+    useEffect(() => {
+      if (messages.length > 0) {
+        setIsFirstLoad(false); // Disable after initial render
+      }
+    }, [messages.length]);
 
     // Format timestamp for display
     const formatTimestamp = (dateString: string) => {
@@ -279,37 +290,41 @@ const ChatWorkspace = forwardRef<ChatWorkspaceHandle, ChatWorkspaceProps>(
 
     return (
       <div className="flex flex-col h-full">
-        {/* Header with Clear Chat button */}
-        <div className="flex justify-end px-4 py-2 border-b border-gray-200">
-          <button
-            onClick={handleClearChat}
-            className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors duration-200"
-          >
-            Clear Chat
-          </button>
-        </div>
+        {/* Scrollable area with sticky header INSIDE */}
+        <div className="flex-1 overflow-y-auto flex flex-col">
+          {/* Sticky Clear Chat button */}
+          <div className="sticky top-0 z-10 bg-[#f9fafb] flex justify-end px-4 py-2 border-b border-gray-200">
+            <button
+              onClick={handleClearChat}
+              className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors duration-200"
+            >
+              Clear Chat
+            </button>
+          </div>
 
-        <div className="flex-1 px-4 py-2">
-          {messages.length === 0 ? (
-            <div className="flex h-full items-center justify-center">
-              <div className="text-center text-gray-500">
-                <h3 className="text-lg font-medium mb-2">Welcome to Chat</h3>
-                <p>Ask any questions about your case documents.</p>
+          {/* Chat content */}
+          <div className="flex-1 px-4 py-2">
+            {messages.length === 0 ? (
+              <div className="flex h-full items-center justify-center">
+                <div className="text-center text-gray-500">
+                  <h3 className="text-lg font-medium mb-2">Welcome to Chat</h3>
+                  <p>Ask any questions about your case documents.</p>
+                </div>
               </div>
-            </div>
-          ) : (
-            <div className="flex-1 overflow-y-auto">
-              {messages.map((message) => (
-                <ChatBubble
-                  key={message.id}
-                  role={message.sender}
-                  content={message.content}
-                  timestamp={formatTimestamp(message.created_at)}
-                />
-              ))}
-              <div ref={endOfMessagesRef} />
-            </div>
-          )}
+            ) : (
+              <div>
+                {messages.map((message) => (
+                  <ChatBubble
+                    key={message.id}
+                    role={message.sender}
+                    content={message.content}
+                    timestamp={formatTimestamp(message.created_at)}
+                  />
+                ))}
+                <div ref={endOfMessagesRef} />
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Confirmation Modal */}
