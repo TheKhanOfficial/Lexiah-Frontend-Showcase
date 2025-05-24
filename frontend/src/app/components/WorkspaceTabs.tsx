@@ -18,7 +18,7 @@ export function WorkspaceTabs({
   onTabChange,
 }: WorkspaceTabsProps) {
   return (
-    <div className="border-b border-gray-200 w-full">
+    <div className="w-full">
       <div className="flex w-full gap-px bg-[#d1d5db]">
         {tabs.map((tab) => (
           <button
