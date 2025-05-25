@@ -531,9 +531,6 @@
   .w-\[8\.5in\] {
     width: 8.5in;
   }
-  .w-\[25\%\] {
-    width: 25%;
-  }
   .w-full {
     width: 100%;
   }
@@ -819,9 +816,6 @@
   .bg-gray-200 {
     background-color: var(--color-gray-200);
   }
-  .bg-gray-700 {
-    background-color: var(--color-gray-700);
-  }
   .bg-indigo-600 {
     background-color: var(--color-indigo-600);
   }
@@ -1081,9 +1075,6 @@
   }
   .opacity-75 {
     opacity: 75%;
-  }
-  .opacity-100 {
-    opacity: 100%;
   }
   .shadow {
     --tw-shadow: 0 1px 3px 0 var(--tw-shadow-color, rgb(0 0 0 / 0.1)), 0 1px 2px -1px var(--tw-shadow-color, rgb(0 0 0 / 0.1));
