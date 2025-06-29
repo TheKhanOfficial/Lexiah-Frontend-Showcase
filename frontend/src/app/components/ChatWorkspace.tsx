@@ -293,7 +293,7 @@ const ChatWorkspace = forwardRef<ChatWorkspaceHandle, ChatWorkspaceProps>(
       <div className="flex flex-col h-full">
         {/* Scrollable area with sticky header INSIDE */}
         <div className="flex flex-col h-full relative">
-          <div className="sticky top-0 z-10 bg-[#f9fafb] flex justify-end px-4 py-2 border-b border-gray-200">
+          <div className="sticky top-0 z-10 flex justify-end px-4 py-2 border-b border-gray-200">
             <button
               onClick={handleClearChat}
               className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors duration-200"

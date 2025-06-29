@@ -22,7 +22,7 @@ export function Header({
 }: HeaderProps) {
   // Full header when visible
   return (
-    <header className="border-b border-gray-200 w-full bg-[#F9FAFB] shadow-md relative z-10">
+    <header className="border-b border-gray-200 w-full bg-[#F9FAFB] shadow-sm relative z-10">
       <div className="border-gray-200 h-16 px-4 flex justify-between items-center">
         {/* Logo on the left */}
         <div className="flex items-center">

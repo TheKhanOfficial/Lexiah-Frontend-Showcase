@@ -78,6 +78,7 @@
     --color-red-600: oklch(57.7% 0.245 27.325);
     --color-red-700: oklch(50.5% 0.213 27.518);
     --color-red-800: oklch(44.4% 0.177 26.899);
+    --color-green-500: oklch(72.3% 0.219 149.579);
     --color-indigo-500: oklch(58.5% 0.233 277.117);
     --color-indigo-600: oklch(51.1% 0.262 276.966);
     --color-indigo-700: oklch(45.7% 0.24 277.023);
@@ -315,6 +316,24 @@
   .top-24 {
     top: calc(var(--spacing) * 24);
   }
+  .-right-3 {
+    right: calc(var(--spacing) * -3);
+  }
+  .-right-4 {
+    right: calc(var(--spacing) * -4);
+  }
+  .-right-8 {
+    right: calc(var(--spacing) * -8);
+  }
+  .-right-10 {
+    right: calc(var(--spacing) * -10);
+  }
+  .-right-50 {
+    right: calc(var(--spacing) * -50);
+  }
+  .-right-\[16px\] {
+    right: calc(16px * -1);
+  }
   .right-0 {
     right: calc(var(--spacing) * 0);
   }
@@ -326,6 +345,9 @@
   }
   .-bottom-8 {
     bottom: calc(var(--spacing) * -8);
+  }
+  .-left-3 {
+    left: calc(var(--spacing) * -3);
   }
   .left-0 {
     left: calc(var(--spacing) * 0);
@@ -362,6 +384,9 @@
     @media (width >= 96rem) {
       max-width: 96rem;
     }
+  }
+  .m-0 {
+    margin: calc(var(--spacing) * 0);
   }
   .m-2 {
     margin: calc(var(--spacing) * 2);
@@ -422,6 +447,9 @@
   }
   .ml-auto {
     margin-left: auto;
+  }
+  .box-border {
+    box-sizing: border-box;
   }
   .block {
     display: block;
@@ -816,6 +844,9 @@
   .bg-gray-200 {
     background-color: var(--color-gray-200);
   }
+  .bg-green-500 {
+    background-color: var(--color-green-500);
+  }
   .bg-indigo-600 {
     background-color: var(--color-indigo-600);
   }
@@ -840,6 +871,9 @@
   .bg-secondary {
     background-color: var(--secondary);
   }
+  .bg-transparent {
+    background-color: transparent;
+  }
   .bg-white {
     background-color: var(--color-white);
   }
@@ -860,8 +894,14 @@
     --tw-gradient-to: #f9f8f6;
     --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
   }
+  .bg-clip-border {
+    background-clip: border-box;
+  }
   .fill-current {
     fill: currentColor;
+  }
+  .p-0 {
+    padding: calc(var(--spacing) * 0);
   }
   .p-1 {
     padding: calc(var(--spacing) * 1);
@@ -1086,6 +1126,10 @@
   }
   .shadow-md {
     --tw-shadow: 0 4px 6px -1px var(--tw-shadow-color, rgb(0 0 0 / 0.1)), 0 2px 4px -2px var(--tw-shadow-color, rgb(0 0 0 / 0.1));
+    box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
+  }
+  .shadow-none {
+    --tw-shadow: 0 0 #0000;
     box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
   }
   .shadow-sm {
@@ -2008,7 +2052,7 @@ body {
   font-style: normal;
   font-weight: 100 900;
   font-display: swap;
-  src: url(/_next/static/media/6d93bde91c0c2823-s.woff2) format('woff2');
+  src: url(/_next/static/media/8e9860b6e62d6359-s.woff2) format('woff2');
   unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 /* latin */
@@ -2017,10 +2061,10 @@ body {
   font-style: normal;
   font-weight: 100 900;
   font-display: swap;
-  src: url(/_next/static/media/a34f9d1faa5f3315-s.p.woff2) format('woff2');
+  src: url(/_next/static/media/e4af272ccee01ff0-s.p.woff2) format('woff2');
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }@font-face {font-family: 'Inter Fallback';src: local("Arial");ascent-override: 90.44%;descent-override: 22.52%;line-gap-override: 0.00%;size-adjust: 107.12%
-}.__className_d65c78 {font-family: 'Inter', 'Inter Fallback';font-style: normal
-}.__variable_d65c78 {--font-sans: 'Inter', 'Inter Fallback'
+}.__className_e8ce0c {font-family: 'Inter', 'Inter Fallback';font-style: normal
+}.__variable_e8ce0c {--font-sans: 'Inter', 'Inter Fallback'
 }
 
