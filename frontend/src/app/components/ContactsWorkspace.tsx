@@ -4,7 +4,8 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { createPortal } from "react-dom";
-import { supabase } from "@/utils/supabase";
+import { supabase, deleteAllContacts } from "@/utils/supabase";
+import { useRef, useEffect } from "react";
 
 // Types
 interface Contact {
@@ -83,6 +84,9 @@ export default function ContactsWorkspace({
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [showDeleteAllModal, setShowDeleteAllModal] = useState(false);
 
   // Form states
   const [formData, setFormData] = useState({
@@ -151,6 +155,23 @@ export default function ContactsWorkspace({
     },
   });
 
+  const deleteAllMutation = useMutation({
+    mutationFn: () => deleteAllContacts(caseId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contacts", caseId] });
+      setError(null);
+    },
+    onError: (err) => {
+      setError(
+        err instanceof Error ? err.message : "Failed to delete all contacts"
+      );
+    },
+    onSettled: () => {
+      // ✅ always close modal after mutation is finished
+      setShowDeleteAllModal(false);
+    },
+  });
+
   // Form handlers
   const resetForm = () => {
     setFormData({
@@ -181,10 +202,9 @@ export default function ContactsWorkspace({
     setError(null);
   };
 
-  const handleDeleteContact = async (id: string) => {
-    if (window.confirm("Are you sure you want to delete this contact?")) {
-      deleteMutation.mutate(id);
-    }
+  const handleDeleteContact = (id: string) => {
+    setPendingDeleteId(id);
+    setShowDeleteModal(true);
   };
 
   const handleSubmitAdd = (e: React.FormEvent) => {
@@ -230,6 +250,8 @@ export default function ContactsWorkspace({
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const scrollRef = useRef<HTMLDivElement>(null);
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -243,12 +265,21 @@ export default function ContactsWorkspace({
       {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold text-gray-900">Contacts</h2>
-        <button
-          onClick={handleAddContact}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          Add Contact
-        </button>
+        <div className="flex space-x-3">
+          <button
+            onClick={handleAddContact}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Add Contact
+          </button>
+          <button
+            onClick={() => setShowDeleteAllModal(true)}
+            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-[#f9fafb] rounded-lg hover:bg-red-700transition-colors"
+            disabled={deleteAllMutation.isPending}
+          >
+            {deleteAllMutation.isPending ? "Deleting..." : "Delete All"}
+          </button>
+        </div>
       </div>
 
       {/* Error display */}
@@ -266,64 +297,80 @@ export default function ContactsWorkspace({
           </p>
         </div>
       ) : (
-        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-          {/* Table header */}
-          <div className="grid grid-cols-12 gap-4 p-4 bg-gray-50 border-b border-gray-200 text-sm font-medium text-gray-700">
-            <div className="col-span-3">Name</div>
-            <div className="col-span-2">Phone</div>
-            <div className="col-span-3">Email</div>
-            <div className="col-span-2">Address</div>
-            <div className="col-span-1">Notes</div>
-            <div className="col-span-1">Actions</div>
-          </div>
+        <div
+          ref={scrollRef}
+          className="overflow-x-auto whitespace-nowrap"
+          style={{ maxWidth: "100%", overflowY: "hidden" }}
+          onWheel={(e) => {
+            if (e.deltaY !== 0) {
+              e.preventDefault();
+              e.currentTarget.scrollLeft += e.deltaY;
+            }
+          }}
+        >
+          <div className="min-w-[900px] bg-white border border-gray-200 rounded-lg overflow-hidden">
+            {/* Table header */}
+            <div className="grid grid-cols-12 gap-4 p-4 bg-gray-50 border-b border-gray-200 text-sm font-medium text-gray-700">
+              <div className="col-span-3">Name</div>
+              <div className="col-span-2">Phone</div>
+              <div className="col-span-3">Email</div>
+              <div className="col-span-2">Address</div>
+              <div className="col-span-1">Notes</div>
+              <div className="col-span-1">Actions</div>
+            </div>
 
-          {/* Table rows */}
-          <div className="divide-y divide-gray-200">
-            {contacts.map((contact) => (
-              <div
-                key={contact.id}
-                className="grid grid-cols-12 gap-4 p-4 hover:bg-gray-50 transition-colors"
-              >
-                <div className="col-span-3">
-                  <span className="font-medium text-gray-900">
-                    {contact.name}
-                  </span>
-                </div>
-                <div className="col-span-2">
-                  <span className="text-gray-600">{contact.phone || "—"}</span>
-                </div>
-                <div className="col-span-3">
-                  <span className="text-gray-600">{contact.email || "—"}</span>
-                </div>
-                <div className="col-span-2">
-                  <span className="text-gray-600 text-sm">
-                    {contact.address || "—"}
-                  </span>
-                </div>
-                <div className="col-span-1">
-                  <span className="text-gray-600 text-sm whitespace-pre-wrap break-words">
-                    {contact.notes || "—"}
-                  </span>
-                </div>
-                <div className="col-span-1">
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => handleEditContact(contact)}
-                      className="text-blue-600 hover:text-blue-800 text-sm"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDeleteContact(contact.id)}
-                      className="text-red-600 hover:text-red-800 text-sm"
-                      disabled={deleteMutation.isPending}
-                    >
-                      Delete
-                    </button>
+            {/* Table rows */}
+            <div className="divide-y divide-gray-200">
+              {contacts.map((contact) => (
+                <div
+                  key={contact.id}
+                  className="grid grid-cols-12 gap-4 p-4 hover:bg-gray-50 transition-colors"
+                >
+                  <div className="col-span-3">
+                    <span className="font-medium text-gray-900 truncate block">
+                      {contact.name}
+                    </span>
+                  </div>
+                  <div className="col-span-2">
+                    <span className="text-gray-600 break-words whitespace-normal block">
+                      {contact.phone || "—"}
+                    </span>
+                  </div>
+                  <div className="col-span-3">
+                    <span className="text-gray-600 break-words whitespace-normal block">
+                      {contact.email || "—"}
+                    </span>
+                  </div>
+                  <div className="col-span-2">
+                    <span className="text-gray-600 text-sm break-words whitespace-normal block">
+                      {contact.address || "—"}
+                    </span>
+                  </div>
+                  <div className="col-span-1">
+                    <span className="text-gray-600 text-sm whitespace-pre-wrap break-words block">
+                      {contact.notes || "—"}
+                    </span>
+                  </div>
+                  <div className="col-span-1">
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => handleEditContact(contact)}
+                        className="text-blue-600 hover:text-blue-800 text-sm"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDeleteContact(contact.id)}
+                        className="text-red-600 hover:text-red-800 text-sm"
+                        disabled={deleteMutation.isPending}
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       )}
@@ -511,6 +558,78 @@ export default function ContactsWorkspace({
                   </button>
                 </div>
               </form>
+            </div>
+          </div>,
+          document.body
+        )}
+      {showDeleteModal &&
+        typeof window !== "undefined" &&
+        createPortal(
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]">
+            <div className="bg-white rounded-lg overflow-hidden shadow-xl max-w-md w-full mx-4">
+              <div className="p-6">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">
+                  Delete Contact
+                </h3>
+                <p className="text-gray-600 mb-6">
+                  Are you sure you want to delete this contact? This action
+                  cannot be undone.
+                </p>
+                <div className="flex items-center justify-end space-x-3">
+                  <button
+                    onClick={() => setShowDeleteModal(false)}
+                    className="px-4 py-2 border border-gray-300 rounded-full text-gray-700 hover:bg-gray-50 font-medium"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (pendingDeleteId) {
+                        deleteMutation.mutate(pendingDeleteId);
+                        setShowDeleteModal(false);
+                        setPendingDeleteId(null);
+                      }
+                    }}
+                    className="px-4 py-2 bg-red-600 text-white rounded-full hover:bg-red-700 font-medium"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
+      {showDeleteAllModal &&
+        typeof window !== "undefined" &&
+        createPortal(
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]">
+            <div className="bg-white rounded-lg overflow-hidden shadow-xl max-w-md w-full mx-4">
+              <div className="p-6">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">
+                  Delete All Contacts
+                </h3>
+                <p className="text-gray-600 mb-6">
+                  Are you sure you want to delete <strong>ALL contacts</strong>{" "}
+                  for this case? This action cannot be undone.
+                </p>
+                <div className="flex items-center justify-end space-x-3">
+                  <button
+                    onClick={() => setShowDeleteAllModal(false)}
+                    className="px-4 py-2 border border-gray-300 rounded-full text-gray-700 hover:bg-gray-50 font-medium"
+                    disabled={deleteAllMutation.isPending}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => deleteAllMutation.mutate()}
+                    className="px-4 py-2 bg-red-600 text-[#f9fafb] rounded-full hover:bg-red-700 font-medium"
+                    disabled={deleteAllMutation.isPending}
+                  >
+                    {deleteAllMutation.isPending ? "Deleting..." : "Delete All"}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>,
           document.body

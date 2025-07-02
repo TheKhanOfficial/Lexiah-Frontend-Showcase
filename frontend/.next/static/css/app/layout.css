@@ -578,6 +578,9 @@
   .min-w-\[8rem\] {
     min-width: 8rem;
   }
+  .min-w-\[900px\] {
+    min-width: 900px;
+  }
   .flex-1 {
     flex: 1;
   }
@@ -727,6 +730,9 @@
   }
   .overflow-hidden {
     overflow: hidden;
+  }
+  .overflow-x-auto {
+    overflow-x: auto;
   }
   .overflow-x-hidden {
     overflow-x: hidden;
@@ -1046,6 +1052,9 @@
   }
   .break-words {
     overflow-wrap: break-word;
+  }
+  .whitespace-normal {
+    white-space: normal;
   }
   .whitespace-nowrap {
     white-space: nowrap;
