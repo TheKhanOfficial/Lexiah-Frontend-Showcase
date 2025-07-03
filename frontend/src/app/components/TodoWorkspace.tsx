@@ -343,13 +343,25 @@ export default function TodoWorkspace({ userId, caseId }: TodoWorkspaceProps) {
       return;
     }
 
+    const wasAuto = editingTask.auto_urgency;
+    const willBeAuto = formData.auto_urgency;
+    const willHaveDueDate = formData.due_date !== "";
+
+    const updates: any = {
+      name: formData.name.trim(),
+      due_date: formData.due_date || null,
+      auto_urgency: willBeAuto,
+    };
+
+    if (!willBeAuto && wasAuto && willHaveDueDate) {
+      // Freeze the current auto-generated color
+      const currentUrgency = getUrgencyColor(editingTask);
+      updates.manual_color = currentUrgency;
+    }
+
     updateMutation.mutate({
       id: editingTask.id,
-      updates: {
-        name: formData.name.trim(),
-        due_date: formData.due_date || null,
-        auto_urgency: formData.auto_urgency,
-      },
+      updates,
     });
   };
 
@@ -419,9 +431,7 @@ export default function TodoWorkspace({ userId, caseId }: TodoWorkspaceProps) {
         title={
           task.completed
             ? "Task completed"
-            : task.due_date
-            ? `Auto-colored based on due date`
-            : "Click to change color"
+            : "Red = Extremely Urgent, Orange = Urgent, Yellow = Medium Priority, Green = Low Priority"
         }
       />
     );
