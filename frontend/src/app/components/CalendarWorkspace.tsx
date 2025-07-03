@@ -277,12 +277,37 @@ export default function CalendarWorkspace({
       const endMidnight = new Date(end);
       endMidnight.setHours(0, 0, 0, 0);
 
+      const isExactlyOneDay =
+        start.getHours() === 0 &&
+        start.getMinutes() === 0 &&
+        end.getHours() === 0 &&
+        end.getMinutes() === 0 &&
+        end.getTime() - start.getTime() === oneDay;
+
+      // ✅ Handle exact all-day (1 day)
+      if (isExactlyOneDay) {
+        return [
+          {
+            id: `${event.id}-allday`,
+            title: event.title,
+            start: event.start,
+            end: event.end,
+            allDay: true,
+            display: "block",
+            backgroundColor: event.color || "#111827",
+            borderColor: event.color || "#111827",
+            classNames: ["calendar-event"],
+            extendedProps: { type: "calendar", eventId: event.id },
+          },
+        ];
+      }
+
       const events: EventInput[] = [];
 
       const sameDay = startMidnight.getTime() === endMidnight.getTime();
 
       if (sameDay) {
-        // ✨ Handle single-day event as one block
+        // 🎯 Single-day timed event
         events.push({
           id: `${event.id}-single`,
           title: event.title,
@@ -290,15 +315,17 @@ export default function CalendarWorkspace({
           end: event.end,
           allDay: false,
           display: "block",
-          backgroundColor: event.color || "#2563EB",
-          borderColor: event.color || "#2563EB",
+          backgroundColor: event.color || "#111827",
+          borderColor: event.color || "#111827",
           classNames: ["calendar-event"],
           extendedProps: { type: "calendar", eventId: event.id },
         });
         return events;
       }
 
-      // Timed start part (if not midnight)
+      // ⏱ Split multi-day event
+
+      // Start block (timed)
       if (start.getTime() > startMidnight.getTime()) {
         const endOfStart = new Date(startMidnight.getTime() + oneDay);
         events.push({
@@ -308,14 +335,14 @@ export default function CalendarWorkspace({
           end: end < endOfStart ? end.toISOString() : endOfStart.toISOString(),
           allDay: false,
           display: "block",
-          backgroundColor: "#2563EB",
-          borderColor: "#2563EB",
+          backgroundColor: event.color || "#111827",
+          borderColor: event.color || "#111827",
           classNames: ["calendar-event"],
           extendedProps: { type: "calendar", eventId: event.id },
         });
       }
 
-      // All-day in-between days
+      // Middle all-day blocks
       let current = new Date(startMidnight.getTime() + oneDay);
       while (current < endMidnight) {
         const next = new Date(current.getTime() + oneDay);
@@ -325,15 +352,15 @@ export default function CalendarWorkspace({
           start: current.toISOString(),
           end: next.toISOString(),
           allDay: true,
-          backgroundColor: "#2563EB",
-          borderColor: "#2563EB",
+          backgroundColor: event.color || "#111827",
+          borderColor: event.color || "#111827",
           classNames: ["calendar-event"],
           extendedProps: { type: "calendar", eventId: event.id },
         });
         current = next;
       }
 
-      // Timed end part (if not exactly midnight)
+      // End block (timed)
       if (end.getTime() > endMidnight.getTime()) {
         events.push({
           id: `${event.id}-end`,
@@ -342,8 +369,8 @@ export default function CalendarWorkspace({
           end: end.toISOString(),
           allDay: false,
           display: "block",
-          backgroundColor: "#2563EB",
-          borderColor: "#2563EB",
+          backgroundColor: event.color || "#111827",
+          borderColor: event.color || "#111827",
           classNames: ["calendar-event"],
           extendedProps: { type: "calendar", eventId: event.id },
         });
