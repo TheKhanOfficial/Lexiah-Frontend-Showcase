@@ -149,6 +149,17 @@ function isAllDayEvent(start: string, end: string): boolean {
   const startDate = new Date(start);
   const endDate = new Date(end);
 
+  const startsExactlyAtMidnight =
+    startDate.getHours() === 0 &&
+    startDate.getMinutes() === 0 &&
+    startDate.getSeconds() === 0;
+
+  const endsExactlyAtMidnight =
+    endDate.getHours() === 0 &&
+    endDate.getMinutes() === 0 &&
+    endDate.getSeconds() === 0;
+
+  // Calculate full-day span excluding the first and last day if partial
   const startDay = new Date(startDate);
   startDay.setHours(0, 0, 0, 0);
   const endDay = new Date(endDate);
@@ -157,8 +168,8 @@ function isAllDayEvent(start: string, end: string): boolean {
   const diffDays =
     (endDay.getTime() - startDay.getTime()) / (1000 * 60 * 60 * 24);
 
-  // Mark as all-day if spans 1+ full days (e.g. Jan 3 2PM to Jan 6 9AM = 3 full days)
-  return diffDays >= 1;
+  // Only all-day if it starts AND ends exactly at midnight AND spans at least 1 day
+  return startsExactlyAtMidnight && endsExactlyAtMidnight && diffDays >= 1;
 }
 
 export default function CalendarWorkspace({
