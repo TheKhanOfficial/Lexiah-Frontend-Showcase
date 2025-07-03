@@ -29,6 +29,8 @@ interface CalendarEvent {
   title: string;
   start: string;
   end: string;
+  notes?: string | null;
+  color?: string | null;
   created_at: string;
 }
 
@@ -196,6 +198,7 @@ export default function CalendarWorkspace({
     end: "",
     isAllDay: false,
     notes: "",
+    color: "#2563EB",
   });
   const [error, setError] = useState<string | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(
@@ -287,8 +290,8 @@ export default function CalendarWorkspace({
           end: event.end,
           allDay: false,
           display: "block",
-          backgroundColor: "#2563EB",
-          borderColor: "#2563EB",
+          backgroundColor: event.color || "#2563EB",
+          borderColor: event.color || "#2563EB",
           classNames: ["calendar-event"],
           extendedProps: { type: "calendar", eventId: event.id },
         });
@@ -412,6 +415,7 @@ export default function CalendarWorkspace({
       start: startDate.toISOString(),
       end: endDate.toISOString(),
       notes: formData.notes.trim() || null,
+      color: formData.color || "#2563EB",
     };
 
     createEventMutation.mutate(eventData);
@@ -450,8 +454,8 @@ export default function CalendarWorkspace({
   };
 
   const updateNotesMutation = useMutation({
-    mutationFn: (notes: string) =>
-      updateCalendarEvent(selectedEvent!.id, { notes }),
+    mutationFn: (updates: { notes: string; color: string }) =>
+      updateCalendarEvent(selectedEvent!.id, updates),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["calendar_events", caseId] });
     },
@@ -686,6 +690,38 @@ export default function CalendarWorkspace({
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Event Color
+                  </label>
+                  <div className="flex space-x-2">
+                    {[
+                      "#EF4444", // red
+                      "#10B981", // green
+                      "#FACC15", // yellow
+                      "#3B82F6", // blue
+                      "#FB923C", // orange
+                      "#8B5CF6", // purple
+                      "#000000", // black
+                      "#92400E", // brown
+                    ].map((c) => (
+                      <button
+                        key={c}
+                        type="button"
+                        className={`w-6 h-6 rounded-full border-2 ${
+                          formData.color === c
+                            ? "border-gray-900"
+                            : "border-transparent"
+                        }`}
+                        style={{ backgroundColor: c }}
+                        onClick={() =>
+                          setFormData((prev) => ({ ...prev, color: c }))
+                        }
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     Notes
                   </label>
                   <textarea
@@ -743,6 +779,38 @@ export default function CalendarWorkspace({
                 </div>
 
                 <div>
+                  <p className="text-sm text-gray-500">Color</p>
+                  <div className="flex space-x-2 mt-1">
+                    {[
+                      "#EF4444", // red
+                      "#10B981", // green
+                      "#FACC15", // yellow
+                      "#3B82F6", // blue
+                      "#FB923C", // orange
+                      "#8B5CF6", // purple
+                      "#000000", // black
+                      "#92400E", // brown
+                    ].map((c) => (
+                      <button
+                        key={c}
+                        type="button"
+                        className={`w-6 h-6 rounded-full border-2 ${
+                          selectedEvent?.color === c
+                            ? "border-gray-900"
+                            : "border-transparent"
+                        }`}
+                        style={{ backgroundColor: c }}
+                        onClick={() => {
+                          setSelectedEvent((prev) =>
+                            prev ? { ...prev, color: c } : prev
+                          );
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                <div>
                   <p className="text-sm text-gray-500">Notes</p>
                   <textarea
                     value={selectedEvent.notes || ""}
@@ -770,7 +838,10 @@ export default function CalendarWorkspace({
                 <button
                   onClick={() => {
                     if (selectedEvent) {
-                      updateNotesMutation.mutate(selectedEvent.notes || "");
+                      updateNotesMutation.mutate({
+                        notes: selectedEvent.notes || "",
+                        color: selectedEvent.color || "#2563EB",
+                      });
                     }
                     setShowEventModal(false);
                   }}
