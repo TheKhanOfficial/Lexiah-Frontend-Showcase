@@ -254,20 +254,70 @@ export default function CalendarWorkspace({
         },
       })),
     // Calendar events (timed)
-    ...calendarEvents.map((event) => ({
-      id: `event-${event.id}`,
-      title: event.title,
-      start: event.start,
-      end: event.end,
-      allDay: isAllDayEvent(event.start, event.end),
-      backgroundColor: "#2563EB", // Blue
-      borderColor: "#2563EB",
-      classNames: ["calendar-event"],
-      extendedProps: {
-        type: "calendar",
-        eventId: event.id,
-      },
-    })),
+    ...calendarEvents.flatMap((event) => {
+      const start = new Date(event.start);
+      const end = new Date(event.end);
+      const oneDay = 24 * 60 * 60 * 1000;
+
+      const startMidnight = new Date(start);
+      startMidnight.setHours(0, 0, 0, 0);
+
+      const endMidnight = new Date(end);
+      endMidnight.setHours(0, 0, 0, 0);
+
+      const events: EventInput[] = [];
+
+      // Timed start part (if not midnight)
+      if (start.getTime() > startMidnight.getTime()) {
+        const endOfStart = new Date(startMidnight.getTime() + oneDay);
+        events.push({
+          id: `${event.id}-start`,
+          title: event.title,
+          start: start.toISOString(),
+          end: end < endOfStart ? end.toISOString() : endOfStart.toISOString(),
+          allDay: false,
+          backgroundColor: "#2563EB",
+          borderColor: "#2563EB",
+          classNames: ["calendar-event"],
+          extendedProps: { type: "calendar", eventId: event.id },
+        });
+      }
+
+      // All-day in-between days
+      let current = new Date(startMidnight.getTime() + oneDay);
+      while (current < endMidnight) {
+        const next = new Date(current.getTime() + oneDay);
+        events.push({
+          id: `${event.id}-allday-${current.toISOString()}`,
+          title: event.title,
+          start: current.toISOString(),
+          end: next.toISOString(),
+          allDay: true,
+          backgroundColor: "#2563EB",
+          borderColor: "#2563EB",
+          classNames: ["calendar-event"],
+          extendedProps: { type: "calendar", eventId: event.id },
+        });
+        current = next;
+      }
+
+      // Timed end part (if not exactly midnight)
+      if (end.getTime() > endMidnight.getTime()) {
+        events.push({
+          id: `${event.id}-end`,
+          title: event.title,
+          start: endMidnight.toISOString(),
+          end: end.toISOString(),
+          allDay: false,
+          backgroundColor: "#2563EB",
+          borderColor: "#2563EB",
+          classNames: ["calendar-event"],
+          extendedProps: { type: "calendar", eventId: event.id },
+        });
+      }
+
+      return events;
+    }),
   ];
 
   // Form handlers
@@ -292,6 +342,8 @@ export default function CalendarWorkspace({
   };
 
   const handleDateSelect = (selectInfo: DateSelectArg) => {
+    if (currentView !== "timeGridWeek") return; // Only allow selection in week view
+
     const startDate = selectInfo.start;
     const endDate = selectInfo.end;
 
@@ -301,6 +353,7 @@ export default function CalendarWorkspace({
       start: toLocalISOString(startDate),
       end: toLocalISOString(endDate),
       isAllDay: selectInfo.allDay,
+      notes: "",
     });
     setShowAddModal(true);
   };
@@ -485,6 +538,15 @@ export default function CalendarWorkspace({
               weekends={true}
               timeZone="local"
               select={handleDateSelect}
+              dateClick={(info) => {
+                if (currentView === "dayGridMonth") {
+                  const calendarApi = calendarRef.current?.getApi();
+                  if (calendarApi) {
+                    calendarApi.changeView("timeGridWeek", info.date);
+                    setCurrentView("timeGridWeek");
+                  }
+                }
+              }}
               eventClassNames="cursor-pointer"
               eventContent={(eventInfo) => {
                 const isTask = eventInfo.event.extendedProps.type === "task";
