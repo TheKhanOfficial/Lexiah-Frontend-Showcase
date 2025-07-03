@@ -563,7 +563,10 @@ export default function CalendarWorkspace({
               }}
               dayCellClassNames="hover:bg-gray-50 transition-colors"
               eventClick={(clickInfo) => {
-                const eventId = clickInfo.event.id.replace("event-", "");
+                const type = clickInfo.event.extendedProps.type;
+                if (type !== "calendar") return;
+
+                const eventId = clickInfo.event.extendedProps.eventId;
                 const full = calendarEvents.find((e) => e.id === eventId);
                 if (full) {
                   setSelectedEvent(full);
