@@ -130,18 +130,25 @@ function getTaskUrgencyColor(task: Task): UrgencyColor {
   return "green"; // >5 days
 }
 
+function formatMonthYear(date: Date) {
+  return date.toLocaleString("default", {
+    month: "long",
+    year: "numeric",
+  });
+}
+
 function getTaskEventColor(urgency: UrgencyColor): string {
   switch (urgency) {
     case "darkred":
-      return "#7F1D1D"; // Dark red
+      return "#991B1B"; // Tailwind red-800
     case "red":
-      return "#DC2626"; // Red
+      return "#FB923C"; // Tailwind orange-400
     case "yellow":
-      return "#D97706"; // Amber
+      return "#FCD34D"; // Tailwind yellow-300
     case "green":
-      return "#059669"; // Emerald
+      return "#4ADE80"; // Tailwind green-400
     default:
-      return "#059669";
+      return "#4ADE80";
   }
 }
 
@@ -195,6 +202,8 @@ export default function CalendarWorkspace({
     null
   );
   const [showEventModal, setShowEventModal] = useState(false);
+  const [currentDate, setCurrentDate] = useState(new Date());
+
   const deleteEventMutation = useMutation({
     mutationFn: deleteCalendarEvent,
     onSuccess: () => {
@@ -267,6 +276,25 @@ export default function CalendarWorkspace({
 
       const events: EventInput[] = [];
 
+      const sameDay = startMidnight.getTime() === endMidnight.getTime();
+
+      if (sameDay) {
+        // ✨ Handle single-day event as one block
+        events.push({
+          id: `${event.id}-single`,
+          title: event.title,
+          start: event.start,
+          end: event.end,
+          allDay: false,
+          display: "block",
+          backgroundColor: "#2563EB",
+          borderColor: "#2563EB",
+          classNames: ["calendar-event"],
+          extendedProps: { type: "calendar", eventId: event.id },
+        });
+        return events;
+      }
+
       // Timed start part (if not midnight)
       if (start.getTime() > startMidnight.getTime()) {
         const endOfStart = new Date(startMidnight.getTime() + oneDay);
@@ -276,6 +304,7 @@ export default function CalendarWorkspace({
           start: start.toISOString(),
           end: end < endOfStart ? end.toISOString() : endOfStart.toISOString(),
           allDay: false,
+          display: "block",
           backgroundColor: "#2563EB",
           borderColor: "#2563EB",
           classNames: ["calendar-event"],
@@ -309,6 +338,7 @@ export default function CalendarWorkspace({
           start: endMidnight.toISOString(),
           end: end.toISOString(),
           allDay: false,
+          display: "block",
           backgroundColor: "#2563EB",
           borderColor: "#2563EB",
           classNames: ["calendar-event"],
@@ -399,6 +429,7 @@ export default function CalendarWorkspace({
     const calendarApi = calendarRef.current?.getApi();
     if (calendarApi) {
       calendarApi.today();
+      setCurrentDate(calendarApi.getDate());
     }
   };
 
@@ -406,6 +437,7 @@ export default function CalendarWorkspace({
     const calendarApi = calendarRef.current?.getApi();
     if (calendarApi) {
       calendarApi.prev();
+      setCurrentDate(calendarApi.getDate());
     }
   };
 
@@ -413,6 +445,7 @@ export default function CalendarWorkspace({
     const calendarApi = calendarRef.current?.getApi();
     if (calendarApi) {
       calendarApi.next();
+      setCurrentDate(calendarApi.getDate());
     }
   };
 
@@ -472,6 +505,10 @@ export default function CalendarWorkspace({
               ›
             </button>
           </div>
+        </div>
+
+        <div className="text-lg font-medium text-gray-800">
+          {formatMonthYear(currentDate)}
         </div>
 
         {/* View toggle and add button */}
@@ -549,15 +586,9 @@ export default function CalendarWorkspace({
               }}
               eventClassNames="cursor-pointer"
               eventContent={(eventInfo) => {
-                const isTask = eventInfo.event.extendedProps.type === "task";
                 return (
                   <div className="p-1 text-xs font-medium truncate">
                     {eventInfo.event.title}
-                    {isTask && (
-                      <span className="ml-1 opacity-75">
-                        ({eventInfo.event.extendedProps.urgency})
-                      </span>
-                    )}
                   </div>
                 );
               }}
@@ -711,21 +742,20 @@ export default function CalendarWorkspace({
                   </p>
                 </div>
 
-                {selectedEvent.notes && (
-                  <div>
-                    <p className="text-sm text-gray-500">Notes</p>
-                    <textarea
-                      value={selectedEvent.notes || ""}
-                      onChange={(e) => {
-                        setSelectedEvent((prev) =>
-                          prev ? { ...prev, notes: e.target.value } : prev
-                        );
-                      }}
-                      rows={4}
-                      className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                    />
-                  </div>
-                )}
+                <div>
+                  <p className="text-sm text-gray-500">Notes</p>
+                  <textarea
+                    value={selectedEvent.notes || ""}
+                    onChange={(e) => {
+                      setSelectedEvent((prev) =>
+                        prev ? { ...prev, notes: e.target.value } : prev
+                      );
+                    }}
+                    rows={4}
+                    className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                    placeholder="Add notes..."
+                  />
+                </div>
               </div>
 
               <div className="flex space-x-3 pt-6">
