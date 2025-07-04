@@ -586,7 +586,7 @@ export default function CalendarWorkspace({
       {/* Calendar */}
       <div className="flex-1 p-4 overflow-auto">
         <div
-          style={{ height: "800px" }}
+          style={{ height: "1360px" }}
           className="bg-white rounded-lg shadow-sm border border-gray-200"
         >
           <div
@@ -636,32 +636,6 @@ export default function CalendarWorkspace({
                 }
               }}
             />
-          </div>
-        </div>
-      </div>
-
-      {/* Legend */}
-      <div className="px-4 py-2 border-t border-gray-200 bg-gray-50">
-        <div className="flex items-center justify-center space-x-6 text-xs">
-          <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 bg-blue-600 rounded"></div>
-            <span className="text-gray-600">Calendar Events</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 bg-emerald-600 rounded"></div>
-            <span className="text-gray-600">Low Priority Tasks</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 bg-amber-600 rounded"></div>
-            <span className="text-gray-600">Medium Priority Tasks</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 bg-red-600 rounded"></div>
-            <span className="text-gray-600">High Priority Tasks</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 bg-red-900 rounded"></div>
-            <span className="text-gray-600">Urgent Tasks</span>
           </div>
         </div>
       </div>
