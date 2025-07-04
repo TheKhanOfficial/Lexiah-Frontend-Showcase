@@ -76,12 +76,9 @@
     --color-red-600: oklch(57.7% 0.245 27.325);
     --color-red-700: oklch(50.5% 0.213 27.518);
     --color-red-800: oklch(44.4% 0.177 26.899);
-    --color-red-900: oklch(39.6% 0.141 25.723);
     --color-orange-400: oklch(75% 0.183 55.934);
-    --color-amber-600: oklch(66.6% 0.179 58.318);
     --color-yellow-300: oklch(90.5% 0.182 98.111);
     --color-green-400: oklch(79.2% 0.209 151.711);
-    --color-emerald-600: oklch(59.6% 0.145 163.225);
     --color-blue-500: oklch(62.3% 0.214 259.815);
     --color-blue-600: oklch(54.6% 0.245 262.881);
     --color-blue-700: oklch(48.8% 0.243 264.376);
@@ -473,9 +470,6 @@
   .h-2 {
     height: calc(var(--spacing) * 2);
   }
-  .h-3 {
-    height: calc(var(--spacing) * 3);
-  }
   .h-3\.5 {
     height: calc(var(--spacing) * 3.5);
   }
@@ -535,9 +529,6 @@
   }
   .w-2 {
     width: calc(var(--spacing) * 2);
-  }
-  .w-3 {
-    width: calc(var(--spacing) * 3);
   }
   .w-3\.5 {
     width: calc(var(--spacing) * 3.5);
@@ -727,13 +718,6 @@
       margin-inline-end: calc(calc(var(--spacing) * 4) * calc(1 - var(--tw-space-x-reverse)));
     }
   }
-  .space-x-6 {
-    :where(& > :not(:last-child)) {
-      --tw-space-x-reverse: 0;
-      margin-inline-start: calc(calc(var(--spacing) * 6) * var(--tw-space-x-reverse));
-      margin-inline-end: calc(calc(var(--spacing) * 6) * calc(1 - var(--tw-space-x-reverse)));
-    }
-  }
   .divide-y {
     :where(& > :not(:last-child)) {
       --tw-divide-y-reverse: 0;
@@ -875,9 +859,6 @@
   .bg-\[\#f9fafb\] {
     background-color: #f9fafb;
   }
-  .bg-amber-600 {
-    background-color: var(--color-amber-600);
-  }
   .bg-background {
     background-color: var(--background);
   }
@@ -895,9 +876,6 @@
   }
   .bg-destructive {
     background-color: var(--destructive);
-  }
-  .bg-emerald-600 {
-    background-color: var(--color-emerald-600);
   }
   .bg-gray-50 {
     background-color: var(--color-gray-50);
@@ -940,9 +918,6 @@
   }
   .bg-red-800 {
     background-color: var(--color-red-800);
-  }
-  .bg-red-900 {
-    background-color: var(--color-red-900);
   }
   .bg-secondary {
     background-color: var(--secondary);
