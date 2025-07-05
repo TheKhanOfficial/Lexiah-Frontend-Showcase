@@ -37,6 +37,7 @@ interface CalendarEvent {
 interface CalendarWorkspaceProps {
   userId: string;
   caseId: string;
+  splitscreenCount: number;
 }
 
 type UrgencyColor = "green" | "yellow" | "red" | "darkred";
@@ -184,6 +185,7 @@ function isAllDayEvent(start: string, end: string): boolean {
 export default function CalendarWorkspace({
   userId,
   caseId,
+  splitscreenCount,
 }: CalendarWorkspaceProps) {
   const queryClient = useQueryClient();
   const calendarRef = useRef<FullCalendar>(null);
@@ -498,6 +500,17 @@ export default function CalendarWorkspace({
     if (el) observer.observe(el);
     return () => observer.disconnect();
   }, []);
+
+  useEffect(() => {
+    let count = 0;
+    const interval = setInterval(() => {
+      calendarRef.current?.getApi().updateSize();
+      count++;
+      if (count >= 30) clearInterval(interval);
+    }, 50); // wait for layout change to settle
+
+    return () => clearInterval(interval);
+  }, [splitscreenCount]);
 
   // Loading state
   if (isLoadingTasks || isLoadingEvents) {
