@@ -571,6 +571,7 @@ Remember, Your goal is to write the single best document summary in the history 
       {/* Split view container */}
       <div className="flex flex-1 overflow-hidden relative">
         {/* PDF Viewer with auto-sizing */}
+
         <div
           className={`relative flex flex-col min-w-0 overflow-hidden ${
             showAISummary ? "" : "flex-1"
@@ -607,9 +608,8 @@ Remember, Your goal is to write the single best document summary in the history 
               </svg>
             </button>
           </div>
-
           {/* PDF Navigation toolbar */}
-          <div className="bg-gray-100 border-b border-gray-200 px-4 py-2 flex items-center justify-between">
+          <div className="sticky bg-gray-100 border-b border-gray-200 px-4 py-2 flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <h3 className="text-sm font-medium text-gray-700 truncate max-w-xs md:max-w-md">
                 {document.name}
@@ -784,7 +784,7 @@ Remember, Your goal is to write the single best document summary in the history 
               {isSummarizing ? (
                 <p className="text-gray-600">{docSummary}</p>
               ) : (
-                <div className="prose prose-sm max-w-none text-gray-700">
+                <div className="prose prose-sm max-w-none text-gray-700 pb-32">
                   {docSummary ? (
                     <ReactMarkdown>{docSummary}</ReactMarkdown>
                   ) : (

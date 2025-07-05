@@ -165,7 +165,7 @@ function sortTasks(tasks: Task[], sortBy: SortOption): Task[] {
 function formatDate(dateString: string | null): string {
   if (!dateString) return "—";
 
-  const date = new Date(dateString);
+  const date = new Date(dateString + "T00:00:00");
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   date.setHours(0, 0, 0, 0);
@@ -449,354 +449,358 @@ export default function TodoWorkspace({ userId, caseId }: TodoWorkspaceProps) {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-gray-900">To-Do List</h2>
-        <div className="flex items-center space-x-3">
-          {/* Sort control */}
-          <div className="flex items-center space-x-2">
-            <label className="text-sm font-medium text-gray-700">
-              Sort by:
-            </label>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as SortOption)}
-              className="px-3 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="urgency">Urgency</option>
-              <option value="date">Due Date</option>
-            </select>
-          </div>
-
-          <button
-            onClick={handleAddTask}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Add Task
-          </button>
-          <button
-            onClick={() => setShowDeleteAllModal(true)}
-            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
-            disabled={deleteAllMutation.isPending}
-          >
-            {deleteAllMutation.isPending ? "Deleting..." : "Delete All"}
-          </button>
-        </div>
-      </div>
-
-      {/* Error display */}
-      {error && (
-        <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-red-600 text-sm">{error}</p>
-        </div>
-      )}
-
-      {/* Tasks table */}
-      {sortedTasks.length === 0 ? (
-        <div className="text-center py-12 bg-gray-50 rounded-lg">
-          <p className="text-gray-500">
-            No tasks yet. Add your first task to get started.
-          </p>
-        </div>
-      ) : (
-        <div
-          ref={scrollRef}
-          className="overflow-x-auto whitespace-nowrap"
-          style={{ maxWidth: "100%", overflowY: "hidden" }}
-          onWheel={(e) => {
-            if (e.deltaY !== 0) {
-              e.preventDefault();
-              e.currentTarget.scrollLeft += e.deltaY;
-            }
-          }}
-        >
-          <div className="min-w-[800px] bg-white border border-gray-200 rounded-lg overflow-hidden">
-            {/* Table header */}
-            <div className="grid grid-cols-12 gap-4 p-4 bg-gray-50 border-b border-gray-200 text-sm font-medium text-gray-700">
-              <div className="col-span-1">Complete</div>
-              <div className="col-span-5">Task Name</div>
-              <div className="col-span-2">Due Date</div>
-              <div className="col-span-2">Urgency</div>
-              <div className="col-span-2">Actions</div>
+    <div className="flex flex-col h-full">
+      <div className="flex-1 overflow-auto p-6 space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-semibold text-gray-900">To-Do List</h2>
+          <div className="flex items-center space-x-3">
+            {/* Sort control */}
+            <div className="flex items-center space-x-2">
+              <label className="text-sm font-medium text-gray-700">
+                Sort by:
+              </label>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as SortOption)}
+                className="px-3 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="urgency">Urgency</option>
+                <option value="date">Due Date</option>
+              </select>
             </div>
 
-            {/* Table rows */}
-            <div className="divide-y divide-gray-200">
-              {sortedTasks.map((task) => (
-                <div
-                  key={task.id}
-                  className="grid grid-cols-12 gap-4 p-4 hover:bg-gray-50 transition-colors"
-                >
-                  <div className="col-span-1 flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={task.completed}
-                      onChange={() => toggleTaskComplete(task)}
-                      className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    />
-                  </div>
-                  <div className="col-span-5">
-                    <span
-                      className={`font-medium ${
-                        task.completed
-                          ? "text-gray-500 line-through"
-                          : "text-gray-900"
-                      } block break-words whitespace-normal
+            <button
+              onClick={handleAddTask}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Add Task
+            </button>
+            <button
+              onClick={() => setShowDeleteAllModal(true)}
+              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+              disabled={deleteAllMutation.isPending}
+            >
+              {deleteAllMutation.isPending ? "Deleting..." : "Delete All"}
+            </button>
+          </div>
+        </div>
+
+        {/* Error display */}
+        {error && (
+          <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-red-600 text-sm">{error}</p>
+          </div>
+        )}
+
+        {/* Tasks table */}
+        {sortedTasks.length === 0 ? (
+          <div className="text-center py-12 bg-gray-50 rounded-lg">
+            <p className="text-gray-500">
+              No tasks yet. Add your first task to get started.
+            </p>
+          </div>
+        ) : (
+          <div
+            ref={scrollRef}
+            className="overflow-x-auto whitespace-nowrap"
+            style={{ maxWidth: "100%", overflowY: "hidden" }}
+            onWheel={(e) => {
+              if (e.deltaY !== 0) {
+                e.preventDefault();
+                e.currentTarget.scrollLeft += e.deltaY;
+              }
+            }}
+          >
+            <div className="min-w-[800px] bg-white border border-gray-200 rounded-lg overflow-hidden">
+              {/* Table header */}
+              <div className="grid grid-cols-12 gap-4 p-4 bg-gray-50 border-b border-gray-200 text-sm font-medium text-gray-700">
+                <div className="col-span-1">Complete</div>
+                <div className="col-span-5">Task Name</div>
+                <div className="col-span-2">Due Date</div>
+                <div className="col-span-2">Urgency</div>
+                <div className="col-span-2">Actions</div>
+              </div>
+
+              {/* Table rows */}
+              <div className="divide-y divide-gray-200">
+                {sortedTasks.map((task) => (
+                  <div
+                    key={task.id}
+                    className="grid grid-cols-12 gap-4 p-4 hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="col-span-1 flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={task.completed}
+                        onChange={() => toggleTaskComplete(task)}
+                        className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      />
+                    </div>
+                    <div className="col-span-5">
+                      <span
+                        className={`font-medium ${
+                          task.completed
+                            ? "text-gray-500 line-through"
+                            : "text-gray-900"
+                        } block break-words whitespace-normal
 `}
-                    >
-                      {task.name}
-                    </span>
-                  </div>
-                  <div className="col-span-2">
-                    <span
-                      className={`text-sm ${
-                        task.completed ? "text-gray-400" : "text-gray-600"
-                      } break-words whitespace-normal block`}
-                    >
-                      {formatDate(task.due_date)}
-                    </span>
-                  </div>
-                  <div className="col-span-2 flex items-center">
-                    {renderUrgencyBox(task)}
-                  </div>
-                  <div className="col-span-2">
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => handleEditTask(task)}
-                        className="text-blue-600 hover:text-blue-800 text-sm"
                       >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDeleteTask(task.id)}
-                        className="text-red-600 hover:text-red-800 text-sm"
-                        disabled={deleteMutation.isPending}
+                        {task.name}
+                      </span>
+                    </div>
+                    <div className="col-span-2">
+                      <span
+                        className={`text-sm ${
+                          task.completed ? "text-gray-400" : "text-gray-600"
+                        } break-words whitespace-normal block`}
                       >
-                        Delete
-                      </button>
+                        {formatDate(task.due_date)}
+                      </span>
+                    </div>
+                    <div className="col-span-2 flex items-center">
+                      {renderUrgencyBox(task)}
+                    </div>
+                    <div className="col-span-2">
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => handleEditTask(task)}
+                          className="text-blue-600 hover:text-blue-800 text-sm"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDeleteTask(task.id)}
+                          className="text-red-600 hover:text-red-800 text-sm"
+                          disabled={deleteMutation.isPending}
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* Add Task Modal */}
-      {showAddModal &&
-        createPortal(
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
-            <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-              <h3 className="text-lg font-semibold mb-4">Add New Task</h3>
-              <form onSubmit={handleSubmitAdd} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Task Name *
-                  </label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Due Date (optional)
-                  </label>
-                  <input
-                    type="date"
-                    name="due_date"
-                    value={formData.due_date}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div className="flex space-x-3 pt-4">
-                  <button
-                    type="submit"
-                    disabled={createMutation.isPending}
-                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-                  >
-                    {createMutation.isPending ? "Adding..." : "Add Task"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowAddModal(false)}
-                    disabled={createMutation.isPending}
-                    className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>,
-          document.body
         )}
 
-      {/* Edit Task Modal */}
-      {showEditModal &&
-        editingTask &&
-        createPortal(
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
-            <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-              <h3 className="text-lg font-semibold mb-4">Edit Task</h3>
-              <form onSubmit={handleSubmitEdit} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Task Name *
-                  </label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Due Date (optional)
-                  </label>
-                  <input
-                    type="date"
-                    name="due_date"
-                    value={formData.due_date}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                {formData.due_date && (
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id="autoUrgency"
-                      name="auto_urgency"
-                      checked={formData.auto_urgency}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          auto_urgency: e.target.checked,
-                        }))
-                      }
-                      className="w-4 h-4 text-blue-600 border-gray-300 rounded"
-                    />
-                    <label
-                      htmlFor="autoUrgency"
-                      className="text-sm text-gray-700"
-                    >
-                      Automatically set urgency based on due date
+        {/* Add Task Modal */}
+        {showAddModal &&
+          createPortal(
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
+              <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+                <h3 className="text-lg font-semibold mb-4">Add New Task</h3>
+                <form onSubmit={handleSubmitAdd} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Task Name *
                     </label>
+                    <input
+                      type="text"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
                   </div>
-                )}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Due Date (optional)
+                    </label>
+                    <input
+                      type="date"
+                      name="due_date"
+                      value={formData.due_date}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div className="flex space-x-3 pt-4">
+                    <button
+                      type="submit"
+                      disabled={createMutation.isPending}
+                      className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                    >
+                      {createMutation.isPending ? "Adding..." : "Add Task"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowAddModal(false)}
+                      disabled={createMutation.isPending}
+                      className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>,
+            document.body
+          )}
 
-                <div className="flex space-x-3 pt-4">
-                  <button
-                    type="submit"
-                    disabled={updateMutation.isPending}
-                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-                  >
-                    {updateMutation.isPending ? "Updating..." : "Update Task"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowEditModal(false);
-                      setEditingTask(null);
-                    }}
-                    disabled={updateMutation.isPending}
-                    className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>,
-          document.body
-        )}
+        {/* Edit Task Modal */}
+        {showEditModal &&
+          editingTask &&
+          createPortal(
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
+              <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+                <h3 className="text-lg font-semibold mb-4">Edit Task</h3>
+                <form onSubmit={handleSubmitEdit} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Task Name *
+                    </label>
+                    <input
+                      type="text"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Due Date (optional)
+                    </label>
+                    <input
+                      type="date"
+                      name="due_date"
+                      value={formData.due_date}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  {formData.due_date && (
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="autoUrgency"
+                        name="auto_urgency"
+                        checked={formData.auto_urgency}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            auto_urgency: e.target.checked,
+                          }))
+                        }
+                        className="w-4 h-4 text-blue-600 border-gray-300 rounded"
+                      />
+                      <label
+                        htmlFor="autoUrgency"
+                        className="text-sm text-gray-700"
+                      >
+                        Automatically set urgency based on due date
+                      </label>
+                    </div>
+                  )}
 
-      {/* Delete Task Modal */}
-      {showDeleteModal &&
-        typeof window !== "undefined" &&
-        createPortal(
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]">
-            <div className="bg-white rounded-lg overflow-hidden shadow-xl max-w-md w-full mx-4">
-              <div className="p-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">
-                  Delete Task
-                </h3>
-                <p className="text-gray-600 mb-6">
-                  Are you sure you want to delete this task? This action cannot
-                  be undone.
-                </p>
-                <div className="flex items-center justify-end space-x-3">
-                  <button
-                    onClick={() => setShowDeleteModal(false)}
-                    className="px-4 py-2 border border-gray-300 rounded-full text-gray-700 hover:bg-gray-50 font-medium"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={() => {
-                      if (pendingDeleteId) {
-                        deleteMutation.mutate(pendingDeleteId);
-                        setShowDeleteModal(false);
-                        setPendingDeleteId(null);
-                      }
-                    }}
-                    className="px-4 py-2 bg-red-600 text-white rounded-full hover:bg-red-700 font-medium"
-                  >
-                    Delete
-                  </button>
+                  <div className="flex space-x-3 pt-4">
+                    <button
+                      type="submit"
+                      disabled={updateMutation.isPending}
+                      className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                    >
+                      {updateMutation.isPending ? "Updating..." : "Update Task"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowEditModal(false);
+                        setEditingTask(null);
+                      }}
+                      disabled={updateMutation.isPending}
+                      className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>,
+            document.body
+          )}
+
+        {/* Delete Task Modal */}
+        {showDeleteModal &&
+          typeof window !== "undefined" &&
+          createPortal(
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]">
+              <div className="bg-white rounded-lg overflow-hidden shadow-xl max-w-md w-full mx-4">
+                <div className="p-6">
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">
+                    Delete Task
+                  </h3>
+                  <p className="text-gray-600 mb-6">
+                    Are you sure you want to delete this task? This action
+                    cannot be undone.
+                  </p>
+                  <div className="flex items-center justify-end space-x-3">
+                    <button
+                      onClick={() => setShowDeleteModal(false)}
+                      className="px-4 py-2 border border-gray-300 rounded-full text-gray-700 hover:bg-gray-50 font-medium"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (pendingDeleteId) {
+                          deleteMutation.mutate(pendingDeleteId);
+                          setShowDeleteModal(false);
+                          setPendingDeleteId(null);
+                        }
+                      }}
+                      className="px-4 py-2 bg-red-600 text-white rounded-full hover:bg-red-700 font-medium"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>,
-          document.body
-        )}
+            </div>,
+            document.body
+          )}
 
-      {/* Delete All Tasks Modal */}
-      {showDeleteAllModal &&
-        typeof window !== "undefined" &&
-        createPortal(
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]">
-            <div className="bg-white rounded-lg overflow-hidden shadow-xl max-w-md w-full mx-4">
-              <div className="p-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">
-                  Delete All Tasks
-                </h3>
-                <p className="text-gray-600 mb-6">
-                  Are you sure you want to delete <strong>ALL tasks</strong> for
-                  this case? This action cannot be undone.
-                </p>
-                <div className="flex items-center justify-end space-x-3">
-                  <button
-                    onClick={() => setShowDeleteAllModal(false)}
-                    className="px-4 py-2 border border-gray-300 rounded-full text-gray-700 hover:bg-gray-50 font-medium"
-                    disabled={deleteAllMutation.isPending}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={() => deleteAllMutation.mutate()}
-                    className="px-4 py-2 bg-red-600 text-white rounded-full hover:bg-red-700 font-medium"
-                    disabled={deleteAllMutation.isPending}
-                  >
-                    {deleteAllMutation.isPending ? "Deleting..." : "Delete All"}
-                  </button>
+        {/* Delete All Tasks Modal */}
+        {showDeleteAllModal &&
+          typeof window !== "undefined" &&
+          createPortal(
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]">
+              <div className="bg-white rounded-lg overflow-hidden shadow-xl max-w-md w-full mx-4">
+                <div className="p-6">
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">
+                    Delete All Tasks
+                  </h3>
+                  <p className="text-gray-600 mb-6">
+                    Are you sure you want to delete <strong>ALL tasks</strong>{" "}
+                    for this case? This action cannot be undone.
+                  </p>
+                  <div className="flex items-center justify-end space-x-3">
+                    <button
+                      onClick={() => setShowDeleteAllModal(false)}
+                      className="px-4 py-2 border border-gray-300 rounded-full text-gray-700 hover:bg-gray-50 font-medium"
+                      disabled={deleteAllMutation.isPending}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => deleteAllMutation.mutate()}
+                      className="px-4 py-2 bg-red-600 text-white rounded-full hover:bg-red-700 font-medium"
+                      disabled={deleteAllMutation.isPending}
+                    >
+                      {deleteAllMutation.isPending
+                        ? "Deleting..."
+                        : "Delete All"}
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>,
-          document.body
-        )}
+            </div>,
+            document.body
+          )}
+      </div>
     </div>
   );
 }

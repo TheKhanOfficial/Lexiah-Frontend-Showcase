@@ -373,21 +373,23 @@ export default function NoteViewer({
           </div>
 
           {/* Editor content with scale transform */}
-          <div className="flex-1 overflow-auto bg-gray-100 flex justify-center py-8 px-4">
-            <div
-              className="bg-white shadow-md p-8 rounded-md w-[8.5in] min-h-[11in] max-w-full"
-              style={{
-                transform: `scale(${scale})`,
-                transformOrigin: "top center",
-              }}
-            >
-              {editor ? (
-                <EditorContent editor={editor} />
-              ) : (
-                <div className="text-[#111827] text-center">
-                  Loading editor...
-                </div>
-              )}
+          <div className="flex flex-col h-full">
+            <div className="flex-1 overflow-auto bg-gray-100 flex justify-center py-8 px-4">
+              <div
+                className="bg-white shadow-md p-8 rounded-md w-[8.5in] min-h-[11in] max-w-full"
+                style={{
+                  transform: `scale(${scale})`,
+                  transformOrigin: "top center",
+                }}
+              >
+                {editor ? (
+                  <EditorContent editor={editor} />
+                ) : (
+                  <div className="text-[#111827] text-center">
+                    Loading editor...
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
