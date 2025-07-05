@@ -13,6 +13,7 @@ import { supabase } from "@/utils/supabase";
 import { getAIResponse } from "@/utils/api";
 import { ChatBubble } from "@/app/components/ChatBubble";
 import { createPortal } from "react-dom";
+import { InputBar } from "@/app/components/InputBar";
 
 // Helper functions for Supabase
 export async function fetchChatMessages(caseId: string) {
@@ -302,7 +303,7 @@ const ChatWorkspace = forwardRef<ChatWorkspaceHandle, ChatWorkspaceProps>(
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto px-4 py-2">
+          <div className="flex-1 overflow-y-auto px-4 py-2 pb-28 pt-28 min-h-0">
             {messages.length === 0 ? (
               <div className="flex h-full items-center justify-center">
                 <div className="text-center text-gray-500">
@@ -324,6 +325,10 @@ const ChatWorkspace = forwardRef<ChatWorkspaceHandle, ChatWorkspaceProps>(
               </div>
             )}
           </div>
+        </div>
+
+        <div className="sticky bottom-0 bg-white border-t border-gray-200 z-10">
+          <InputBar onSubmit={(text) => processMessage(text)} />
         </div>
 
         {/* Confirmation Modal */}
