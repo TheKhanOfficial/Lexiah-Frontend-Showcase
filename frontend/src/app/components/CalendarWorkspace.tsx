@@ -10,6 +10,7 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import { CalendarApi, EventInput, DateSelectArg } from "@fullcalendar/core";
+import { useUI } from "@/app/context/UIContext";
 
 // Types
 interface Task {
@@ -208,6 +209,7 @@ export default function CalendarWorkspace({
   );
   const [showEventModal, setShowEventModal] = useState(false);
   const [currentDate, setCurrentDate] = useState(new Date());
+  const { sidebarGlitchFix, setSidebarGlitchFix } = useUI();
 
   const deleteEventMutation = useMutation({
     mutationFn: deleteCalendarEvent,
@@ -510,7 +512,7 @@ export default function CalendarWorkspace({
     }, 50); // wait for layout change to settle
 
     return () => clearInterval(interval);
-  }, [splitscreenCount]);
+  }, [splitscreenCount, sidebarGlitchFix]);
 
   // Loading state
   if (isLoadingTasks || isLoadingEvents) {
