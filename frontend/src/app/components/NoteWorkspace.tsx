@@ -206,7 +206,7 @@ export default function NoteWorkspace({
         itemType="note"
         onItemAdded={handleNoteAdded}
         onAddItemError={handleAddItemError}
-        addItemText="New Note"
+        addItemText="New Note 📝"
         fileUploadEnabled={false}
         sortBy="updated_at"
         sortDirection="desc"
