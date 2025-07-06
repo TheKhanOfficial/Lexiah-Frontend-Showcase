@@ -1,7 +1,7 @@
 "use client";
 // app/components/TimelineWorkspace.tsx
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { createPortal } from "react-dom";
 import { supabase } from "@/utils/supabase";
@@ -268,12 +268,15 @@ export default function TimelineWorkspace({
   const [selectedEvent, setSelectedEvent] = useState<TimelineEvent | null>(
     null
   );
+
   const [importanceFilters, setImportanceFilters] = useState<
     Set<ImportanceLevel>
   >(new Set(["low", "medium", "high", "critical"]));
+
   const [categoryFilters, setCategoryFilters] = useState<Set<string>>(
     new Set()
   );
+
   const [error, setError] = useState<string | null>(null);
 
   // Form state
@@ -286,11 +289,16 @@ export default function TimelineWorkspace({
   });
 
   // Fetch events
-  const { data: events = [], isLoading } = useQuery({
+  const { data: eventsData = [], isFetching } = useQuery({
     queryKey: ["timeline_events", caseId],
     queryFn: () => fetchTimelineEvents(caseId),
     enabled: !!caseId,
+    staleTime: Infinity,
+    cacheTime: Infinity,
+    refetchOnWindowFocus: false,
   });
+
+  const events = eventsData ?? []; // never block render
 
   // Mutations
   const createMutation = useMutation({
@@ -318,15 +326,14 @@ export default function TimelineWorkspace({
     },
   });
 
+  useEffect(() => {
+    if (categoryFilters.size === 0 && events.length > 0) {
+      setCategoryFilters(new Set(events.map((e) => e.category)));
+    }
+  }, [events, categoryFilters]);
+
   // Get unique categories
   const allCategories = Array.from(new Set(events.map((e) => e.category)));
-
-  // Initialize category filters
-  useEffect(() => {
-    if (allCategories.length > 0 && categoryFilters.size === 0) {
-      setCategoryFilters(new Set(allCategories));
-    }
-  }, [allCategories.length]);
 
   // Filter events
   const filteredEvents = events.filter(
@@ -335,8 +342,15 @@ export default function TimelineWorkspace({
       categoryFilters.has(event.category)
   );
 
-  const zoomConfig = getZoomConfig(zoom, currentDate);
-  const positionedEvents = stackEvents(filteredEvents, zoomConfig);
+  const zoomConfig = useMemo(
+    () => getZoomConfig(zoom, currentDate),
+    [zoom, currentDate]
+  );
+
+  const positionedEvents = useMemo(
+    () => stackEvents(filteredEvents, zoomConfig),
+    [filteredEvents, zoomConfig]
+  );
 
   // Form handlers
   const resetForm = () => {
@@ -415,14 +429,6 @@ export default function TimelineWorkspace({
     }
     setCategoryFilters(newFilters);
   };
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-gray-500">Loading timeline...</div>
-      </div>
-    );
-  }
 
   return (
     <div className="h-full flex flex-col">
@@ -542,83 +548,83 @@ export default function TimelineWorkspace({
       </div>
 
       {/* Timeline */}
-      <div className="flex-1 overflow-hidden">
-        <div
-          ref={timelineRef}
-          className="h-full overflow-x-auto overflow-y-hidden"
-          style={{ scrollBehavior: "smooth" }}
-        >
-          <div
-            className="grid h-full min-w-[800px]"
-            style={{
-              gridTemplateColumns: "repeat(12, 1fr)",
-              gridTemplateRows: "repeat(9, 1fr)",
-              gap: "0",
-            }}
-          >
-            {/* Timeline columns */}
-            {Array.from({ length: 12 }, (_, colIndex) => {
-              const columnDate = new Date(
-                zoomConfig.start.getTime() +
-                  colIndex * zoomConfig.daysPerColumn * 24 * 60 * 60 * 1000
-              );
-
-              return (
-                <div
-                  key={colIndex}
-                  className="relative border-r border-gray-200 last:border-r-0"
-                >
-                  {/* Column spanning all 9 rows */}
-                  <div className="absolute inset-0 grid grid-rows-9">
-                    {/* Rows 1-4: Top events */}
-                    {Array.from({ length: 4 }, (_, rowIndex) => (
-                      <div
-                        key={`top-${rowIndex}`}
-                        className="border-b border-gray-100 last:border-b-0"
-                      />
-                    ))}
-
-                    {/* Row 5: Timeline bar */}
-                    <div className="bg-gray-100 border-y border-gray-300 flex flex-col items-center justify-center p-1">
-                      <div className="text-xs font-medium text-gray-700 text-center">
-                        {zoomConfig.formatLabel(columnDate)}
-                      </div>
-                    </div>
-
-                    {/* Rows 6-9: Bottom events */}
-                    {Array.from({ length: 4 }, (_, rowIndex) => (
-                      <div
-                        key={`bottom-${rowIndex}`}
-                        className="border-t border-gray-100 first:border-t-0"
-                      />
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
-
-            {/* Events */}
-            {positionedEvents.map(({ event, row, col, span }, index) => (
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 flex flex-col min-h-0">
+          <div className="flex-1 relative min-h-0">
+            <div
+              ref={timelineRef}
+              className="absolute inset-0 overflow-auto bg-white"
+            >
               <div
-                key={`${event.id}-${index}`}
-                className={`absolute z-10 p-1 m-0.5 rounded border-2 cursor-pointer transition-all hover:scale-105 hover:z-20 ${getImportanceColor(
-                  event.importance
-                )}`}
+                className="grid w-full h-full"
                 style={{
-                  gridColumn: `${col + 1} / span ${span}`,
-                  gridRow: row,
+                  gridTemplateColumns: "repeat(12, 1fr)",
+                  gridTemplateRows: "repeat(9, 1fr)",
                 }}
-                onClick={() => {
-                  setSelectedEvent(event);
-                  setShowEventModal(true);
-                }}
-                title={`${event.title} (${event.importance})`}
               >
-                <div className="text-xs text-white font-medium truncate">
-                  {getCategoryEmoji(event.category)} {event.title}
-                </div>
+                {/* Timeline columns */}
+                {Array.from({ length: 12 * 9 }, (_, i) => {
+                  const row = Math.floor(i / 12) + 1;
+                  const col = (i % 12) + 1;
+
+                  const isLabelRow = row === 5; // row 5 is the label row
+
+                  return (
+                    <div
+                      key={`cell-${row}-${col}`}
+                      className={`border border-gray-200 ${
+                        isLabelRow
+                          ? "bg-gray-100 flex items-center justify-center p-1"
+                          : "bg-white"
+                      }`}
+                      style={{
+                        gridRow: row,
+                        gridColumn: col,
+                      }}
+                    >
+                      {isLabelRow && (
+                        <div className="text-xs font-medium text-gray-700 text-center">
+                          {zoomConfig.formatLabel(
+                            new Date(
+                              zoomConfig.start.getTime() +
+                                (col - 1) *
+                                  zoomConfig.daysPerColumn *
+                                  24 *
+                                  60 *
+                                  60 *
+                                  1000
+                            )
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+
+                {/* Events */}
+                {positionedEvents.map(({ event, row, col, span }, index) => (
+                  <div
+                    key={`${event.id}-${index}`}
+                    className={`absolute z-10 p-1 m-0.5 rounded border-2 cursor-pointer transition-all hover:scale-105 hover:z-20 ${getImportanceColor(
+                      event.importance
+                    )}`}
+                    style={{
+                      gridColumn: `${col + 1} / span ${span}`,
+                      gridRow: row,
+                    }}
+                    onClick={() => {
+                      setSelectedEvent(event);
+                      setShowEventModal(true);
+                    }}
+                    title={`${event.title} (${event.importance})`}
+                  >
+                    <div className="text-xs text-white font-medium truncate">
+                      {getCategoryEmoji(event.category)} {event.title}
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
           </div>
         </div>
       </div>

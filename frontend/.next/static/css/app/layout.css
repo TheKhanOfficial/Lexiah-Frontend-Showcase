@@ -279,6 +279,9 @@
   }
 }
 @layer utilities {
+  .pointer-events-none {
+    pointer-events: none;
+  }
   .collapse {
     visibility: collapse;
   }
@@ -545,6 +548,15 @@
   .min-h-\[11in\] {
     min-height: 11in;
   }
+  .min-h-\[500px\] {
+    min-height: 500px;
+  }
+  .min-h-\[600px\] {
+    min-height: 600px;
+  }
+  .min-h-full {
+    min-height: 100%;
+  }
   .w-0 {
     width: calc(var(--spacing) * 0);
   }
@@ -592,6 +604,9 @@
   }
   .w-\[8\.5in\] {
     width: 8.5in;
+  }
+  .w-\[1200px\] {
+    width: 1200px;
   }
   .w-full {
     width: 100%;
