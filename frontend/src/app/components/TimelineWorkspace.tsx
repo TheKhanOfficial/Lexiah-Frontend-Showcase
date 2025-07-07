@@ -278,6 +278,13 @@ export default function TimelineWorkspace({
   );
 
   const [error, setError] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  useEffect(() => {
+    if (toastMessage) {
+      const timer = setTimeout(() => setToastMessage(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [toastMessage]);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -310,7 +317,11 @@ export default function TimelineWorkspace({
       setError(null);
     },
     onError: (err) => {
-      setError(err instanceof Error ? err.message : "Failed to create event");
+      setShowAddModal(false);
+      setToastMessage(
+        err instanceof Error ? err.message : "Failed to create event"
+      );
+      resetForm();
     },
   });
 
@@ -322,7 +333,9 @@ export default function TimelineWorkspace({
       setSelectedEvent(null);
     },
     onError: (err) => {
-      setError(err instanceof Error ? err.message : "Failed to delete event");
+      setToastMessage(
+        err instanceof Error ? err.message : "Failed to delete event"
+      );
     },
   });
 
@@ -432,121 +445,6 @@ export default function TimelineWorkspace({
 
   return (
     <div className="h-full flex flex-col">
-      {/* Header */}
-      <div className="flex-shrink-0 p-4 border-b border-gray-200 bg-white space-y-4">
-        {/* Controls */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <h2 className="text-xl font-semibold">Timeline</h2>
-
-            {/* Zoom controls */}
-            <div className="flex border border-gray-300 rounded-lg overflow-hidden">
-              {(["week", "month", "year"] as ZoomLevel[]).map((level) => (
-                <button
-                  key={level}
-                  onClick={() => setZoom(level)}
-                  className={`px-3 py-1 text-sm font-medium capitalize ${
-                    zoom === level
-                      ? "bg-blue-600 text-white"
-                      : "bg-white text-gray-700 hover:bg-gray-50"
-                  }`}
-                >
-                  {level}
-                </button>
-              ))}
-            </div>
-
-            {/* Navigation */}
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => navigateTime("prev")}
-                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded"
-              >
-                ←
-              </button>
-              <button
-                onClick={() => setCurrentDate(new Date())}
-                className="px-3 py-1 text-sm text-blue-600 hover:bg-blue-50 rounded"
-              >
-                Today
-              </button>
-              <button
-                onClick={() => navigateTime("next")}
-                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded"
-              >
-                →
-              </button>
-            </div>
-          </div>
-
-          <button
-            onClick={() => {
-              setShowAddModal(true);
-              resetForm();
-            }}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            + Add Event
-          </button>
-        </div>
-
-        {/* Filters */}
-        <div className="space-y-3">
-          {/* Importance filters */}
-          <div className="flex items-center space-x-3">
-            <span className="text-sm font-medium text-gray-700">
-              Importance:
-            </span>
-            <div className="flex space-x-1">
-              {(["low", "medium", "high", "critical"] as ImportanceLevel[]).map(
-                (level) => (
-                  <button
-                    key={level}
-                    onClick={() => toggleImportanceFilter(level)}
-                    className={`w-8 h-8 rounded border-2 transition-all ${
-                      importanceFilters.has(level)
-                        ? getImportanceColor(level) + " scale-110"
-                        : "bg-gray-200 border-gray-300"
-                    }`}
-                    title={level}
-                  />
-                )
-              )}
-            </div>
-          </div>
-
-          {/* Category filters */}
-          {allCategories.length > 0 && (
-            <div className="flex items-center space-x-3">
-              <span className="text-sm font-medium text-gray-700">
-                Categories:
-              </span>
-              <div className="flex flex-wrap gap-2">
-                {allCategories.map((category) => (
-                  <button
-                    key={category}
-                    onClick={() => toggleCategoryFilter(category)}
-                    className={`px-3 py-1 text-sm rounded-full border transition-all ${
-                      categoryFilters.has(category)
-                        ? "bg-blue-100 text-blue-800 border-blue-300"
-                        : "bg-gray-100 text-gray-600 border-gray-300"
-                    }`}
-                  >
-                    {getCategoryEmoji(category)} {category}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {error && (
-          <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-red-600 text-sm">{error}</p>
-          </div>
-        )}
-      </div>
-
       {/* Timeline */}
       <div className="flex-1 flex flex-col overflow-hidden">
         <div className="flex-1 flex flex-col min-h-0">
@@ -555,6 +453,113 @@ export default function TimelineWorkspace({
               ref={timelineRef}
               className="absolute inset-0 overflow-auto bg-white"
             >
+              {/* Disjoint Controls Inline with Timeline */}
+              <div className="absolute z-20 top-2 left-2 flex flex-wrap gap-2 text-sm">
+                {/* Navigation */}
+                <button
+                  onClick={() => navigateTime("prev")}
+                  className="px-2 py-1 rounded border text-gray-700 hover:bg-gray-100"
+                >
+                  ←
+                </button>
+                <button
+                  onClick={() => setCurrentDate(new Date())}
+                  className="px-2 py-1 rounded border text-blue-600 hover:bg-blue-50"
+                >
+                  Today
+                </button>
+                <button
+                  onClick={() => navigateTime("next")}
+                  className="px-2 py-1 rounded border text-gray-700 hover:bg-gray-100"
+                >
+                  →
+                </button>
+
+                {/* Zoom */}
+                {(["week", "month", "year"] as ZoomLevel[]).map((level) => (
+                  <button
+                    key={level}
+                    onClick={() => setZoom(level)}
+                    className={`px-2 py-1 rounded border capitalize ${
+                      zoom === level
+                        ? "bg-blue-600 text-white"
+                        : "bg-white text-gray-700 hover:bg-gray-100"
+                    }`}
+                  >
+                    {level}
+                  </button>
+                ))}
+
+                {/* Add Event */}
+                <button
+                  onClick={() => {
+                    setShowAddModal(true);
+                    resetForm();
+                  }}
+                  className="px-3 py-1 rounded bg-blue-600 text-white hover:bg-blue-700"
+                >
+                  + Add
+                </button>
+
+                {/* Filter Toggle */}
+                <div className="relative group">
+                  <button className="px-2 py-1 rounded border text-gray-700 hover:bg-gray-100">
+                    Filter ⌄
+                  </button>
+
+                  {/* Dropdown */}
+                  <div className="absolute mt-1 hidden group-hover:block bg-white border rounded shadow p-2 space-y-3 z-30">
+                    {/* Importance */}
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Importance</p>
+                      <div className="flex gap-1">
+                        {(
+                          [
+                            "low",
+                            "medium",
+                            "high",
+                            "critical",
+                          ] as ImportanceLevel[]
+                        ).map((level) => (
+                          <button
+                            key={level}
+                            onClick={() => toggleImportanceFilter(level)}
+                            className={`w-6 h-6 rounded border-2 ${
+                              importanceFilters.has(level)
+                                ? getImportanceColor(level)
+                                : "bg-gray-200 border-gray-300"
+                            }`}
+                            title={level}
+                          />
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Categories */}
+                    {allCategories.length > 0 && (
+                      <div>
+                        <p className="text-xs text-gray-500 mb-1">Categories</p>
+                        <div className="flex flex-wrap gap-1 max-w-xs">
+                          {allCategories.map((category) => (
+                            <button
+                              key={category}
+                              onClick={() => toggleCategoryFilter(category)}
+                              className={`px-2 py-0.5 text-xs rounded border ${
+                                categoryFilters.has(category)
+                                  ? "bg-blue-100 text-blue-800 border-blue-300"
+                                  : "bg-gray-100 text-gray-600 border-gray-300"
+                              }`}
+                            >
+                              {getCategoryEmoji(category)} {category}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
               <div
                 className="grid w-full h-full"
                 style={{
@@ -632,7 +637,7 @@ export default function TimelineWorkspace({
       {/* Add Event Modal */}
       {showAddModal &&
         createPortal(
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 w-full max-w-md">
               <h3 className="text-lg font-semibold mb-4">Add Timeline Event</h3>
 
@@ -755,7 +760,7 @@ export default function TimelineWorkspace({
       {showEventModal &&
         selectedEvent &&
         createPortal(
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 w-full max-w-md">
               <div className="flex items-start justify-between mb-4">
                 <h3 className="text-lg font-semibold">{selectedEvent.title}</h3>
@@ -836,6 +841,11 @@ export default function TimelineWorkspace({
           </div>,
           document.body
         )}
+      {toastMessage && (
+        <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-red-600 text-white text-sm px-4 py-2 rounded shadow-lg z-50">
+          {toastMessage}
+        </div>
+      )}
     </div>
   );
 }

@@ -509,7 +509,7 @@ export default function CalendarWorkspace({
       calendarRef.current?.getApi().updateSize();
       count++;
       if (count >= 30) clearInterval(interval);
-    }, 50); // wait for layout change to settle
+    }, 0); // wait for layout change to settle
 
     return () => clearInterval(interval);
   }, [splitscreenCount, sidebarGlitchFix]);
