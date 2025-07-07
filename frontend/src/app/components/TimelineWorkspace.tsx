@@ -15,6 +15,7 @@ interface TimelineEvent {
   end: string;
   importance: "low" | "medium" | "high" | "critical";
   category: string;
+  description: string;
   created_at: string;
 }
 
@@ -293,6 +294,7 @@ export default function TimelineWorkspace({
     end: "",
     importance: "medium" as ImportanceLevel,
     category: "admin",
+    description: "", // ← ✅ Add this line
   });
 
   // Fetch events
@@ -373,6 +375,7 @@ export default function TimelineWorkspace({
       end: "",
       importance: "medium",
       category: "admin",
+      description: "", // ← ✅ Add this line
     });
     setError(null);
   };
@@ -400,6 +403,7 @@ export default function TimelineWorkspace({
       end: endDate.toISOString(),
       importance: formData.importance,
       category: formData.category,
+      description: formData.description.trim(),
     });
   };
 
@@ -655,6 +659,23 @@ export default function TimelineWorkspace({
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Event title"
                   />
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Description
+                    </label>
+                    <textarea
+                      value={formData.description}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          description: e.target.value,
+                        })
+                      }
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Event description"
+                      rows={3}
+                    />
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -814,6 +835,17 @@ export default function TimelineWorkspace({
                     {selectedEvent.category}
                   </span>
                 </div>
+
+                {selectedEvent.description && (
+                  <div>
+                    <span className="text-sm font-medium text-gray-700">
+                      Description:{" "}
+                    </span>
+                    <p className="text-sm text-gray-600 whitespace-pre-wrap">
+                      {selectedEvent.description}
+                    </p>
+                  </div>
+                )}
               </div>
 
               <div className="flex justify-end space-x-3 mt-6">
