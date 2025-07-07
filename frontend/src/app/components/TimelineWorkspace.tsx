@@ -193,8 +193,8 @@ function getEventPosition(
   const endCol = Math.floor((endDayOffset - 1) / zoomConfig.daysPerColumn);
 
   return {
-    startCol: Math.max(0, Math.min(11, startCol)),
-    span: Math.max(1, Math.min(12 - startCol, endCol - startCol + 1)),
+    startCol: Math.max(0, Math.min(6, startCol)),
+    span: Math.max(1, Math.min(7 - startCol, endCol - startCol + 1)),
   };
 }
 
@@ -228,8 +228,8 @@ function stackEvents(
     const isHighPriority =
       event.importance === "critical" || event.importance === "high";
     const rowsToCheck = isHighPriority
-      ? [5, 4, 6, 3, 7, 2, 8, 1, 9] // Critical/high: center out
-      : [6, 7, 8, 9, 4, 3, 2, 1]; // Medium/low: bottom first
+      ? [4, 3, 5, 2, 6, 1, 7] // center out from row 4
+      : [5, 6, 7, 3, 2, 1]; // bottom first for low/medium
 
     for (const row of rowsToCheck) {
       const hasConflict = positioned.some((p) => {
@@ -558,16 +558,16 @@ export default function TimelineWorkspace({
               <div
                 className="grid w-full h-full"
                 style={{
-                  gridTemplateColumns: "repeat(12, 1fr)",
-                  gridTemplateRows: "repeat(9, 1fr)",
+                  gridTemplateColumns: "repeat(7, 1fr)",
+                  gridTemplateRows: "repeat(7, 1fr)",
                 }}
               >
                 {/* Timeline columns */}
-                {Array.from({ length: 12 * 9 }, (_, i) => {
-                  const row = Math.floor(i / 12) + 1;
-                  const col = (i % 12) + 1;
+                {Array.from({ length: 7 * 7 }, (_, i) => {
+                  const row = Math.floor(i / 7) + 1;
+                  const col = (i % 7) + 1;
 
-                  const isLabelRow = row === 5; // row 5 is the label row
+                  const isLabelRow = row === 4; // row 5 is the label row
 
                   return (
                     <div
