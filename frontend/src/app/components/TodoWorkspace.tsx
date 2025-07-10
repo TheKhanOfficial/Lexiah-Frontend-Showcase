@@ -313,27 +313,40 @@ export default function TodoWorkspace({ userId, caseId }: TodoWorkspaceProps) {
 
   const handleSubmitAdd = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name.trim()) {
-      setError("Task name is required");
+
+    const { title, start, end, importance, category, description } = formData;
+
+    if (
+      !title.trim() ||
+      !start ||
+      !end ||
+      !importance ||
+      !category.trim() ||
+      !description.trim()
+    ) {
+      setError("All fields are required");
       return;
     }
 
-    console.log("Creating task with:", {
-      case_id: caseId,
-      name: formData.name.trim(),
-      due_date: formData.due_date || null,
-      completed: false,
-      manual_color: null,
-    });
+    const startDate = new Date(start);
+    const endDate = new Date(end);
 
-    createMutation.mutate({
+    if (endDate <= startDate) {
+      setError("End date must be after start date");
+      return;
+    }
+
+    const sanitized = {
       case_id: caseId,
-      name: formData.name.trim(),
-      due_date: formData.due_date || null,
-      completed: false,
-      manual_color: null,
-      auto_urgency: !!formData.due_date,
-    });
+      title: title.trim(),
+      start: startDate.toISOString().split("T")[0],
+      end: endDate.toISOString().split("T")[0],
+      importance,
+      category: category.trim(),
+      description: description.trim(),
+    };
+
+    createMutation.mutate(sanitized);
   };
 
   const handleSubmitEdit = (e: React.FormEvent) => {

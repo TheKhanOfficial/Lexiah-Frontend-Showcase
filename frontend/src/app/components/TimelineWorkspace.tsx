@@ -30,7 +30,7 @@ type ImportanceLevel = "low" | "medium" | "high" | "critical";
 // Supabase functions
 async function fetchTimelineEvents(caseId: string): Promise<TimelineEvent[]> {
   const { data, error } = await supabase
-    .from("timeline_events")
+    .from("timeline")
     .select("*")
     .eq("case_id", caseId)
     .order("start", { ascending: true });
@@ -43,10 +43,12 @@ async function createTimelineEvent(
   eventData: Omit<TimelineEvent, "id" | "created_at">
 ): Promise<TimelineEvent> {
   const { data, error } = await supabase
-    .from("timeline_events")
+    .from("timeline")
     .insert([eventData])
     .select()
     .single();
+
+  console.log("Supabase insert response:", { data, error, eventData });
 
   if (error) throw error;
   return data;
@@ -57,7 +59,7 @@ async function updateTimelineEvent(
   updates: Partial<Omit<TimelineEvent, "id" | "created_at">>
 ): Promise<TimelineEvent> {
   const { data, error } = await supabase
-    .from("timeline_events")
+    .from("timeline")
     .update(updates)
     .eq("id", id)
     .select()
@@ -68,10 +70,7 @@ async function updateTimelineEvent(
 }
 
 async function deleteTimelineEvent(id: string): Promise<void> {
-  const { error } = await supabase
-    .from("timeline_events")
-    .delete()
-    .eq("id", id);
+  const { error } = await supabase.from("timeline").delete().eq("id", id);
   if (error) throw error;
 }
 
@@ -104,16 +103,19 @@ function getImportancePriority(importance: ImportanceLevel): number {
 
 function getCategoryEmoji(category: string): string {
   const emojiMap: Record<string, string> = {
-    court: "⚖️",
+    trial: "⚖️",
+    hearing: "👨‍⚖️",
     discovery: "🔍",
-    admin: "📋",
-    meeting: "🤝",
+    client_meeting: "🤝",
+    internal_meeting: "👥",
     deadline: "⏰",
     filing: "📄",
-    deposition: "🎯",
+    deposition: "🎙️",
     motion: "📝",
-    hearing: "👥",
-    settlement: "🤝",
+    appeal: "🔁",
+    evidence: "📸",
+    settlement: "💼",
+    other: "📌",
   };
   return emojiMap[category.toLowerCase()] || "📅";
 }
@@ -293,13 +295,13 @@ export default function TimelineWorkspace({
     start: "",
     end: "",
     importance: "medium" as ImportanceLevel,
-    category: "admin",
+    category: "trial",
     description: "", // ← ✅ Add this line
   });
 
   // Fetch events
   const { data: eventsData = [], isFetching } = useQuery({
-    queryKey: ["timeline_events", caseId],
+    queryKey: ["timeline", caseId],
     queryFn: () => fetchTimelineEvents(caseId),
     enabled: !!caseId,
     staleTime: Infinity,
@@ -313,7 +315,7 @@ export default function TimelineWorkspace({
   const createMutation = useMutation({
     mutationFn: createTimelineEvent,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["timeline_events", caseId] });
+      queryClient.invalidateQueries({ queryKey: ["timeline", caseId] });
       setShowAddModal(false);
       resetForm();
       setError(null);
@@ -330,7 +332,7 @@ export default function TimelineWorkspace({
   const deleteMutation = useMutation({
     mutationFn: deleteTimelineEvent,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["timeline_events", caseId] });
+      queryClient.invalidateQueries({ queryKey: ["timeline", caseId] });
       setShowEventModal(false);
       setSelectedEvent(null);
     },
@@ -342,10 +344,18 @@ export default function TimelineWorkspace({
   });
 
   useEffect(() => {
-    if (categoryFilters.size === 0 && events.length > 0) {
-      setCategoryFilters(new Set(events.map((e) => e.category)));
+    const current = new Set(categoryFilters);
+    let updated = false;
+
+    for (const e of events) {
+      if (!current.has(e.category)) {
+        current.add(e.category);
+        updated = true;
+      }
     }
-  }, [events, categoryFilters]);
+
+    if (updated) setCategoryFilters(current);
+  }, [events]);
 
   // Get unique categories
   const allCategories = Array.from(new Set(events.map((e) => e.category)));
@@ -374,7 +384,7 @@ export default function TimelineWorkspace({
       start: "",
       end: "",
       importance: "medium",
-      category: "admin",
+      category: "trial",
       description: "", // ← ✅ Add this line
     });
     setError(null);
@@ -391,20 +401,24 @@ export default function TimelineWorkspace({
     const startDate = new Date(formData.start);
     const endDate = new Date(formData.end);
 
-    if (endDate <= startDate) {
+    if (endDate < startDate) {
       setError("End date must be after start date");
       return;
     }
 
-    createMutation.mutate({
+    const sanitized = {
       case_id: caseId,
       title: formData.title.trim(),
-      start: startDate.toISOString(),
-      end: endDate.toISOString(),
-      importance: formData.importance,
-      category: formData.category,
-      description: formData.description.trim(),
-    });
+      start: startDate.toISOString().split("T")[0],
+      end: endDate.toISOString().split("T")[0],
+      importance: formData.importance as ImportanceLevel,
+      category: formData.category.trim(),
+      description: formData.description?.trim() || "",
+    };
+
+    console.log("Submitting sanitized event:", sanitized); // Debug
+
+    createMutation.mutate(sanitized);
   };
 
   const navigateTime = (direction: "prev" | "next") => {
@@ -446,6 +460,9 @@ export default function TimelineWorkspace({
     }
     setCategoryFilters(newFilters);
   };
+
+  console.log("Current filters:", Array.from(categoryFilters));
+  console.log("All categories in events:", allCategories);
 
   return (
     <div className="h-full flex flex-col">
@@ -652,6 +669,7 @@ export default function TimelineWorkspace({
                   </label>
                   <input
                     type="text"
+                    required
                     value={formData.title}
                     onChange={(e) =>
                       setFormData({ ...formData, title: e.target.value })
@@ -664,6 +682,7 @@ export default function TimelineWorkspace({
                       Description
                     </label>
                     <textarea
+                      required
                       value={formData.description}
                       onChange={(e) =>
                         setFormData({
@@ -684,10 +703,14 @@ export default function TimelineWorkspace({
                       Start Date
                     </label>
                     <input
-                      type="datetime-local"
-                      value={formData.start}
+                      type="date"
+                      required
+                      value={formData.start.split("T")[0]}
                       onChange={(e) =>
-                        setFormData({ ...formData, start: e.target.value })
+                        setFormData({
+                          ...formData,
+                          start: `${e.target.value}T00:00:00Z`,
+                        })
                       }
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
@@ -698,10 +721,14 @@ export default function TimelineWorkspace({
                       End Date
                     </label>
                     <input
-                      type="datetime-local"
-                      value={formData.end}
+                      type="date"
+                      required
+                      value={formData.end.split("T")[0]}
                       onChange={(e) =>
-                        setFormData({ ...formData, end: e.target.value })
+                        setFormData({
+                          ...formData,
+                          end: `${e.target.value}T00:00:00Z`,
+                        })
                       }
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
@@ -714,6 +741,7 @@ export default function TimelineWorkspace({
                       Importance
                     </label>
                     <select
+                      required
                       value={formData.importance}
                       onChange={(e) =>
                         setFormData({
@@ -736,24 +764,36 @@ export default function TimelineWorkspace({
                     </label>
                     <select
                       value={formData.category}
+                      required
                       onChange={(e) =>
                         setFormData({ ...formData, category: e.target.value })
                       }
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
-                      <option value="court">Court</option>
-                      <option value="discovery">Discovery</option>
-                      <option value="admin">Admin</option>
-                      <option value="meeting">Meeting</option>
-                      <option value="deadline">Deadline</option>
-                      <option value="filing">Filing</option>
-                      <option value="deposition">Deposition</option>
-                      <option value="motion">Motion</option>
-                      <option value="hearing">Hearing</option>
-                      <option value="settlement">Settlement</option>
+                      <option value="trial">⚖️Trial</option>
+                      <option value="hearing">👨‍⚖️Hearing</option>
+                      <option value="motion">📝Motion</option>
+                      <option value="deposition">🎙️Deposition</option>
+                      <option value="discovery">🔍Discovery</option>
+                      <option value="filing">📄Filing</option>
+                      <option value="deadline">⏰Deadline</option>
+                      <option value="client_meeting">🤝Client Meeting</option>
+                      <option value="internal_meeting">
+                        👥Internal Meeting
+                      </option>
+                      <option value="appeal">🔁Appeal</option>
+                      <option value="evidence">📸Evidence</option>
+                      <option value="settlement">💼Settlement</option>
+                      <option value="other">📌Other</option>
                     </select>
                   </div>
                 </div>
+
+                {error && (
+                  <div className="text-red-600 text-sm font-medium text-center">
+                    {error}
+                  </div>
+                )}
 
                 <div className="flex justify-end space-x-3 mt-6">
                   <button
