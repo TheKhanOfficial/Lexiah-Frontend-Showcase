@@ -220,45 +220,52 @@ function stackEvents(
     span: number;
   }> = [];
 
-  // Sort by importance (critical first) then by start date
+  // Sort by priority, then start date
   const sortedEvents = [...events].sort((a, b) => {
-    const priorityDiff =
+    const imp =
       getImportancePriority(a.importance) - getImportancePriority(b.importance);
-    if (priorityDiff !== 0) return priorityDiff;
-    return new Date(a.start).getTime() - new Date(b.start).getTime();
+    return imp !== 0
+      ? imp
+      : new Date(a.start).getTime() - new Date(b.start).getTime();
   });
+
+  const placementOrder = [3, 5, 2, 6, 1, 7]; // 1A=3, 1B=5, 2A=2, 2B=6, 3A=1, 3B=7
+  const colRowMap: Record<number, Set<number>> = {}; // Keep track of used rows per column
 
   for (const event of sortedEvents) {
     const position = getEventPosition(event, zoomConfig);
     if (!position) continue;
 
     const { startCol, span } = position;
+    const col = startCol;
 
-    // Find available row (1-4 for top, 6-9 for bottom)
-    let targetRow = -1;
-    const isHighPriority =
-      event.importance === "critical" || event.importance === "high";
-    const rowsToCheck = isHighPriority
-      ? [4, 3, 5, 2, 6, 1, 7] // center out from row 4
-      : [5, 6, 7, 3, 2, 1]; // bottom first for low/medium
+    if (!colRowMap[col]) colRowMap[col] = new Set();
 
-    for (const row of rowsToCheck) {
-      const hasConflict = positioned.some((p) => {
-        if (p.row !== row) return false;
-        const pEnd = p.col + p.span - 1;
-        const eventEnd = startCol + span - 1;
-        return !(eventEnd < p.col || startCol > pEnd);
-      });
-
-      if (!hasConflict) {
-        targetRow = row;
+    let assignedRow: number | null = null;
+    for (const row of placementOrder) {
+      if (!colRowMap[col].has(row)) {
+        assignedRow = row;
         break;
       }
     }
 
-    if (targetRow !== -1) {
-      positioned.push({ event, row: targetRow, col: startCol, span });
+    if (assignedRow === null) {
+      // Overflow, don't render on grid, let "+X more" handle it
+      continue;
     }
+
+    // Mark this row used for all columns it spans
+    for (let i = col; i < col + span; i++) {
+      if (!colRowMap[i]) colRowMap[i] = new Set();
+      colRowMap[i].add(assignedRow);
+    }
+
+    positioned.push({
+      event,
+      row: assignedRow,
+      col,
+      span,
+    });
   }
 
   return positioned;
@@ -375,14 +382,18 @@ export default function TimelineWorkspace({
       categoryFilters.has(event.category)
   );
 
+  const uniqueFilteredEvents = Array.from(
+    new Map(filteredEvents.map((e) => [e.id, e])).values()
+  );
+
   const zoomConfig = useMemo(
     () => getZoomConfig(zoom, currentDate),
     [zoom, currentDate]
   );
 
   const positionedEvents = useMemo(
-    () => stackEvents(filteredEvents, zoomConfig),
-    [filteredEvents, zoomConfig]
+    () => stackEvents(uniqueFilteredEvents, zoomConfig),
+    [uniqueFilteredEvents, zoomConfig]
   );
 
   // Form handlers
@@ -617,18 +628,36 @@ export default function TimelineWorkspace({
                       }}
                     >
                       {isLabelRow && (
-                        <div className="text-xs font-medium text-gray-700 text-center">
-                          {zoomConfig.formatLabel(
-                            new Date(
-                              zoomConfig.start.getTime() +
-                                (col - 1) *
-                                  zoomConfig.daysPerColumn *
-                                  24 *
-                                  60 *
-                                  60 *
-                                  1000
-                            )
-                          )}
+                        <div className="flex flex-col items-center justify-center space-y-0.5">
+                          <div className="text-xs font-medium text-gray-700 text-center">
+                            {zoomConfig.formatLabel(
+                              new Date(
+                                zoomConfig.start.getTime() +
+                                  (col - 1) *
+                                    zoomConfig.daysPerColumn *
+                                    24 *
+                                    60 *
+                                    60 *
+                                    1000
+                              )
+                            )}
+                          </div>
+                          {(() => {
+                            const colIndex = col - 1;
+                            const totalEvents = events.filter((e) => {
+                              const pos = getEventPosition(e, zoomConfig);
+                              return pos && pos.startCol === colIndex;
+                            });
+                            const overflow = totalEvents.length - 6;
+                            if (overflow > 0) {
+                              return (
+                                <div className="text-[10px] text-blue-600 font-medium">
+                                  +{overflow} more
+                                </div>
+                              );
+                            }
+                            return null;
+                          })()}
                         </div>
                       )}
                     </div>
