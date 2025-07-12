@@ -177,27 +177,35 @@ function getEventPosition(
     timelineStart.getTime() + zoomConfig.totalDays * 24 * 60 * 60 * 1000
   );
 
-  // Check if event overlaps with visible timeline
-  if (eventEnd < timelineStart || eventStart > timelineEnd) {
-    return null;
-  }
+  // Exclude events that don't intersect the current visible timeline
+  if (eventEnd < timelineStart || eventStart > timelineEnd) return null;
 
-  const startMs = Math.max(eventStart.getTime(), timelineStart.getTime());
-  const endMs = Math.min(eventEnd.getTime(), timelineEnd.getTime());
+  const MS_PER_DAY = 24 * 60 * 60 * 1000;
+  const daysPerCol = zoomConfig.daysPerColumn;
 
-  const startDayOffset = Math.floor(
-    (startMs - timelineStart.getTime()) / (24 * 60 * 60 * 1000)
+  // Align visible event range
+  const visibleStart = new Date(
+    Math.max(eventStart.getTime(), timelineStart.getTime())
   );
-  const endDayOffset = Math.ceil(
-    (endMs - timelineStart.getTime()) / (24 * 60 * 60 * 1000)
+  const visibleEnd = new Date(
+    Math.min(eventEnd.getTime(), timelineEnd.getTime())
   );
 
-  const startCol = Math.floor(startDayOffset / zoomConfig.daysPerColumn);
-  const endCol = Math.floor((endDayOffset - 1) / zoomConfig.daysPerColumn);
+  // Offset in days from start of timeline
+  const startOffsetDays = Math.floor(
+    (visibleStart.getTime() - timelineStart.getTime()) / MS_PER_DAY
+  );
+  const endOffsetDays = Math.ceil(
+    (visibleEnd.getTime() - timelineStart.getTime()) / MS_PER_DAY
+  );
+
+  const startCol = Math.floor(startOffsetDays / daysPerCol);
+  const endCol = Math.floor((endOffsetDays - 1) / daysPerCol);
+  const span = Math.max(1, endCol - startCol + 1);
 
   return {
-    startCol: Math.max(0, Math.min(6, startCol)),
-    span: Math.max(1, Math.min(7 - startCol, endCol - startCol + 1)),
+    startCol: startCol,
+    span: span,
   };
 }
 
@@ -631,7 +639,7 @@ export default function TimelineWorkspace({
                 {positionedEvents.map(({ event, row, col, span }, index) => (
                   <div
                     key={`${event.id}-${index}`}
-                    className={`absolute z-10 p-1 m-0.5 rounded border-2 cursor-pointer transition-all hover:scale-105 hover:z-20 ${getImportanceColor(
+                    className={`z-10 p-1 m-0.5 rounded border-2 flex items-center justify-center overflow-hidden cursor-pointer transition-all hover:scale-105 hover:z-20 ${getImportanceColor(
                       event.importance
                     )}`}
                     style={{
