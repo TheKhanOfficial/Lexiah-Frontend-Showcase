@@ -101,6 +101,13 @@ function getImportancePriority(importance: ImportanceLevel): number {
   }
 }
 
+function formatCategoryName(category: string): string {
+  return category
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
 function getCategoryEmoji(category: string): string {
   const emojiMap: Record<string, string> = {
     trial: "⚖️",
@@ -660,7 +667,8 @@ export default function TimelineWorkspace({
                                   : "bg-gray-100 text-gray-600 border-gray-300"
                               }`}
                             >
-                              {getCategoryEmoji(category)} {category}
+                              {getCategoryEmoji(category)}{" "}
+                              {formatCategoryName(category)}
                             </button>
                           ))}
                         </div>
@@ -756,8 +764,34 @@ export default function TimelineWorkspace({
                       }}
                       title={`${event.title} (${event.importance})`}
                     >
-                      <div className="text-xs text-white font-medium truncate">
-                        {getCategoryEmoji(event.category)} {event.title}
+                      <div className="flex flex-col w-full h-full text-left p-1 overflow-hidden">
+                        {/* Always visible label */}
+                        <div
+                          className="text-sm font-semibold text-white leading-tight mb-1 truncate"
+                          title={`${formatCategoryName(event.category)}: ${
+                            event.title
+                          }`}
+                        >
+                          {getCategoryEmoji(event.category)}{" "}
+                          {formatCategoryName(event.category)}: {event.title}
+                        </div>
+
+                        {/* Content with clipping */}
+                        <div
+                          className="text-[11px] text-white opacity-90 leading-snug relative flex-1"
+                          style={{
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            display: "-webkit-box",
+                            WebkitBoxOrient: "vertical",
+                            WebkitLineClamp: 4,
+                            whiteSpace: "normal", // ✅ allows multiline clamp
+                            wordBreak: "break-word", // ✅ ensures long words wrap
+                            maxHeight: "5.2em",
+                          }}
+                        >
+                          {event.description}
+                        </div>
                       </div>
                     </div>
                   );
@@ -1033,7 +1067,8 @@ export default function TimelineWorkspace({
                       "other",
                     ].map((category) => (
                       <option key={category} value={category}>
-                        {getCategoryEmoji(category)} {category}
+                        {getCategoryEmoji(category)}{" "}
+                        {formatCategoryName(category)}
                       </option>
                     ))}
                   </select>

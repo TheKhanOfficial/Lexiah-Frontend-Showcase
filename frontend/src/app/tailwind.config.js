@@ -1,5 +1,8 @@
-// tailwind.config.js
-module.exports = {
+import typography from "@tailwindcss/typography";
+import lineClamp from "@tailwindcss/line-clamp";
+
+/** @type {import('tailwindcss').Config} */
+const config = {
   content: [
     "./app/**/*.{js,ts,jsx,tsx}",
     "./pages/**/*.{js,ts,jsx,tsx}",
@@ -12,5 +15,7 @@ module.exports = {
       },
     },
   },
-  plugins: [require("@tailwindcss/typography")],
+  plugins: [typography, lineClamp],
 };
+
+export default config;
