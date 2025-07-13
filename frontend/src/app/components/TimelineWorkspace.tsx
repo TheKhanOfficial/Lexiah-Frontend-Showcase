@@ -128,7 +128,6 @@ function getZoomConfig(zoom: ZoomLevel, currentDate: Date) {
     case "week": {
       // Start from beginning of week (Sunday)
       const start = new Date(baseDate);
-      start.setDate(baseDate.getDate() - baseDate.getDay());
       return {
         start,
         daysPerColumn: 1,
@@ -142,8 +141,7 @@ function getZoomConfig(zoom: ZoomLevel, currentDate: Date) {
       };
     }
     case "month": {
-      // Start from beginning of month
-      const start = new Date(baseDate.getFullYear(), baseDate.getMonth(), 1);
+      const start = new Date(baseDate);
       return {
         start,
         daysPerColumn: 3,
@@ -153,8 +151,7 @@ function getZoomConfig(zoom: ZoomLevel, currentDate: Date) {
       };
     }
     case "year": {
-      // Start from beginning of year
-      const start = new Date(baseDate.getFullYear(), 0, 1);
+      const start = new Date(baseDate);
       return {
         start,
         daysPerColumn: 30, // Approximate month
@@ -203,6 +200,8 @@ function getEventPosition(
   const endCol = Math.floor((endOffsetDays - 1) / daysPerCol);
   const span = Math.max(1, endCol - startCol + 1);
 
+  if (startCol > 6 || endCol < 0) return null;
+
   return {
     startCol: startCol,
     span: span,
@@ -220,7 +219,6 @@ function stackEvents(
     span: number;
   }> = [];
 
-  // Sort by priority, then start date
   const sortedEvents = [...events].sort((a, b) => {
     const imp =
       getImportancePriority(a.importance) - getImportancePriority(b.importance);
@@ -229,43 +227,50 @@ function stackEvents(
       : new Date(a.start).getTime() - new Date(b.start).getTime();
   });
 
-  const placementOrder = [3, 5, 2, 6, 1, 7]; // 1A=3, 1B=5, 2A=2, 2B=6, 3A=1, 3B=7
-  const colRowMap: Record<number, Set<number>> = {}; // Keep track of used rows per column
+  const placementOrder = [3, 5, 2, 6, 1, 7]; // 1A -> 3B
+
+  // Track used rows per column
+  const usedGrid: Record<number, Set<number>> = {};
 
   for (const event of sortedEvents) {
     const position = getEventPosition(event, zoomConfig);
     if (!position) continue;
 
     const { startCol, span } = position;
-    const col = startCol;
-
-    if (!colRowMap[col]) colRowMap[col] = new Set();
 
     let assignedRow: number | null = null;
+
     for (const row of placementOrder) {
-      if (!colRowMap[col].has(row)) {
+      let rowFree = true;
+      for (let col = startCol; col < startCol + span; col++) {
+        if (!usedGrid[col]) usedGrid[col] = new Set();
+        if (usedGrid[col].has(row)) {
+          rowFree = false;
+          break;
+        }
+      }
+
+      if (rowFree) {
         assignedRow = row;
+        // Mark this row as used across all columns it spans
+        for (let col = startCol; col < startCol + span; col++) {
+          usedGrid[col].add(row);
+        }
         break;
       }
     }
 
-    if (assignedRow === null) {
-      // Overflow, don't render on grid, let "+X more" handle it
-      continue;
+    if (assignedRow !== null) {
+      positioned.push({
+        event,
+        row: assignedRow,
+        col: startCol,
+        span,
+      });
     }
 
-    // Mark this row used for all columns it spans
-    for (let i = col; i < col + span; i++) {
-      if (!colRowMap[i]) colRowMap[i] = new Set();
-      colRowMap[i].add(assignedRow);
-    }
-
-    positioned.push({
-      event,
-      row: assignedRow,
-      col,
-      span,
-    });
+    // If no row could be found (too many stacked events), it's intentionally hidden,
+    // and "+X more" logic can show it's overflowed.
   }
 
   return positioned;
@@ -359,6 +364,31 @@ export default function TimelineWorkspace({
   });
 
   useEffect(() => {
+    const container = timelineRef.current;
+    if (!container) return;
+
+    let lastScrollTime = 0;
+
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const now = Date.now();
+
+      // Throttle scroll speed (avoid updating too fast)
+      if (now - lastScrollTime < 100) return;
+      lastScrollTime = now;
+
+      const direction = e.deltaY > 0 ? "next" : "prev";
+      navigateTime(direction, 1); // ✅ Move 1 unit (i.e., 1 grid square)
+    };
+
+    container.addEventListener("wheel", handleWheel, { passive: false });
+
+    return () => {
+      container.removeEventListener("wheel", handleWheel);
+    };
+  }, [zoom, currentDate]);
+
+  useEffect(() => {
     const current = new Set(categoryFilters);
     let updated = false;
 
@@ -391,9 +421,13 @@ export default function TimelineWorkspace({
     [zoom, currentDate]
   );
 
+  const visibleEvents = uniqueFilteredEvents.filter(
+    (event) => getEventPosition(event, zoomConfig) !== null
+  );
+
   const positionedEvents = useMemo(
-    () => stackEvents(uniqueFilteredEvents, zoomConfig),
-    [uniqueFilteredEvents, zoomConfig]
+    () => stackEvents(visibleEvents, zoomConfig),
+    [visibleEvents, zoomConfig]
   );
 
   // Form handlers
@@ -440,20 +474,19 @@ export default function TimelineWorkspace({
     createMutation.mutate(sanitized);
   };
 
-  const navigateTime = (direction: "prev" | "next") => {
+  const navigateTime = (direction: "prev" | "next", steps = 1) => {
     const newDate = new Date(currentDate);
+    const dir = direction === "next" ? 1 : -1;
 
     switch (zoom) {
       case "week":
-        newDate.setDate(newDate.getDate() + (direction === "next" ? 7 : -7));
+        newDate.setDate(newDate.getDate() + dir * steps);
         break;
       case "month":
-        newDate.setMonth(newDate.getMonth() + (direction === "next" ? 1 : -1));
+        newDate.setDate(newDate.getDate() + dir * steps * 3); // 3 days per col
         break;
       case "year":
-        newDate.setFullYear(
-          newDate.getFullYear() + (direction === "next" ? 1 : -1)
-        );
+        newDate.setDate(newDate.getDate() + dir * steps * 30); // 30 days per col
         break;
     }
 
@@ -665,27 +698,29 @@ export default function TimelineWorkspace({
                 })}
 
                 {/* Events */}
-                {positionedEvents.map(({ event, row, col, span }, index) => (
-                  <div
-                    key={`${event.id}-${index}`}
-                    className={`z-10 p-1 m-0.5 rounded border-2 flex items-center justify-center overflow-hidden cursor-pointer transition-all hover:scale-105 hover:z-20 ${getImportanceColor(
-                      event.importance
-                    )}`}
-                    style={{
-                      gridColumn: `${col + 1} / span ${span}`,
-                      gridRow: row,
-                    }}
-                    onClick={() => {
-                      setSelectedEvent(event);
-                      setShowEventModal(true);
-                    }}
-                    title={`${event.title} (${event.importance})`}
-                  >
-                    <div className="text-xs text-white font-medium truncate">
-                      {getCategoryEmoji(event.category)} {event.title}
+                {positionedEvents.map(({ event, row, col, span }, index) => {
+                  return (
+                    <div
+                      key={`${event.id}-${index}`}
+                      className={`z-10 p-1 m-0.5 rounded border-2 flex items-center justify-center overflow-hidden cursor-pointer transition-all hover:scale-105 hover:z-20 ${getImportanceColor(
+                        event.importance
+                      )}`}
+                      style={{
+                        gridColumn: `${col + 1} / ${col + span + 1}`,
+                        gridRow: row,
+                      }}
+                      onClick={() => {
+                        setSelectedEvent(event);
+                        setShowEventModal(true);
+                      }}
+                      title={`${event.title} (${event.importance})`}
+                    >
+                      <div className="text-xs text-white font-medium truncate">
+                        {getCategoryEmoji(event.category)} {event.title}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>
