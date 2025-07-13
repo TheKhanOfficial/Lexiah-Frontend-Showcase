@@ -163,16 +163,24 @@ function getZoomConfig(zoom: ZoomLevel, currentDate: Date) {
   }
 }
 
+function parseLocalDate(dateStr: string): Date {
+  const [year, month, day] = dateStr.split("-").map(Number);
+  return new Date(year, month - 1, day); // ✅ zero-indexed months
+}
+
 function getEventPosition(
   event: TimelineEvent,
   zoomConfig: any
 ): { startCol: number; span: number } | null {
-  const eventStart = new Date(event.start);
-  const eventEnd = new Date(event.end);
-  const timelineStart = zoomConfig.start;
+  const eventStart = parseLocalDate(event.start);
+  const eventEnd = parseLocalDate(event.end);
+  const timelineStart = new Date(zoomConfig.start);
+  timelineStart.setHours(0, 0, 0, 0);
+
   const timelineEnd = new Date(
-    timelineStart.getTime() + zoomConfig.totalDays * 24 * 60 * 60 * 1000
+    timelineStart.getTime() + zoomConfig.totalDays * 86400000
   );
+  timelineEnd.setHours(23, 59, 59, 999); // Include entire end day
 
   // Exclude events that don't intersect the current visible timeline
   if (eventEnd < timelineStart || eventStart > timelineEnd) return null;
@@ -180,12 +188,15 @@ function getEventPosition(
   const MS_PER_DAY = 24 * 60 * 60 * 1000;
   const daysPerCol = zoomConfig.daysPerColumn;
 
+  const eventEndInclusive = new Date(eventEnd.getTime() + MS_PER_DAY);
+
   // Align visible event range
   const visibleStart = new Date(
     Math.max(eventStart.getTime(), timelineStart.getTime())
   );
+
   const visibleEnd = new Date(
-    Math.min(eventEnd.getTime(), timelineEnd.getTime())
+    Math.min(eventEndInclusive.getTime(), timelineEnd.getTime())
   );
 
   // Offset in days from start of timeline
@@ -291,6 +302,9 @@ export default function TimelineWorkspace({
   const [selectedEvent, setSelectedEvent] = useState<TimelineEvent | null>(
     null
   );
+  const [editableEvent, setEditableEvent] = useState<TimelineEvent | null>(
+    null
+  );
 
   const [importanceFilters, setImportanceFilters] = useState<
     Set<ImportanceLevel>
@@ -359,6 +373,29 @@ export default function TimelineWorkspace({
     onError: (err) => {
       setToastMessage(
         err instanceof Error ? err.message : "Failed to delete event"
+      );
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({
+      id,
+      updates,
+    }: {
+      id: string;
+      updates: Partial<TimelineEvent>;
+    }) => updateTimelineEvent(id, updates),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["timeline", caseId] });
+      setToastMessage("Event updated ✅");
+      setShowEventModal(false); // 👈 Auto-close the modal
+      setSelectedEvent(null); // 👈 Clear selected
+      setEditableEvent(null); // 👈 Clear editable
+    },
+
+    onError: (err) => {
+      setToastMessage(
+        err instanceof Error ? err.message : "Failed to update event"
       );
     },
   });
@@ -462,8 +499,8 @@ export default function TimelineWorkspace({
     const sanitized = {
       case_id: caseId,
       title: formData.title.trim(),
-      start: startDate.toISOString().split("T")[0],
-      end: endDate.toISOString().split("T")[0],
+      start: formData.start, // YYYY-MM-DD format, no timezone shift
+      end: formData.end,
       importance: formData.importance as ImportanceLevel,
       category: formData.category.trim(),
       description: formData.description?.trim() || "",
@@ -702,15 +739,19 @@ export default function TimelineWorkspace({
                   return (
                     <div
                       key={`${event.id}-${index}`}
-                      className={`z-10 p-1 m-0.5 rounded border-2 flex items-center justify-center overflow-hidden cursor-pointer transition-all hover:scale-105 hover:z-20 ${getImportanceColor(
+                      className={`z-10 p-1 m-0.5 rounded border-2 flex items-center justify-center overflow-hidden cursor-pointer transition-transform duration-150 ease-out transform hover:scale-105 hover:z-20 ${getImportanceColor(
                         event.importance
                       )}`}
                       style={{
                         gridColumn: `${col + 1} / ${col + span + 1}`,
                         gridRow: row,
+                        contain: "layout paint",
+                        transformOrigin:
+                          col + span + 1 >= 7 ? "right center" : "center", // 👈 this is the fix
                       }}
                       onClick={() => {
                         setSelectedEvent(event);
+                        setEditableEvent(event);
                         setShowEventModal(true);
                       }}
                       title={`${event.title} (${event.importance})`}
@@ -777,11 +818,11 @@ export default function TimelineWorkspace({
                     <input
                       type="date"
                       required
-                      value={formData.start.split("T")[0]}
+                      value={formData.start}
                       onChange={(e) =>
                         setFormData({
                           ...formData,
-                          start: `${e.target.value}T00:00:00Z`,
+                          start: e.target.value,
                         })
                       }
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -795,11 +836,11 @@ export default function TimelineWorkspace({
                     <input
                       type="date"
                       required
-                      value={formData.end.split("T")[0]}
+                      value={formData.end}
                       onChange={(e) =>
                         setFormData({
                           ...formData,
-                          end: `${e.target.value}T00:00:00Z`,
+                          end: e.target.value,
                         })
                       }
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -892,11 +933,12 @@ export default function TimelineWorkspace({
       {/* Event Detail Modal */}
       {showEventModal &&
         selectedEvent &&
+        editableEvent &&
         createPortal(
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 w-full max-w-md">
               <div className="flex items-start justify-between mb-4">
-                <h3 className="text-lg font-semibold">{selectedEvent.title}</h3>
+                <h3 className="text-lg font-semibold">{editableEvent.title}</h3>
                 <button
                   onClick={() => setShowEventModal(false)}
                   className="text-gray-400 hover:text-gray-600"
@@ -911,7 +953,14 @@ export default function TimelineWorkspace({
                     Start:{" "}
                   </span>
                   <span className="text-sm text-gray-600">
-                    {new Date(selectedEvent.start).toLocaleString()}
+                    {parseLocalDate(editableEvent.start).toLocaleDateString(
+                      "en-US",
+                      {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      }
+                    )}
                   </span>
                 </div>
 
@@ -920,44 +969,93 @@ export default function TimelineWorkspace({
                     End:{" "}
                   </span>
                   <span className="text-sm text-gray-600">
-                    {new Date(selectedEvent.end).toLocaleString()}
+                    {parseLocalDate(editableEvent.end).toLocaleDateString(
+                      "en-US",
+                      {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      }
+                    )}
                   </span>
                 </div>
 
+                {/* Editable Importance */}
                 <div>
-                  <span className="text-sm font-medium text-gray-700">
-                    Importance:{" "}
-                  </span>
-                  <span
-                    className={`inline-block w-3 h-3 rounded-full ${getImportanceColor(
-                      selectedEvent.importance
-                    )} mr-2`}
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Importance
+                  </label>
+                  <select
+                    value={editableEvent.importance}
+                    onChange={(e) =>
+                      setEditableEvent({
+                        ...editableEvent,
+                        importance: e.target.value as ImportanceLevel,
+                      })
+                    }
+                    className="w-full border border-gray-300 rounded px-2 py-1"
+                  >
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                    <option value="critical">Critical</option>
+                  </select>
+                </div>
+
+                {/* Editable Category */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Category
+                  </label>
+                  <select
+                    value={editableEvent.category}
+                    onChange={(e) =>
+                      setEditableEvent({
+                        ...editableEvent,
+                        category: e.target.value,
+                      })
+                    }
+                    className="w-full border border-gray-300 rounded px-2 py-1"
+                  >
+                    {[
+                      "trial",
+                      "hearing",
+                      "motion",
+                      "deposition",
+                      "discovery",
+                      "filing",
+                      "deadline",
+                      "client_meeting",
+                      "internal_meeting",
+                      "appeal",
+                      "evidence",
+                      "settlement",
+                      "other",
+                    ].map((category) => (
+                      <option key={category} value={category}>
+                        {getCategoryEmoji(category)} {category}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Editable Description */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Description
+                  </label>
+                  <textarea
+                    value={editableEvent.description}
+                    onChange={(e) =>
+                      setEditableEvent({
+                        ...editableEvent,
+                        description: e.target.value,
+                      })
+                    }
+                    className="w-full border border-gray-300 rounded px-2 py-2"
+                    rows={4}
                   />
-                  <span className="text-sm text-gray-600 capitalize">
-                    {selectedEvent.importance}
-                  </span>
                 </div>
-
-                <div>
-                  <span className="text-sm font-medium text-gray-700">
-                    Category:{" "}
-                  </span>
-                  <span className="text-sm text-gray-600">
-                    {getCategoryEmoji(selectedEvent.category)}{" "}
-                    {selectedEvent.category}
-                  </span>
-                </div>
-
-                {selectedEvent.description && (
-                  <div>
-                    <span className="text-sm font-medium text-gray-700">
-                      Description:{" "}
-                    </span>
-                    <p className="text-sm text-gray-600 whitespace-pre-wrap">
-                      {selectedEvent.description}
-                    </p>
-                  </div>
-                )}
               </div>
 
               <div className="flex justify-end space-x-3 mt-6">
@@ -966,6 +1064,24 @@ export default function TimelineWorkspace({
                   className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
                 >
                   Close
+                </button>
+                <button
+                  onClick={() => {
+                    if (editableEvent) {
+                      updateMutation.mutate({
+                        id: editableEvent.id,
+                        updates: {
+                          description: editableEvent.description,
+                          importance: editableEvent.importance,
+                          category: editableEvent.category,
+                        },
+                      });
+                    }
+                  }}
+                  disabled={updateMutation.isPending}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+                >
+                  {updateMutation.isPending ? "Saving..." : "Save"}
                 </button>
                 <button
                   onClick={() => {
@@ -985,6 +1101,7 @@ export default function TimelineWorkspace({
           </div>,
           document.body
         )}
+
       {toastMessage && (
         <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-red-600 text-white text-sm px-4 py-2 rounded shadow-lg z-50">
           {toastMessage}
