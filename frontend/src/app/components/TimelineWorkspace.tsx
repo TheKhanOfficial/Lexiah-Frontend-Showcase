@@ -695,9 +695,9 @@ export default function TimelineWorkspace({
                   return (
                     <div
                       key={`cell-${row}-${col}`}
-                      className={`border border-gray-200 ${
+                      className={`${
                         isLabelRow
-                          ? "bg-gray-100 flex items-center justify-center p-1"
+                          ? "border border-gray-300 bg-gray-100 flex items-center justify-center p-1"
                           : "bg-white"
                       }`}
                       style={{
@@ -722,18 +722,31 @@ export default function TimelineWorkspace({
                           </div>
                           {(() => {
                             const colIndex = col - 1;
-                            const totalEvents = events.filter((e) => {
-                              const pos = getEventPosition(e, zoomConfig);
-                              return pos && pos.startCol === colIndex;
-                            });
-                            const overflow = totalEvents.length - 6;
-                            if (overflow > 0) {
+
+                            // Step 1: Get all visible events that belong in this column
+                            const totalVisibleInCol = visibleEvents.filter(
+                              (e) => {
+                                const pos = getEventPosition(e, zoomConfig);
+                                return pos && pos.startCol === colIndex;
+                              }
+                            );
+
+                            // Step 2: Count how many of them are actually positioned
+                            const positionedInCol = positionedEvents.filter(
+                              (e) => e.col === colIndex
+                            );
+
+                            const overflowCount =
+                              totalVisibleInCol.length - positionedInCol.length;
+
+                            if (overflowCount > 0) {
                               return (
                                 <div className="text-[10px] text-blue-600 font-medium">
-                                  +{overflow} more
+                                  +{overflowCount} more
                                 </div>
                               );
                             }
+
                             return null;
                           })()}
                         </div>
