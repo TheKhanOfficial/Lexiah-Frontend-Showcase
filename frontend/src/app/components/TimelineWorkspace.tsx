@@ -321,6 +321,8 @@ export default function TimelineWorkspace({
     new Set()
   );
 
+  const [showFilter, setShowFilter] = useState(false);
+
   const [error, setError] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   useEffect(() => {
@@ -576,113 +578,127 @@ export default function TimelineWorkspace({
               className="absolute inset-0 overflow-auto bg-white"
             >
               {/* Disjoint Controls Inline with Timeline */}
-              <div className="absolute z-20 top-2 left-2 flex flex-wrap gap-2 text-sm">
-                {/* Navigation */}
-                <button
-                  onClick={() => navigateTime("prev")}
-                  className="px-2 py-1 rounded border text-gray-700 hover:bg-gray-100"
-                >
-                  ←
-                </button>
-                <button
-                  onClick={() => setCurrentDate(new Date())}
-                  className="px-2 py-1 rounded border text-blue-600 hover:bg-blue-50"
-                >
-                  Today
-                </button>
-                <button
-                  onClick={() => navigateTime("next")}
-                  className="px-2 py-1 rounded border text-gray-700 hover:bg-gray-100"
-                >
-                  →
-                </button>
-
-                {/* Zoom */}
-                {(["week", "month", "year"] as ZoomLevel[]).map((level) => (
+              <div className="absolute z-50 top-2 left-2 right-2 flex justify-between items-center flex-wrap gap-2 text-sm">
+                <div className="flex flex-wrap items-center gap-2">
+                  {/* Navigation */}
                   <button
-                    key={level}
-                    onClick={() => setZoom(level)}
-                    className={`px-2 py-1 rounded border capitalize ${
-                      zoom === level
-                        ? "bg-blue-600 text-white"
-                        : "bg-white text-gray-700 hover:bg-gray-100"
-                    }`}
+                    onClick={() => setCurrentDate(new Date())}
+                    className="px-2 py-1 rounded border text-blue-600 hover:bg-blue-50"
                   >
-                    {level}
+                    Today
                   </button>
-                ))}
+                  <div className="flex gap-0">
+                    {/* Zoom */}
+                    {(["week", "month", "year"] as ZoomLevel[]).map((level) => (
+                      <button
+                        key={level}
+                        onClick={() => setZoom(level)}
+                        className={`px-2 py-1 rounded border capitalize ${
+                          zoom === level
+                            ? "bg-blue-600 text-white"
+                            : "bg-white text-gray-700 hover:bg-gray-100"
+                        }`}
+                      >
+                        {level}
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
-                {/* Add Event */}
-                <button
-                  onClick={() => {
-                    setShowAddModal(true);
-                    resetForm();
-                  }}
-                  className="px-3 py-1 rounded bg-blue-600 text-white hover:bg-blue-700"
-                >
-                  + Add
-                </button>
+                <div className="flex flex-wrap items-center gap-2">
+                  {/* Filter Toggle */}
+                  <div className="relative">
+                    <button
+                      className={`px-2 py-1 rounded border bg-white text-gray-700 hover:bg-gray-100 ${
+                        showFilter ? "ring-2 ring-blue-300" : ""
+                      }`}
+                      onClick={() => setShowFilter((prev) => !prev)}
+                    >
+                      Filter ⌄
+                    </button>
 
-                {/* Filter Toggle */}
-                <div className="relative group">
-                  <button className="px-2 py-1 rounded border text-gray-700 hover:bg-gray-100">
-                    Filter ⌄
-                  </button>
-
-                  {/* Dropdown */}
-                  <div className="absolute mt-1 hidden group-hover:block bg-white border rounded shadow p-2 space-y-3 z-30">
-                    {/* Importance */}
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">Importance</p>
-                      <div className="flex gap-1">
-                        {(
-                          [
-                            "low",
-                            "medium",
-                            "high",
-                            "critical",
-                          ] as ImportanceLevel[]
-                        ).map((level) => (
+                    {showFilter && (
+                      <div className="absolute mt-1 bg-white border rounded shadow p-4 space-y-4 z-30 w-35">
+                        <div className="flex justify-between items-center">
+                          <p className="text-sm font-semibold text-gray-700">
+                            Filters
+                          </p>
                           <button
-                            key={level}
-                            onClick={() => toggleImportanceFilter(level)}
-                            className={`w-6 h-6 rounded border-2 ${
-                              importanceFilters.has(level)
-                                ? getImportanceColor(level)
-                                : "bg-gray-200 border-gray-300"
-                            }`}
-                            title={level}
-                          />
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Categories */}
-                    {allCategories.length > 0 && (
-                      <div>
-                        <p className="text-xs text-gray-500 mb-1">Categories</p>
-                        <div className="flex flex-wrap gap-1 max-w-xs">
-                          {allCategories.map((category) => (
-                            <button
-                              key={category}
-                              onClick={() => toggleCategoryFilter(category)}
-                              className={`px-2 py-0.5 text-xs rounded border ${
-                                categoryFilters.has(category)
-                                  ? "bg-blue-100 text-blue-800 border-blue-300"
-                                  : "bg-gray-100 text-gray-600 border-gray-300"
-                              }`}
-                            >
-                              {getCategoryEmoji(category)}{" "}
-                              {formatCategoryName(category)}
-                            </button>
-                          ))}
+                            className="text-gray-500 text-lg hover:text-gray-800"
+                            onClick={() => setShowFilter(false)}
+                          >
+                            ✕
+                          </button>
                         </div>
+
+                        {/* Importance */}
+                        <div>
+                          <p className="text-xs text-gray-500 mb-1">
+                            Importance
+                          </p>
+                          <div className="flex gap-1">
+                            {(
+                              [
+                                "low",
+                                "medium",
+                                "high",
+                                "critical",
+                              ] as ImportanceLevel[]
+                            ).map((level) => (
+                              <button
+                                key={level}
+                                onClick={() => toggleImportanceFilter(level)}
+                                className={`w-6 h-6 rounded border-2 ${
+                                  importanceFilters.has(level)
+                                    ? getImportanceColor(level)
+                                    : "bg-gray-200 border-gray-300"
+                                }`}
+                                title={level}
+                              />
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Categories */}
+                        {allCategories.length > 0 && (
+                          <div>
+                            <p className="text-xs text-gray-500 mb-1">
+                              Categories
+                            </p>
+                            <div className="flex flex-wrap gap-1 max-w-xs">
+                              {allCategories.map((category) => (
+                                <button
+                                  key={category}
+                                  onClick={() => toggleCategoryFilter(category)}
+                                  className={`px-2 py-0.5 text-xs rounded border ${
+                                    categoryFilters.has(category)
+                                      ? "bg-blue-100 text-blue-800 border-blue-300"
+                                      : "bg-gray-100 text-gray-600 border-gray-300"
+                                  }`}
+                                >
+                                  {getCategoryEmoji(category)}{" "}
+                                  {formatCategoryName(category)}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
+
+                  {/* Add Event */}
+                  <button
+                    onClick={() => {
+                      setShowAddModal(true);
+                      resetForm();
+                    }}
+                    className="px-3 py-1 rounded bg-blue-600 text-white hover:bg-blue-700"
+                  >
+                    + Add
+                  </button>
                 </div>
               </div>
-
               <div
                 className="grid w-full h-full"
                 style={{
@@ -738,7 +754,7 @@ export default function TimelineWorkspace({
                             );
 
                             // Get all matching events in the current column time range
-                            const totalInCol = events.filter((e) => {
+                            const totalInCol = filteredEvents.filter((e) => {
                               const eventStart = parseLocalDate(e.start);
                               const eventEnd = parseLocalDate(e.end);
                               return (
@@ -822,7 +838,11 @@ export default function TimelineWorkspace({
                         gridRow: row,
                         contain: "layout paint",
                         transformOrigin:
-                          col + span + 1 >= 7 ? "right center" : "center", // 👈 this is the fix
+                          row >= 7
+                            ? "center bottom"
+                            : col + span + 1 >= 7
+                            ? "right center"
+                            : "center",
                       }}
                       onClick={() => {
                         setSelectedEvent(event);
