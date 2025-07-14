@@ -340,6 +340,11 @@ export default function TimelineWorkspace({
     description: "", // ← ✅ Add this line
   });
 
+  const [overflowEvents, setOverflowEvents] = useState<TimelineEvent[] | null>(
+    null
+  );
+  const [overflowLabel, setOverflowLabel] = useState<string | null>(null);
+
   // Fetch events
   const { data: eventsData = [], isFetching } = useQuery({
     queryKey: ["timeline", caseId],
@@ -723,27 +728,76 @@ export default function TimelineWorkspace({
                           {(() => {
                             const colIndex = col - 1;
 
-                            // Step 1: Get all visible events that belong in this column
-                            const totalVisibleInCol = visibleEvents.filter(
-                              (e) => {
-                                const pos = getEventPosition(e, zoomConfig);
-                                return pos && pos.startCol === colIndex;
-                              }
+                            const columnStart = new Date(
+                              zoomConfig.start.getTime() +
+                                colIndex * zoomConfig.daysPerColumn * 86400000
+                            );
+                            const columnEnd = new Date(
+                              columnStart.getTime() +
+                                zoomConfig.daysPerColumn * 86400000
                             );
 
-                            // Step 2: Count how many of them are actually positioned
+                            // Get all matching events in the current column time range
+                            const totalInCol = events.filter((e) => {
+                              const eventStart = parseLocalDate(e.start);
+                              const eventEnd = parseLocalDate(e.end);
+                              return (
+                                eventStart < columnEnd &&
+                                eventEnd >= columnStart
+                              );
+                            });
+
                             const positionedInCol = positionedEvents.filter(
                               (e) => e.col === colIndex
                             );
 
+                            // ✅ Show +X only if more than 6 total
                             const overflowCount =
-                              totalVisibleInCol.length - positionedInCol.length;
+                              totalInCol.length > 6 ? totalInCol.length - 6 : 0;
 
                             if (overflowCount > 0) {
                               return (
-                                <div className="text-[10px] text-blue-600 font-medium">
+                                <button
+                                  className="text-[10px] text-blue-600 font-medium underline"
+                                  onClick={() => {
+                                    setOverflowEvents(totalInCol);
+                                    setOverflowLabel(
+                                      zoomConfig.formatLabel(
+                                        new Date(
+                                          zoomConfig.start.getTime() +
+                                            colIndex *
+                                              zoomConfig.daysPerColumn *
+                                              86400000
+                                        )
+                                      )
+                                    );
+                                  }}
+                                >
                                   +{overflowCount} more
-                                </div>
+                                </button>
+                              );
+                            }
+
+                            if (overflowCount > 0) {
+                              return (
+                                <button
+                                  className="text-[10px] text-blue-600 font-medium underline"
+                                  onClick={() => {
+                                    setOverflowEvents(totalInCol);
+                                    setOverflowLabel(
+                                      zoomConfig.formatLabel(
+                                        new Date(
+                                          zoomConfig.start.getTime() +
+                                            colIndex *
+                                              zoomConfig.daysPerColumn *
+                                              86400000
+                                        )
+                                      )
+                                    );
+                                  }}
+                                >
+                                  +{overflowCount} more
+                                </button>
                               );
                             }
 
@@ -1144,6 +1198,56 @@ export default function TimelineWorkspace({
                 >
                   {deleteMutation.isPending ? "Deleting..." : "Delete"}
                 </button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
+
+      {/* Overflow Events Modal */}
+      {overflowEvents &&
+        createPortal(
+          <div className="fixed inset-0 z-50 bg-black/40 px-4 py-8 overflow-y-auto">
+            <div className="bg-white rounded-lg shadow-lg w-full max-w-3xl mx-auto p-6">
+              <div className="flex justify-between items-start mb-6">
+                <h2 className="text-xl font-bold text-gray-900">
+                  Events on {overflowLabel}
+                </h2>
+                <button
+                  onClick={() => setOverflowEvents(null)}
+                  className="text-gray-600 text-2xl hover:text-gray-900"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                {overflowEvents.map((event) => (
+                  <div
+                    key={event.id}
+                    onClick={() => {
+                      setSelectedEvent(event);
+                      setEditableEvent(event);
+                      setShowEventModal(true);
+                      setOverflowEvents(null);
+                    }}
+                    className={`rounded border-2 p-4 cursor-pointer transition hover:scale-[1.01] ${getImportanceColor(
+                      event.importance
+                    )}`}
+                  >
+                    <div className="text-sm font-semibold text-white mb-2 whitespace-pre-wrap break-words">
+                      {getCategoryEmoji(event.category)}{" "}
+                      {formatCategoryName(event.category)}: {event.title}
+                    </div>
+                    <div className="text-sm text-white whitespace-pre-wrap break-words">
+                      {event.description}
+                    </div>
+                  </div>
+                ))}
+
+                {overflowEvents.length === 0 && (
+                  <p className="text-gray-500 text-sm">No events found.</p>
+                )}
               </div>
             </div>
           </div>,
