@@ -17,6 +17,7 @@ interface TimelineEvent {
   category: string;
   description: string;
   created_at: string;
+  document_ids?: string[];
 }
 
 interface TimelineWorkspaceProps {
@@ -534,6 +535,7 @@ export default function TimelineWorkspace({
       importance: formData.importance as ImportanceLevel,
       category: formData.category.trim(),
       description: formData.description?.trim() || "",
+      document_ids: [],
     };
 
     console.log("Submitting sanitized event:", sanitized); // Debug
@@ -1250,6 +1252,33 @@ export default function TimelineWorkspace({
                     rows={4}
                   />
                 </div>
+              </div>
+
+              {/* Related Documents (Static for now) */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Related Documents
+                </label>
+                <ul className="text-sm text-blue-600 underline space-y-1">
+                  <li>
+                    <button
+                      type="button"
+                      onClick={() => alert("TODO: link to document")}
+                      className="hover:text-blue-800"
+                    >
+                      📄 Placeholder Doc 1
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      onClick={() => alert("TODO: link to document")}
+                      className="hover:text-blue-800"
+                    >
+                      📄 Placeholder Doc 2
+                    </button>
+                  </li>
+                </ul>
               </div>
 
               <div className="flex justify-end space-x-3 mt-6">
