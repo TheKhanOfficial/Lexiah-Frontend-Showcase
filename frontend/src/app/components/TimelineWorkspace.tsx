@@ -133,20 +133,25 @@ function getZoomConfig(zoom: ZoomLevel, currentDate: Date) {
 
   switch (zoom) {
     case "week": {
-      // Start from beginning of week (Sunday)
       const start = new Date(baseDate);
       return {
         start,
         daysPerColumn: 1,
         totalDays: 12,
-        formatLabel: (date: Date) =>
-          date.toLocaleDateString("en-US", {
+        formatLabel: (date: Date) => {
+          const weekday = date.toLocaleDateString("en-US", {
             weekday: "short",
-            month: "numeric",
+          }); // Mon
+          const datePart = date.toLocaleDateString("en-US", {
+            month: "long", // July
             day: "numeric",
-          }),
+            year: "numeric",
+          }); // July 14, 2025
+          return `${datePart} (${weekday})`;
+        },
       };
     }
+
     case "month": {
       const start = new Date(baseDate);
       return {
@@ -154,17 +159,25 @@ function getZoomConfig(zoom: ZoomLevel, currentDate: Date) {
         daysPerColumn: 3,
         totalDays: 36,
         formatLabel: (date: Date) =>
-          date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+          date.toLocaleDateString("en-US", {
+            month: "short", // Sep
+            day: "numeric", // 17
+            year: "numeric", // 2025
+          }),
       };
     }
+
     case "year": {
       const start = new Date(baseDate);
       return {
         start,
-        daysPerColumn: 30, // Approximate month
+        daysPerColumn: 30,
         totalDays: 365,
         formatLabel: (date: Date) =>
-          date.toLocaleDateString("en-US", { month: "short" }),
+          date.toLocaleDateString("en-US", {
+            month: "short", // Sep
+            year: "numeric", // 2025
+          }),
       };
     }
   }
@@ -306,6 +319,9 @@ export default function TimelineWorkspace({
   const [currentDate, setCurrentDate] = useState(new Date());
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEventModal, setShowEventModal] = useState(false);
+  const [showDeleteAllModal, setShowDeleteAllModal] = useState(false);
+  const [isDeletingAll, setIsDeletingAll] = useState(false);
+
   const [selectedEvent, setSelectedEvent] = useState<TimelineEvent | null>(
     null
   );
@@ -578,16 +594,16 @@ export default function TimelineWorkspace({
               className="absolute inset-0 overflow-auto bg-white"
             >
               {/* Disjoint Controls Inline with Timeline */}
-              <div className="absolute z-50 top-2 left-2 right-2 flex justify-between items-center flex-wrap gap-2 text-sm">
+              <div className="absolute z-50 top-2 left-2 right-2 flex justify-between items-center flex-wrap gap-2 text-sm pointer-events-none">
                 <div className="flex flex-wrap items-center gap-2">
                   {/* Navigation */}
                   <button
                     onClick={() => setCurrentDate(new Date())}
-                    className="px-2 py-1 rounded border text-blue-600 hover:bg-blue-50"
+                    className="px-2 py-1 rounded border bg-white text-blue-600 hover:bg-blue-50 pointer-events-auto"
                   >
                     Today
                   </button>
-                  <div className="flex gap-0">
+                  <div className="flex gap-0 pointer-events-auto">
                     {/* Zoom */}
                     {(["week", "month", "year"] as ZoomLevel[]).map((level) => (
                       <button
@@ -607,7 +623,7 @@ export default function TimelineWorkspace({
 
                 <div className="flex flex-wrap items-center gap-2">
                   {/* Filter Toggle */}
-                  <div className="relative">
+                  <div className="relative pointer-events-auto">
                     <button
                       className={`px-2 py-1 rounded border bg-white text-gray-700 hover:bg-gray-100 ${
                         showFilter ? "ring-2 ring-blue-300" : ""
@@ -618,7 +634,7 @@ export default function TimelineWorkspace({
                     </button>
 
                     {showFilter && (
-                      <div className="absolute mt-1 bg-white border rounded shadow p-4 space-y-4 z-30 w-35">
+                      <div className="absolute mt-1 bg-white border rounded shadow p-4 space-y-4 z-30 w-35 pointer-events-auto">
                         <div className="flex justify-between items-center">
                           <p className="text-sm font-semibold text-gray-700">
                             Filters
@@ -687,13 +703,21 @@ export default function TimelineWorkspace({
                     )}
                   </div>
 
+                  {/* Delete All */}
+                  <button
+                    onClick={() => setShowDeleteAllModal(true)}
+                    className="px-3 py-1 rounded pointer-events-auto bg-red-600 text-white hover:bg-red-700"
+                  >
+                    🗑️ Delete All
+                  </button>
+
                   {/* Add Event */}
                   <button
                     onClick={() => {
                       setShowAddModal(true);
                       resetForm();
                     }}
-                    className="px-3 py-1 rounded bg-blue-600 text-white hover:bg-blue-700"
+                    className="px-3 py-1 rounded pointer-events-auto bg-blue-600 text-white hover:bg-blue-700"
                   >
                     + Add
                   </button>
@@ -718,7 +742,7 @@ export default function TimelineWorkspace({
                       key={`cell-${row}-${col}`}
                       className={`${
                         isLabelRow
-                          ? "border border-gray-300 bg-gray-100 flex items-center justify-center p-1"
+                          ? "bg-white rounded-lg shadow-sm border border-gray-200 flex items-center justify-center px-2 py-3"
                           : "bg-white"
                       }`}
                       style={{
@@ -727,17 +751,14 @@ export default function TimelineWorkspace({
                       }}
                     >
                       {isLabelRow && (
-                        <div className="flex flex-col items-center justify-center space-y-0.5">
-                          <div className="text-xs font-medium text-gray-700 text-center">
+                        <div className="flex flex-col items-center justify-center space-y-1">
+                          <div className="text-xs sm:text-sm font-medium text-gray-800 text-center leading-snug tracking-tight">
                             {zoomConfig.formatLabel(
                               new Date(
                                 zoomConfig.start.getTime() +
                                   (col - 1) *
                                     zoomConfig.daysPerColumn *
-                                    24 *
-                                    60 *
-                                    60 *
-                                    1000
+                                    86400000
                               )
                             )}
                           </div>
@@ -888,6 +909,57 @@ export default function TimelineWorkspace({
           </div>
         </div>
       </div>
+
+      {showDeleteAllModal &&
+        createPortal(
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-md">
+              <h3 className="text-lg font-semibold mb-4 text-black">
+                Confirm Delete All
+              </h3>
+              <p className="text-sm text-gray-700 mb-6">
+                Are you sure you want to delete <strong>all events</strong> in
+                this case? This action cannot be undone.
+              </p>
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={() => setShowDeleteAllModal(false)}
+                  className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={async () => {
+                    setIsDeletingAll(true);
+                    try {
+                      await Promise.all(
+                        events.map((event) => deleteTimelineEvent(event.id))
+                      );
+                      queryClient.invalidateQueries({
+                        queryKey: ["timeline", caseId],
+                      });
+                      setToastMessage("All events deleted ✅");
+                    } catch (err) {
+                      setToastMessage(
+                        err instanceof Error
+                          ? err.message
+                          : "Failed to delete all events"
+                      );
+                    } finally {
+                      setIsDeletingAll(false);
+                      setShowDeleteAllModal(false);
+                    }
+                  }}
+                  disabled={isDeletingAll}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
+                >
+                  {isDeletingAll ? "Deleting..." : "Yes, Delete All"}
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
 
       {/* Add Event Modal */}
       {showAddModal &&
