@@ -406,20 +406,38 @@ export default function CalendarWorkspace({
   };
 
   const handleDateSelect = (selectInfo: DateSelectArg) => {
-    if (currentView !== "timeGridWeek") return; // Only allow selection in week view
-
     const startDate = selectInfo.start;
     const endDate = selectInfo.end;
 
-    setSelectedDate(selectInfo);
-    setFormData({
-      title: "",
-      start: toLocalISOString(startDate),
-      end: toLocalISOString(endDate),
-      isAllDay: selectInfo.allDay,
-      notes: "",
-    });
-    setShowAddModal(true);
+    const isMonthView = currentView === "dayGridMonth";
+    const isMultiDay = endDate.getTime() - startDate.getTime() > 86400000;
+
+    // 👇 Only intercept if in month view AND it's a multi-day selection
+    if (isMonthView && isMultiDay) {
+      setSelectedDate(selectInfo);
+      setFormData({
+        title: "",
+        start: toLocalISOString(new Date(startDate.getTime() - 86400000)),
+        end: toLocalISOString(endDate),
+        isAllDay: selectInfo.allDay,
+        notes: "",
+      });
+      setShowAddModal(true);
+      return;
+    }
+
+    // ✅ Let weekly view handle dragging normally
+    if (currentView === "timeGridWeek") {
+      setSelectedDate(selectInfo);
+      setFormData({
+        title: "",
+        start: toLocalISOString(startDate),
+        end: toLocalISOString(endDate),
+        isAllDay: selectInfo.allDay,
+        notes: "",
+      });
+      setShowAddModal(true);
+    }
   };
 
   const handleSubmitAdd = async (e: React.FormEvent) => {
@@ -581,6 +599,30 @@ export default function CalendarWorkspace({
               Week
             </button>
           </div>
+
+          <button
+            onClick={async () => {
+              if (
+                confirm("Are you sure you want to delete ALL calendar events?")
+              ) {
+                const { error } = await supabase
+                  .from("calendar_events")
+                  .delete()
+                  .eq("case_id", caseId);
+
+                if (error) {
+                  alert("Failed to delete all events.");
+                } else {
+                  queryClient.invalidateQueries({
+                    queryKey: ["calendar_events", caseId],
+                  });
+                }
+              }
+            }}
+            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+          >
+            Delete All
+          </button>
 
           <button
             onClick={() => setShowAddModal(true)}
