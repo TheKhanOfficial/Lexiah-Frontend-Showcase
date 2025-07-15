@@ -1,4 +1,4 @@
-// File: C:\Users\vicvi\OneDrive\Desktop\lexia-ai\frontend\src\app\layout.tsx
+// File: C:\Users\vicvi\projects\lexiah-ai\frontend\src\app\layout.tsx
 import * as entry from '../../../src/app/layout.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

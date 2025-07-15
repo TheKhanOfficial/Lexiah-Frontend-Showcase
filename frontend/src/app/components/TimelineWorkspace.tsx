@@ -170,14 +170,36 @@ function getZoomConfig(zoom: ZoomLevel, currentDate: Date) {
 
     case "year": {
       const start = new Date(baseDate);
+      const year = start.getFullYear();
+      const months: { start: Date; end: Date }[] = [];
+
+      const centerMonth = start.getMonth(); // currentDate's month
+      const centerYear = start.getFullYear();
+
+      for (let offset = -3; offset <= 3; offset++) {
+        const monthDate = new Date(centerYear, centerMonth + offset, 1);
+        const monthStart = new Date(
+          monthDate.getFullYear(),
+          monthDate.getMonth(),
+          1
+        );
+        const monthEnd = new Date(
+          monthDate.getFullYear(),
+          monthDate.getMonth() + 1,
+          0
+        ); // last day
+        months.push({ start: monthStart, end: monthEnd });
+      }
+
       return {
         start,
-        daysPerColumn: 30,
-        totalDays: 365,
-        formatLabel: (date: Date) =>
-          date.toLocaleDateString("en-US", {
-            month: "short", // Sep
-            year: "numeric", // 2025
+        months,
+        daysPerColumn: null, // Not used
+        totalDays: null, // Not used
+        formatLabel: (_: any, index: number) =>
+          months[index].start.toLocaleDateString("en-US", {
+            month: "short",
+            year: "numeric",
           }),
       };
     }
@@ -195,32 +217,43 @@ function getEventPosition(
 ): { startCol: number; span: number } | null {
   const eventStart = parseLocalDate(event.start);
   const eventEnd = parseLocalDate(event.end);
+
+  if (zoomConfig.months) {
+    const colStart = zoomConfig.months.findIndex(
+      (m: any) => eventStart >= m.start && eventStart <= m.end
+    );
+    const colEnd = zoomConfig.months.findIndex(
+      (m: any) => eventEnd >= m.start && eventEnd <= m.end
+    );
+
+    if (colStart < 0 || colEnd < 0) return null;
+
+    return {
+      startCol: colStart,
+      span: colEnd - colStart + 1,
+    };
+  }
+
+  const MS_PER_DAY = 86400000;
   const timelineStart = new Date(zoomConfig.start);
   timelineStart.setHours(0, 0, 0, 0);
-
   const timelineEnd = new Date(
-    timelineStart.getTime() + zoomConfig.totalDays * 86400000
+    timelineStart.getTime() + zoomConfig.totalDays * MS_PER_DAY
   );
-  timelineEnd.setHours(23, 59, 59, 999); // Include entire end day
+  timelineEnd.setHours(23, 59, 59, 999);
 
-  // Exclude events that don't intersect the current visible timeline
   if (eventEnd < timelineStart || eventStart > timelineEnd) return null;
 
-  const MS_PER_DAY = 24 * 60 * 60 * 1000;
   const daysPerCol = zoomConfig.daysPerColumn;
-
   const eventEndInclusive = new Date(eventEnd.getTime() + MS_PER_DAY);
 
-  // Align visible event range
   const visibleStart = new Date(
     Math.max(eventStart.getTime(), timelineStart.getTime())
   );
-
   const visibleEnd = new Date(
     Math.min(eventEndInclusive.getTime(), timelineEnd.getTime())
   );
 
-  // Offset in days from start of timeline
   const startOffsetDays = Math.floor(
     (visibleStart.getTime() - timelineStart.getTime()) / MS_PER_DAY
   );
@@ -314,6 +347,7 @@ export default function TimelineWorkspace({
 }: TimelineWorkspaceProps) {
   const queryClient = useQueryClient();
   const timelineRef = useRef<HTMLDivElement>(null);
+  const prevZoom = useRef<ZoomLevel>("month"); // default start
 
   // State
   const [zoom, setZoom] = useState<ZoomLevel>("month");
@@ -555,7 +589,7 @@ export default function TimelineWorkspace({
         newDate.setDate(newDate.getDate() + dir * steps * 3); // 3 days per col
         break;
       case "year":
-        newDate.setDate(newDate.getDate() + dir * steps * 30); // 30 days per col
+        newDate.setMonth(newDate.getMonth() + dir * steps); // ← correct
         break;
     }
 
@@ -600,7 +634,15 @@ export default function TimelineWorkspace({
                 <div className="flex flex-wrap items-center gap-2">
                   {/* Navigation */}
                   <button
-                    onClick={() => setCurrentDate(new Date())}
+                    onClick={() => {
+                      const today = new Date();
+                      if (zoom === "week") {
+                        today.setDate(today.getDate() - 3); // center week
+                      } else if (zoom === "month") {
+                        today.setDate(today.getDate() - 9); // center month (3 days/col × 3 cols before = 9)
+                      }
+                      setCurrentDate(today);
+                    }}
                     className="px-2 py-1 rounded border bg-white text-blue-600 hover:bg-blue-50 pointer-events-auto"
                   >
                     Today
@@ -610,7 +652,23 @@ export default function TimelineWorkspace({
                     {(["week", "month", "year"] as ZoomLevel[]).map((level) => (
                       <button
                         key={level}
-                        onClick={() => setZoom(level)}
+                        onClick={() => {
+                          const adjusted = new Date(currentDate);
+
+                          if (prevZoom.current !== "year") {
+                            if (level === "week" && prevZoom.current !== "week")
+                              adjusted.setDate(adjusted.getDate() + 6);
+                            if (
+                              level === "month" &&
+                              prevZoom.current !== "month"
+                            )
+                              adjusted.setDate(adjusted.getDate() - 6);
+                          }
+
+                          setCurrentDate(adjusted);
+                          setZoom(level);
+                          prevZoom.current = level; // 👈 update previous zoom
+                        }}
                         className={`px-2 py-1 rounded border capitalize ${
                           zoom === level
                             ? "bg-blue-600 text-white"
@@ -755,89 +813,131 @@ export default function TimelineWorkspace({
                       {isLabelRow && (
                         <div className="flex flex-col items-center justify-center space-y-1">
                           <div className="text-xs sm:text-sm font-medium text-gray-800 text-center leading-snug tracking-tight">
-                            {zoomConfig.formatLabel(
-                              new Date(
-                                zoomConfig.start.getTime() +
-                                  (col - 1) *
-                                    zoomConfig.daysPerColumn *
-                                    86400000
-                              )
-                            )}
+                            {zoom === "year"
+                              ? zoomConfig.formatLabel(null, col - 1)
+                              : zoomConfig.formatLabel(
+                                  new Date(
+                                    zoomConfig.start.getTime() +
+                                      (col - 1) *
+                                        zoomConfig.daysPerColumn *
+                                        86400000
+                                  )
+                                )}
                           </div>
                           {(() => {
                             const colIndex = col - 1;
 
-                            const columnStart = new Date(
-                              zoomConfig.start.getTime() +
-                                colIndex * zoomConfig.daysPerColumn * 86400000
-                            );
-                            const columnEnd = new Date(
-                              columnStart.getTime() +
-                                zoomConfig.daysPerColumn * 86400000
-                            );
+                            if (zoom === "year") {
+                              const monthRange = zoomConfig.months[colIndex];
+                              if (!monthRange) return null;
 
-                            // Get all matching events in the current column time range
-                            const totalInCol = filteredEvents.filter((e) => {
-                              const eventStart = parseLocalDate(e.start);
-                              const eventEnd = parseLocalDate(e.end);
-                              return (
-                                eventStart < columnEnd &&
-                                eventEnd >= columnStart
+                              const { start: monthStart, end: monthEnd } =
+                                monthRange;
+
+                              const eventsInMonth = filteredEvents.filter(
+                                (e) => {
+                                  const eventStart = parseLocalDate(e.start);
+                                  const eventEnd = parseLocalDate(e.end);
+                                  return (
+                                    eventStart <= monthEnd &&
+                                    eventEnd >= monthStart
+                                  );
+                                }
                               );
-                            });
 
-                            const positionedInCol = positionedEvents.filter(
-                              (e) => e.col === colIndex
-                            );
+                              const overflowCount =
+                                eventsInMonth.length > 6
+                                  ? eventsInMonth.length - 6
+                                  : 0;
 
-                            // ✅ Show +X only if more than 6 total
-                            const overflowCount =
-                              totalInCol.length > 6 ? totalInCol.length - 6 : 0;
-
-                            if (overflowCount > 0) {
-                              return (
-                                <button
-                                  className="text-[10px] text-blue-600 font-medium underline"
-                                  onClick={() => {
-                                    setOverflowEvents(totalInCol);
-                                    setOverflowLabel(
-                                      zoomConfig.formatLabel(
-                                        new Date(
-                                          zoomConfig.start.getTime() +
-                                            colIndex *
-                                              zoomConfig.daysPerColumn *
-                                              86400000
-                                        )
-                                      )
-                                    );
-                                  }}
-                                >
-                                  +{overflowCount} more
-                                </button>
+                              if (overflowCount > 0) {
+                                return (
+                                  <button
+                                    className="text-[10px] text-blue-600 font-medium underline"
+                                    onClick={() => {
+                                      setOverflowEvents(eventsInMonth);
+                                      setOverflowLabel(
+                                        monthStart.toLocaleDateString("en-US", {
+                                          month: "short",
+                                          year: "numeric",
+                                        })
+                                      );
+                                    }}
+                                  >
+                                    +{overflowCount} more
+                                  </button>
+                                );
+                              }
+                            } else {
+                              const columnStart = new Date(
+                                zoomConfig.start.getTime() +
+                                  colIndex * zoomConfig.daysPerColumn * 86400000
                               );
-                            }
-
-                            if (overflowCount > 0) {
-                              return (
-                                <button
-                                  className="text-[10px] text-blue-600 font-medium underline"
-                                  onClick={() => {
-                                    setOverflowEvents(totalInCol);
-                                    setOverflowLabel(
-                                      zoomConfig.formatLabel(
-                                        new Date(
-                                          zoomConfig.start.getTime() +
-                                            colIndex *
-                                              zoomConfig.daysPerColumn *
-                                              86400000
-                                        )
-                                      )
-                                    );
-                                  }}
-                                >
-                                  +{overflowCount} more
-                                </button>
+                              const columnEnd = new Date(
+                                columnStart.getTime() +
+                                  zoomConfig.daysPerColumn * 86400000
                               );
+
+                              const eventsInCol = filteredEvents.filter((e) => {
+                                const eventStart = parseLocalDate(e.start);
+                                const eventEnd = parseLocalDate(e.end);
+                                return (
+                                  eventStart < columnEnd &&
+                                  eventEnd >= columnStart
+                                );
+                              });
+
+                              const overflowCount =
+                                eventsInCol.length > 6
+                                  ? eventsInCol.length - 6
+                                  : 0;
+
+                              if (overflowCount > 0) {
+                                return (
+                                  <button
+                                    className="text-[10px] text-blue-600 font-medium underline"
+                                    onClick={() => {
+                                      setOverflowEvents(eventsInCol);
+                                      if (zoom === "month") {
+                                        const columnStartStr =
+                                          columnStart.toLocaleDateString(
+                                            "en-US",
+                                            {
+                                              month: "long",
+                                              day: "numeric",
+                                            }
+                                          );
+
+                                        const columnEnd = new Date(
+                                          columnStart.getTime() +
+                                            zoomConfig.daysPerColumn *
+                                              86400000 -
+                                            86400000
+                                        );
+
+                                        const columnEndStr =
+                                          columnEnd.toLocaleDateString(
+                                            "en-US",
+                                            {
+                                              month: "long",
+                                              day: "numeric",
+                                            }
+                                          );
+
+                                        setOverflowLabel(
+                                          `${columnStartStr} – ${columnEndStr}`
+                                        );
+                                      } else {
+                                        setOverflowLabel(
+                                          zoomConfig.formatLabel(columnStart)
+                                        );
+                                      }
+                                    }}
+                                  >
+                                    +{overflowCount} more
+                                  </button>
+                                );
+                              }
                             }
 
                             return null;
