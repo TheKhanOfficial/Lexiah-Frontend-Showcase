@@ -2,7 +2,7 @@
 import { useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { addTopLevelFolder, addSubFolder } from "@/utils/supabase";
+import { addTopLevelFolder, addSubFolder } from "@/utils/supabase/folders";
 
 interface Folder {
   id: string;
