@@ -246,7 +246,7 @@ export function List<T extends { id: string }>({
             <div className="flex items-center justify-center h-full p-4">
               <div className="animate-spin rounded-full h-8 w-8"></div>
             </div>
-          ) : sortedItems.length === 0 ? (
+          ) : filteredItems.length === 0 ? (
             <div className="flex items-center justify-center h-full p-4 text-gray-500">
               {emptyMessage}
             </div>
@@ -260,13 +260,25 @@ export function List<T extends { id: string }>({
               </ul>
 
               {/* Recursive folder rendering */}
-              {folderTree.map((folder) => (
-                <FolderTree
-                  key={folder.id}
-                  folder={folder}
-                  items={filteredItems}
-                  renderItem={(item) => renderItem(item, 0)} // ignore index here
-                />
+              {folderTree.map((folder, index) => (
+                <div key={folder.id}>
+                  {renderItem(
+                    {
+                      ...folder,
+                      folder_id: null, // prevent re-filtering
+                      created_at: folder.created_at ?? "",
+                      __isFolder: true, // flag if needed in renderItem
+                    } as any,
+                    index
+                  )}
+
+                  <FolderTree
+                    folder={folder}
+                    items={filteredItems}
+                    renderItem={renderItem}
+                    level={1}
+                  />
+                </div>
               ))}
             </>
           )}

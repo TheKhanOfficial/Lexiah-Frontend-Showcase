@@ -39,55 +39,50 @@ export default function FolderTree<T extends ItemWithFolderId>({
   const children = folder.children || [];
 
   return (
-    <div>
-      {/* Folder header */}
-      <div
-        className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors"
-        style={{ paddingLeft: `${level * 1.5}rem` }}
-        onClick={() => setIsExpanded(!isExpanded)}
-      >
-        <span className="mr-2 text-lg">{isExpanded ? "📂" : "📁"}</span>
-        <span className="font-medium text-gray-900 select-none">
-          {folder.name}
-        </span>
-      </div>
+    <>
+      {/* Recursive rendering: subfolder and its items */}
+      {children.map((childFolder, index) => (
+        <div key={childFolder.id}>
+          {renderItem(
+            {
+              ...childFolder,
+              folder_id: folder.id,
+              created_at: childFolder.created_at ?? "",
+              __isFolder: true,
+            } as any,
+            index
+          )}
 
-      <div className="pl-6 pr-2 mt-2">
-        <AddNewFolder
-          userId={folder.user_id}
-          caseId={folder.case_id}
-          parentId={folder.id}
-          text="Add Subfolder 📂"
-          onSuccess={() => {}}
-        />
-      </div>
-
-      {/* Folder contents (when expanded) */}
-      {isExpanded && (
-        <div>
-          {/* Render items in this folder */}
-          {folderItems.map((item) => (
-            <div
-              key={item.id}
-              className="py-1"
-              style={{ paddingLeft: `${(level + 1) * 1.5}rem` }}
-            >
-              {renderItem(item)}
-            </div>
-          ))}
-
-          {/* Recursively render child folders */}
-          {children.map((childFolder) => (
+          {isExpanded && (
             <FolderTree
-              key={childFolder.id}
               folder={childFolder}
               items={items}
               renderItem={renderItem}
               level={level + 1}
             />
+          )}
+        </div>
+      ))}
+
+      {isExpanded && (
+        <div>
+          {/* Items inside this folder */}
+          {folderItems.map((item, index) => (
+            <div key={item.id}>{renderItem(item, index)}</div>
           ))}
+
+          {/* Add new subfolder */}
+          <div className="pl-6 pr-2 mt-2">
+            <AddNewFolder
+              userId={folder.user_id}
+              caseId={folder.case_id}
+              parentId={folder.id}
+              text="Add Subfolder 📂"
+              onSuccess={() => {}}
+            />
+          </div>
         </div>
       )}
-    </div>
+    </>
   );
 }

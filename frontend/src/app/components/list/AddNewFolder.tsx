@@ -2,7 +2,7 @@
 import { useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/utils/supabase";
+import { addTopLevelFolder, addSubFolder } from "@/utils/supabase";
 
 interface Folder {
   id: string;
@@ -26,23 +26,14 @@ async function addFolder(
   caseId: string,
   name: string,
   parentId: string | null = null
-): Promise<Folder> {
-  const { data, error } = await supabase
-    .from("folders")
-    .insert([
-      {
-        user_id: userId,
-        case_id: caseId ?? null,
-        name,
-        parent_id: parentId,
-        created_at: new Date().toISOString(),
-      },
-    ])
-    .select()
-    .single();
+) {
+  const listType = "cases";
 
-  if (error) throw error;
-  return data;
+  if (parentId) {
+    return await addSubFolder(userId, listType, name, parentId);
+  } else {
+    return await addTopLevelFolder(userId, listType, name);
+  }
 }
 
 export function AddNewFolder({
