@@ -7,4 +7,5 @@ export interface Case {
   description?: string;
   created_at: string;
   updated_at?: string;
+  folder_id?: string | null; // ✅ add this to match DB schema
 }

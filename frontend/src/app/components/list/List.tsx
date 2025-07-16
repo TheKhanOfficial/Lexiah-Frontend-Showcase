@@ -1,6 +1,7 @@
 // components/list/List.tsx
-import { ReactNode, useState } from "react";
+import { ReactNode, useState, useEffect } from "react";
 import { AddNewItem, ItemType } from "./AddNewItem";
+import FolderTree from "./FolderTree";
 
 interface ListProps<T extends { id: string }> {
   title: string;
@@ -18,6 +19,25 @@ interface ListProps<T extends { id: string }> {
   isLoading?: boolean;
   onAddItemRequest?: () => void; // New prop to handle add item request externally
   onAddItemError?: (error: Error) => void; // Callback for error handling
+  folders?: Folder[];
+}
+
+function buildFolderTree(folders: Folder[]): Folder[] {
+  const map = new Map<string, Folder & { children: Folder[] }>();
+  const roots: Folder[] = [];
+
+  folders.forEach((folder) => map.set(folder.id, { ...folder, children: [] }));
+
+  folders.forEach((folder) => {
+    const node = map.get(folder.id)!;
+    if (folder.parent_id) {
+      map.get(folder.parent_id)?.children.push(node);
+    } else {
+      roots.push(node);
+    }
+  });
+
+  return roots;
 }
 
 export function List<T extends { id: string }>({
@@ -29,6 +49,7 @@ export function List<T extends { id: string }>({
   itemType,
   onItemAdded,
   onAddItemRequest,
+  folders,
   onAddItemError,
   addItemText = "Add New",
   emptyMessage = "No items yet",
@@ -38,7 +59,8 @@ export function List<T extends { id: string }>({
   isLoading = false,
 }: ListProps<T>) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchInput, setSearchInput] = useState("");
   // Sort items if sortBy is provided
   const sortedItems = sortBy
     ? [...items].sort((a, b) => {
@@ -69,6 +91,11 @@ export function List<T extends { id: string }>({
       })
     : items;
 
+  const folderTree = buildFolderTree(folders || []);
+  const filteredItems = sortedItems.filter((item) =>
+    (item as any)?.name?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   // Handle successful item addition
   const handleItemAdded = (newItem: any) => {
     setErrorMessage(null);
@@ -90,6 +117,12 @@ export function List<T extends { id: string }>({
     // Clear error after 5 seconds
     setTimeout(() => setErrorMessage(null), 5000);
   };
+
+  useEffect(() => {
+    if (searchInput.trim() === "") {
+      setSearchQuery("");
+    }
+  }, [searchInput]);
 
   return (
     <div className="flex flex-col h-full">
@@ -129,6 +162,67 @@ export function List<T extends { id: string }>({
             text={addItemText}
             fileUploadEnabled={fileUploadEnabled}
           />
+          <div className="mt-2 px-2 relative">
+            <input
+              type="text"
+              placeholder="Search"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  setSearchQuery(searchInput);
+                }
+              }}
+              className="w-full pr-20 pl-3 py-1.5 text-sm rounded-lg bg-white border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-gray-400 placeholder-gray-400 transition"
+            />
+
+            {/* X clear button */}
+            {searchInput.trim() !== "" && (
+              <button
+                onClick={() => {
+                  setSearchInput("");
+                  setSearchQuery("");
+                }}
+                className="absolute right-9 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black transition"
+                title="Clear search"
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            )}
+
+            {/* Search button */}
+            <button
+              onClick={() => setSearchQuery(searchInput)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black focus:outline-none"
+              title="Search"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1010.5 18.5a7.5 7.5 0 006.15-3.85z"
+                />
+              </svg>
+            </button>
+          </div>
         </div>
 
         <div className="flex-grow overflow-y-auto">
@@ -141,9 +235,24 @@ export function List<T extends { id: string }>({
               {emptyMessage}
             </div>
           ) : (
-            <ul className="space-y-1">
-              {sortedItems.map((item, index) => renderItem(item, index))}
-            </ul>
+            <>
+              {/* Items not in folders */}
+              <ul className="space-y-1 mb-4">
+                {filteredItems
+                  .filter((item) => !(item as any).folder_id)
+                  .map((item, index) => renderItem(item, index))}
+              </ul>
+
+              {/* Recursive folder rendering */}
+              {folderTree.map((folder) => (
+                <FolderTree
+                  key={folder.id}
+                  folder={folder}
+                  items={filteredItems}
+                  renderItem={(item) => renderItem(item, 0)} // ignore index here
+                />
+              ))}
+            </>
           )}
         </div>
       </div>
