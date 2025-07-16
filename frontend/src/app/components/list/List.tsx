@@ -1,6 +1,7 @@
 // components/list/List.tsx
 import { ReactNode, useState, useEffect } from "react";
 import { AddNewItem, ItemType } from "./AddNewItem";
+import { AddNewFolder } from "./AddNewFolder";
 import FolderTree from "./FolderTree";
 
 interface ListProps<T extends { id: string }> {
@@ -162,6 +163,18 @@ export function List<T extends { id: string }>({
             text={addItemText}
             fileUploadEnabled={fileUploadEnabled}
           />
+          <AddNewFolder
+            userId={userId}
+            caseId={caseId!}
+            parentId={null}
+            text="New Folder 📁"
+            onSuccess={() => {
+              queryClient.invalidateQueries({
+                queryKey: ["folders", userId, caseId],
+              });
+            }}
+          />
+
           <div className="mt-2 px-2 relative">
             <input
               type="text"

@@ -1,5 +1,6 @@
 //components/list/FolderTree.tsx
 import React, { useState } from "react";
+import { AddNewFolder } from "./AddNewFolder";
 
 interface Folder {
   id: string;
@@ -49,6 +50,16 @@ export default function FolderTree<T extends ItemWithFolderId>({
         <span className="font-medium text-gray-900 select-none">
           {folder.name}
         </span>
+      </div>
+
+      <div className="pl-6 pr-2 mt-2">
+        <AddNewFolder
+          userId={folder.user_id}
+          caseId={folder.case_id}
+          parentId={folder.id}
+          text="Add Subfolder 📂"
+          onSuccess={() => {}}
+        />
       </div>
 
       {/* Folder contents (when expanded) */}
