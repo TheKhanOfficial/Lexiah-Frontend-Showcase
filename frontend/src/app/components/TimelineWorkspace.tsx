@@ -4,7 +4,12 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { createPortal } from "react-dom";
-import { supabase } from "@/utils/supabase";
+import {
+  fetchTimelineEvents,
+  createTimelineEvent,
+  updateTimelineEvent,
+  deleteTimelineEvent,
+} from "@/utils/supabase/timeline";
 
 // Types
 interface TimelineEvent {
@@ -27,53 +32,6 @@ interface TimelineWorkspaceProps {
 
 type ZoomLevel = "week" | "month" | "year";
 type ImportanceLevel = "low" | "medium" | "high" | "critical";
-
-// Supabase functions
-async function fetchTimelineEvents(caseId: string): Promise<TimelineEvent[]> {
-  const { data, error } = await supabase
-    .from("timeline")
-    .select("*")
-    .eq("case_id", caseId)
-    .order("start", { ascending: true });
-
-  if (error) throw error;
-  return data || [];
-}
-
-async function createTimelineEvent(
-  eventData: Omit<TimelineEvent, "id" | "created_at">
-): Promise<TimelineEvent> {
-  const { data, error } = await supabase
-    .from("timeline")
-    .insert([eventData])
-    .select()
-    .single();
-
-  console.log("Supabase insert response:", { data, error, eventData });
-
-  if (error) throw error;
-  return data;
-}
-
-async function updateTimelineEvent(
-  id: string,
-  updates: Partial<Omit<TimelineEvent, "id" | "created_at">>
-): Promise<TimelineEvent> {
-  const { data, error } = await supabase
-    .from("timeline")
-    .update(updates)
-    .eq("id", id)
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
-}
-
-async function deleteTimelineEvent(id: string): Promise<void> {
-  const { error } = await supabase.from("timeline").delete().eq("id", id);
-  if (error) throw error;
-}
 
 // Helper functions
 function getImportanceColor(importance: ImportanceLevel): string {
