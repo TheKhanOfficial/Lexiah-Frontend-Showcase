@@ -2,7 +2,9 @@
 import { useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { addCase, addDocument, addNote } from "@/utils/supabase";
+import { addNote } from "@/utils/supabase";
+import { addDocument } from "@/utils/supabase/documents";
+import { addCase } from "@/utils/supabase/cases";
 
 export type ItemType = "case" | "document" | "note";
 
