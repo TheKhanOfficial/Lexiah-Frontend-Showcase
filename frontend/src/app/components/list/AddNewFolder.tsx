@@ -59,7 +59,8 @@ export function AddNewFolder({
       addFolder(userId, caseId, name, parentId),
     onSuccess: (data) => {
       // Invalidate relevant queries
-      queryClient.invalidateQueries({ queryKey: ["folders", userId, caseId] });
+      queryClient.invalidateQueries({ queryKey: ["folders", userId, "cases"] });
+
       if (onSuccess) onSuccess(data);
       handleReset();
     },

@@ -22,6 +22,7 @@ interface ListProps<T extends { id: string }> {
   onAddItemRequest?: () => void; // New prop to handle add item request externally
   onAddItemError?: (error: Error) => void; // Callback for error handling
   folders?: Folder[];
+  listType?: string;
 }
 
 function buildFolderTree(folders: Folder[]): Folder[] {
@@ -59,6 +60,7 @@ export function List<T extends { id: string }>({
   sortDirection = "desc",
   fileUploadEnabled = false,
   isLoading = false,
+  listType,
 }: ListProps<T>) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -169,6 +171,7 @@ export function List<T extends { id: string }>({
           <AddNewFolder
             userId={userId}
             caseId={caseId ?? null}
+            listType={listType}
             parentId={null}
             text="New Folder 📁"
             onSuccess={() => {
@@ -277,6 +280,7 @@ export function List<T extends { id: string }>({
                     items={filteredItems}
                     renderItem={renderItem}
                     level={1}
+                    listType={listType}
                   />
                 </div>
               ))}
