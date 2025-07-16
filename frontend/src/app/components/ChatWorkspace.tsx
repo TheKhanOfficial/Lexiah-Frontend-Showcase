@@ -9,79 +9,23 @@ import {
   useState,
 } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/utils/supabase";
+import {
+  fetchChatMessages,
+  sendChatMessage,
+  fetchDocumentSummaries,
+  clearChatMessages,
+  updatePlaceholderWithTokenLimitMessage,
+  updatePlaceholderWithAIReply,
+} from "@/utils/supabase/chat";
+
 import { getAIResponse } from "@/utils/api";
 import { ChatBubble } from "@/app/components/ChatBubble";
 import { createPortal } from "react-dom";
 import { InputBar } from "@/app/components/InputBar";
 
-// Helper functions for Supabase
-export async function fetchChatMessages(caseId: string) {
-  const { data, error } = await supabase
-    .from("chat_messages")
-    .select("*")
-    .eq("case_id", caseId)
-    .order("created_at", { ascending: true });
-
-  if (error) {
-    throw error;
-  }
-
-  return data || [];
-}
-
-export async function sendChatMessage(
-  caseId: string,
-  sender: "user" | "assistant",
-  content: string
-) {
-  const { data, error } = await supabase
-    .from("chat_messages")
-    .insert([
-      {
-        case_id: caseId,
-        sender,
-        content,
-        created_at: new Date().toISOString(),
-      },
-    ])
-    .select();
-
-  if (error) {
-    throw error;
-  }
-
-  return data[0];
-}
-
-export async function fetchDocumentSummaries(caseId: string) {
-  const { data, error } = await supabase
-    .from("documents")
-    .select("summary")
-    .eq("case_id", caseId);
-
-  if (error) throw error;
-
-  return data.map((doc) => doc.summary).filter((s) => s);
-}
-
 // Helper to roughly estimate tokens from words
 function estimateTokens(text: string) {
   return Math.ceil(text.length / 4);
-}
-
-// Added new function to clear chat messages for a specific case
-export async function clearChatMessages(caseId: string) {
-  const { error } = await supabase
-    .from("chat_messages")
-    .delete()
-    .eq("case_id", caseId);
-
-  if (error) {
-    throw error;
-  }
-
-  return true;
 }
 
 // Interface definitions
@@ -190,13 +134,7 @@ const ChatWorkspace = forwardRef<ChatWorkspaceHandle, ChatWorkspaceProps>(
 
         if (totalTokens > 18000) {
           // If too large, update placeholder with warning
-          await supabase
-            .from("chat_messages")
-            .update({
-              content:
-                "⚠️ This conversation is too long. Please clear the chat history to continue discussing.",
-            })
-            .eq("id", typingPlaceholder.id);
+          await updatePlaceholderWithTokenLimitMessage(typingPlaceholder.id);
 
           await refetch();
           return;
@@ -204,12 +142,7 @@ const ChatWorkspace = forwardRef<ChatWorkspaceHandle, ChatWorkspaceProps>(
 
         const aiReply = await getAIResponse(fullHistory);
 
-        const { error } = await supabase
-          .from("chat_messages")
-          .update({ content: aiReply })
-          .eq("id", typingPlaceholder.id);
-
-        if (error) throw error;
+        await updatePlaceholderWithAIReply(typingPlaceholder.id, aiReply);
 
         await refetch();
       } catch (err) {
