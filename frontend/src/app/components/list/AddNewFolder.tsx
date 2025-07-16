@@ -32,7 +32,7 @@ async function addFolder(
     .insert([
       {
         user_id: userId,
-        case_id: caseId,
+        case_id: caseId ?? null,
         name,
         parent_id: parentId,
         created_at: new Date().toISOString(),

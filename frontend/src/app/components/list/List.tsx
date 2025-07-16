@@ -2,6 +2,7 @@
 import { ReactNode, useState, useEffect } from "react";
 import { AddNewItem, ItemType } from "./AddNewItem";
 import { AddNewFolder } from "./AddNewFolder";
+import { useQueryClient } from "@tanstack/react-query";
 import FolderTree from "./FolderTree";
 
 interface ListProps<T extends { id: string }> {
@@ -119,6 +120,8 @@ export function List<T extends { id: string }>({
     setTimeout(() => setErrorMessage(null), 5000);
   };
 
+  const queryClient = useQueryClient();
+
   useEffect(() => {
     if (searchInput.trim() === "") {
       setSearchQuery("");
@@ -165,7 +168,7 @@ export function List<T extends { id: string }>({
           />
           <AddNewFolder
             userId={userId}
-            caseId={caseId!}
+            caseId={caseId ?? null}
             parentId={null}
             text="New Folder 📁"
             onSuccess={() => {
