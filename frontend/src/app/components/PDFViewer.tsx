@@ -3,7 +3,11 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase, getDocumentFile } from "@/utils/supabase";
+import {
+  fetchDocumentById,
+  getDocumentFile,
+  updateDocumentSummary,
+} from "@/utils/supabase/documents";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 import "react-pdf/dist/esm/Page/TextLayer.css";
@@ -66,30 +70,12 @@ export default function PDFViewer({
   // Fetch document metadata
   const { data: document, isLoading: isLoadingMeta } = useQuery<DocumentData>({
     queryKey: ["document", docId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("documents")
-        .select("*")
-        .eq("id", docId)
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
+    queryFn: () => fetchDocumentById(docId),
   });
 
   // Mutation to save summary back to Supabase
   const saveSummaryMutation = useMutation({
-    mutationFn: async (summary: string) => {
-      const { data, error } = await supabase
-        .from("documents")
-        .update({ summary })
-        .eq("id", docId)
-        .select();
-
-      if (error) throw error;
-      return data;
-    },
+    mutationFn: (summary: string) => updateDocumentSummary(docId, summary),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["document", docId] });
     },

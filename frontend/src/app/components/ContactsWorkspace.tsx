@@ -4,7 +4,13 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { createPortal } from "react-dom";
-import { supabase, deleteAllContacts } from "@/utils/supabase";
+import {
+  fetchContacts,
+  createContact,
+  updateContact,
+  deleteContact,
+  deleteAllContacts,
+} from "@/utils/supabase/contacts";
 import { useRef, useEffect } from "react";
 
 // Types
@@ -22,56 +28,6 @@ interface Contact {
 interface ContactsWorkspaceProps {
   userId: string;
   caseId: string;
-}
-
-// Supabase functions
-async function fetchContacts(caseId: string): Promise<Contact[]> {
-  const { data, error } = await supabase
-    .from("contacts")
-    .select("*")
-    .eq("case_id", caseId)
-    .order("created_at", { ascending: false });
-
-  if (error) throw error;
-  return data || [];
-}
-
-async function createContact(
-  contactData: Omit<Contact, "id" | "created_at">
-): Promise<Contact> {
-  const { data, error } = await supabase
-    .from("contacts")
-    .insert([
-      {
-        ...contactData,
-      },
-    ])
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
-}
-
-async function updateContact(
-  id: string,
-  updates: Partial<Omit<Contact, "id" | "created_at">>
-): Promise<Contact> {
-  const { data, error } = await supabase
-    .from("contacts")
-    .update(updates)
-    .eq("id", id)
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
-}
-
-async function deleteContact(id: string): Promise<void> {
-  const { error } = await supabase.from("contacts").delete().eq("id", id);
-
-  if (error) throw error;
 }
 
 export default function ContactsWorkspace({

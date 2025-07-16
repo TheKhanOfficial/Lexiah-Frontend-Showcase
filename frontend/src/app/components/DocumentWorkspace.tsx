@@ -11,7 +11,7 @@ import {
   fetchDocuments,
   renameDocument,
   deleteDocument,
-} from "@/utils/supabase";
+} from "@/utils/supabase/documents";
 
 // Define Document type
 interface Document {
