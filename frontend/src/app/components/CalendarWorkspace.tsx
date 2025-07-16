@@ -4,7 +4,14 @@
 import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { createPortal } from "react-dom";
-import { supabase } from "@/utils/supabase";
+import {
+  fetchTasks,
+  fetchCalendarEvents,
+  createCalendarEvent,
+  updateCalendarEvent,
+  deleteCalendarEvent,
+  deleteAllCalendarEvents,
+} from "@/utils/supabase/calendar";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
@@ -43,66 +50,6 @@ interface CalendarWorkspaceProps {
 
 type UrgencyColor = "green" | "yellow" | "red" | "darkred";
 type CalendarView = "dayGridMonth" | "timeGridWeek";
-
-// Supabase functions for tasks
-async function fetchTasks(caseId: string): Promise<Task[]> {
-  const { data, error } = await supabase
-    .from("tasks")
-    .select("*")
-    .eq("case_id", caseId)
-    .order("created_at", { ascending: false });
-
-  if (error) throw error;
-  return data || [];
-}
-
-// Supabase functions for calendar events
-async function fetchCalendarEvents(caseId: string): Promise<CalendarEvent[]> {
-  const { data, error } = await supabase
-    .from("calendar_events")
-    .select("*")
-    .eq("case_id", caseId)
-    .order("created_at", { ascending: false });
-
-  if (error) throw error;
-  return data || [];
-}
-
-async function createCalendarEvent(
-  eventData: Omit<CalendarEvent, "id" | "created_at">
-): Promise<CalendarEvent> {
-  const { data, error } = await supabase
-    .from("calendar_events")
-    .insert([eventData])
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
-}
-
-async function updateCalendarEvent(
-  id: string,
-  updates: Partial<Omit<CalendarEvent, "id" | "created_at">>
-): Promise<CalendarEvent> {
-  const { data, error } = await supabase
-    .from("calendar_events")
-    .update(updates)
-    .eq("id", id)
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
-}
-
-async function deleteCalendarEvent(id: string): Promise<void> {
-  const { error } = await supabase
-    .from("calendar_events")
-    .delete()
-    .eq("id", id);
-  if (error) throw error;
-}
 
 function toLocalISOString(date: Date) {
   const offsetMs = date.getTimezoneOffset() * 60000;
@@ -605,17 +552,13 @@ export default function CalendarWorkspace({
               if (
                 confirm("Are you sure you want to delete ALL calendar events?")
               ) {
-                const { error } = await supabase
-                  .from("calendar_events")
-                  .delete()
-                  .eq("case_id", caseId);
-
-                if (error) {
-                  alert("Failed to delete all events.");
-                } else {
+                try {
+                  await deleteAllCalendarEvents(caseId);
                   queryClient.invalidateQueries({
                     queryKey: ["calendar_events", caseId],
                   });
+                } catch (error) {
+                  alert("Failed to delete all events.");
                 }
               }
             }}
