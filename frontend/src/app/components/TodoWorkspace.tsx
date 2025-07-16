@@ -4,7 +4,13 @@
 import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { createPortal } from "react-dom";
-import { supabase } from "@/utils/supabase";
+import {
+  fetchTasks,
+  createTask,
+  updateTask,
+  deleteTask,
+  deleteAllTasks,
+} from "@/utils/supabase/todos";
 
 // Types
 interface Task {
@@ -25,64 +31,6 @@ interface TodoWorkspaceProps {
 
 type UrgencyColor = "green" | "yellow" | "red" | "darkred";
 type SortOption = "urgency" | "date";
-
-// Supabase functions
-async function fetchTasks(caseId: string): Promise<Task[]> {
-  const { data, error } = await supabase
-    .from("tasks")
-    .select("*")
-    .eq("case_id", caseId)
-    .order("created_at", { ascending: false });
-
-  if (error) throw error;
-  return data || [];
-}
-
-async function createTask(
-  taskData: Omit<Task, "id" | "created_at">
-): Promise<Task> {
-  // Sanitize inputs
-  const payload = {
-    ...taskData,
-    due_date: taskData.due_date ?? null,
-    manual_color: taskData.manual_color ?? null,
-    completed: taskData.completed ?? false,
-  };
-
-  const { data, error } = await supabase
-    .from("tasks")
-    .insert([payload])
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
-}
-
-async function updateTask(
-  id: string,
-  updates: Partial<Omit<Task, "id" | "created_at">>
-): Promise<Task> {
-  const { data, error } = await supabase
-    .from("tasks")
-    .update(updates)
-    .eq("id", id)
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
-}
-
-async function deleteTask(id: string): Promise<void> {
-  const { error } = await supabase.from("tasks").delete().eq("id", id);
-  if (error) throw error;
-}
-
-async function deleteAllTasks(caseId: string): Promise<void> {
-  const { error } = await supabase.from("tasks").delete().eq("case_id", caseId);
-  if (error) throw error;
-}
 
 // Helper functions
 function getDaysUntilDue(dueDate: string): number {
@@ -314,36 +262,18 @@ export default function TodoWorkspace({ userId, caseId }: TodoWorkspaceProps) {
   const handleSubmitAdd = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const { title, start, end, importance, category, description } = formData;
-
-    if (
-      !title.trim() ||
-      !start ||
-      !end ||
-      !importance ||
-      !category.trim() ||
-      !description.trim()
-    ) {
-      setError("All fields are required");
-      return;
-    }
-
-    const startDate = new Date(start);
-    const endDate = new Date(end);
-
-    if (endDate <= startDate) {
-      setError("End date must be after start date");
+    if (!formData.name.trim()) {
+      setError("Task name is required");
       return;
     }
 
     const sanitized = {
       case_id: caseId,
-      title: title.trim(),
-      start: startDate.toISOString().split("T")[0],
-      end: endDate.toISOString().split("T")[0],
-      importance,
-      category: category.trim(),
-      description: description.trim(),
+      name: formData.name.trim(),
+      due_date: formData.due_date || null,
+      auto_urgency: formData.auto_urgency,
+      completed: false,
+      manual_color: null,
     };
 
     createMutation.mutate(sanitized);
@@ -618,6 +548,7 @@ export default function TodoWorkspace({ userId, caseId }: TodoWorkspaceProps) {
                       required
                     />
                   </div>
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Due Date (optional)
@@ -630,6 +561,31 @@ export default function TodoWorkspace({ userId, caseId }: TodoWorkspaceProps) {
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
+
+                  {formData.due_date && (
+                    <div className="flex items-center space-x-2 pt-2">
+                      <input
+                        type="checkbox"
+                        id="autoUrgencyAdd"
+                        name="auto_urgency"
+                        checked={formData.auto_urgency}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            auto_urgency: e.target.checked,
+                          }))
+                        }
+                        className="w-4 h-4 text-blue-600 border-gray-300 rounded"
+                      />
+                      <label
+                        htmlFor="autoUrgencyAdd"
+                        className="text-sm text-gray-700"
+                      >
+                        Automatically set urgency based on due date
+                      </label>
+                    </div>
+                  )}
+
                   <div className="flex space-x-3 pt-4">
                     <button
                       type="submit"
