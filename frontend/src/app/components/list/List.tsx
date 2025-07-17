@@ -65,6 +65,10 @@ export function List<T extends { id: string }>({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchInput, setSearchInput] = useState("");
+  const [sortOption, setSortOption] = useState<
+    "newest" | "oldest" | "alpha" | "urgency"
+  >("urgency");
+
   // Sort items if sortBy is provided
   const sortedItems = sortBy
     ? [...items].sort((a, b) => {
@@ -131,6 +135,48 @@ export function List<T extends { id: string }>({
   };
 
   const queryClient = useQueryClient();
+
+  const normalizedData = [
+    ...folderTree.map((folder) => ({
+      ...folder,
+      __isFolder: true,
+      created_at: folder.created_at ?? "",
+      name: folder.name,
+    })),
+    ...sortedItems.map((item) => ({
+      ...item,
+      __isFolder: false,
+      created_at: (item as any).created_at ?? "",
+      name: (item as any).name ?? "",
+    })),
+  ];
+
+  const finalSortedList = [...normalizedData].sort((a, b) => {
+    if (sortOption === "urgency") {
+      // TEMP: Just default to time desc, folders & items mixed
+      const timeA = new Date(a.created_at).getTime();
+      const timeB = new Date(b.created_at).getTime();
+      return timeB - timeA;
+    }
+
+    // FOLDERS FIRST
+    if (a.__isFolder && !b.__isFolder) return -1;
+    if (!a.__isFolder && b.__isFolder) return 1;
+
+    if (sortOption === "newest") {
+      return (
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+    } else if (sortOption === "oldest") {
+      return (
+        new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      );
+    } else if (sortOption === "alpha") {
+      return a.name.localeCompare(b.name);
+    }
+
+    return 0; // fallback
+  });
 
   useEffect(() => {
     if (searchInput.trim() === "") {
@@ -252,6 +298,24 @@ export function List<T extends { id: string }>({
           </div>
         </div>
 
+        <div className="mt-1 px-2">
+          <label className="text-sm text-gray-600">Sort by:</label>
+          <select
+            className="mt-1 block w-full text-sm border-gray-300 rounded-md shadow-sm"
+            value={sortOption}
+            onChange={(e) =>
+              setSortOption(
+                e.target.value as "newest" | "oldest" | "alpha" | "urgency"
+              )
+            }
+          >
+            <option value="urgency">Urgency (default)</option>
+            <option value="newest">Time: Newest to Oldest</option>
+            <option value="oldest">Time: Oldest to Newest</option>
+            <option value="alpha">Alphabetical</option>
+          </select>
+        </div>
+
         <div className="flex-grow overflow-y-auto">
           {isLoading ? (
             <div className="flex items-center justify-center h-full p-4">
@@ -264,38 +328,23 @@ export function List<T extends { id: string }>({
           ) : (
             <>
               <div className="space-y-1">
-                {[
-                  // 1. Unfoldered items
-                  ...filteredItems
-                    .filter((item) => !(item as any).folder_id)
-                    .map((item) => ({
-                      __type: "item",
-                      data: item,
-                    })),
-
-                  // 2. Top-level folders
-                  ...folderTree.map((folder) => ({
-                    __type: "folder",
-                    data: folder,
-                  })),
-                ].map((entry, index) => {
-                  if (entry.__type === "item") {
-                    return renderItem(entry.data, index);
-                  } else {
-                    return (
-                      <div key={entry.data.id} className="mb-1">
-                        <FolderTree
-                          folder={entry.data}
-                          items={filteredItems}
-                          allFolders={fetchedFolders}
-                          renderItem={renderItem}
-                          level={1}
-                          listType={listType}
-                        />
-                      </div>
-                    );
-                  }
-                })}
+                {finalSortedList.map((entry, index) =>
+                  entry.__isFolder ? (
+                    <div key={entry.id} className="mb-1">
+                      <FolderTree
+                        folder={entry}
+                        items={filteredItems}
+                        allFolders={fetchedFolders}
+                        renderItem={renderItem}
+                        level={1}
+                        listType={listType}
+                        sortOption={sortOption}
+                      />
+                    </div>
+                  ) : (
+                    renderItem(entry, index)
+                  )
+                )}
               </div>
             </>
           )}

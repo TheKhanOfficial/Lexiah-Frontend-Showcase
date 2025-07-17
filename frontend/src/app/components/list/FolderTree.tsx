@@ -30,6 +30,7 @@ interface FolderTreeProps<T extends ItemWithFolderId> {
   renderItem: (item: T, index: number) => JSX.Element;
   level?: number;
   listType: string;
+  sortOption: "urgency" | "newest" | "oldest" | "alpha";
 }
 
 export default function FolderTree<T extends ItemWithFolderId>({
@@ -39,22 +40,54 @@ export default function FolderTree<T extends ItemWithFolderId>({
   level = 0,
   listType,
   allFolders,
+  sortOption,
 }: FolderTreeProps<T>) {
   const [isExpanded, setIsExpanded] = useState(false);
   const queryClient = useQueryClient();
 
   const handleToggle = () => setIsExpanded(!isExpanded);
 
-  const folderItems = items.filter((item) => item.folder_id === folder.id);
+  const folderItemsRaw = items.filter((item) => item.folder_id === folder.id);
+  const childrenRaw = folder.children || [];
 
-  console.log("All items:", items);
-  console.log("Current folder ID:", folder.id);
-  console.log(
-    "Children found:",
-    items.filter((f) => f.parent_id === folder.id)
-  );
+  let sortedFolderItems: T[] = [];
+  let sortedChildren: FolderWithChildren[] = [];
+  let mixedSorted: (T | (FolderWithChildren & { __isFolder: true }))[] = [];
 
-  const children = folder.children || [];
+  if (sortOption === "urgency") {
+    // Mixed sort of items + folders by created_at
+    mixedSorted = [
+      ...childrenRaw.map((f) => ({ ...f, __isFolder: true })),
+      ...folderItemsRaw,
+    ].sort((a, b) => {
+      const timeA = new Date(a.created_at ?? "").getTime();
+      const timeB = new Date(b.created_at ?? "").getTime();
+      return timeB - timeA;
+    });
+  } else {
+    const compareFn = (
+      a: { created_at?: string; name?: string },
+      b: { created_at?: string; name?: string }
+    ) => {
+      if (sortOption === "newest") {
+        return (
+          new Date(b.created_at ?? "").getTime() -
+          new Date(a.created_at ?? "").getTime()
+        );
+      } else if (sortOption === "oldest") {
+        return (
+          new Date(a.created_at ?? "").getTime() -
+          new Date(b.created_at ?? "").getTime()
+        );
+      } else if (sortOption === "alpha") {
+        return (a.name ?? "").localeCompare(b.name ?? "");
+      }
+      return 0;
+    };
+
+    sortedFolderItems = [...folderItemsRaw].sort(compareFn);
+    sortedChildren = [...childrenRaw].sort(compareFn);
+  }
 
   return (
     <div>
@@ -99,23 +132,42 @@ export default function FolderTree<T extends ItemWithFolderId>({
             }}
           />
 
-          {/* Items inside this folder */}
-          <div className="space-y-1">
-            {folderItems.map((item, index) => renderItem(item, index))}
-          </div>
-
-          {/* Recursive children */}
-          {children.map((childFolder, index) => (
-            <FolderTree
-              key={childFolder.id}
-              folder={childFolder}
-              items={items}
-              allFolders={allFolders} // ✅ NEW
-              renderItem={renderItem}
-              level={level + 1}
-              listType={listType}
-            />
-          ))}
+          {sortOption === "urgency" ? (
+            <>
+              {mixedSorted.map((entry, index) =>
+                (entry as any).__isFolder ? (
+                  <FolderTree
+                    key={entry.id}
+                    folder={entry}
+                    items={items}
+                    allFolders={allFolders}
+                    renderItem={renderItem}
+                    level={level + 1}
+                    listType={listType}
+                    sortOption={sortOption}
+                  />
+                ) : (
+                  renderItem(entry as T, index)
+                )
+              )}
+            </>
+          ) : (
+            <>
+              {sortedChildren.map((childFolder) => (
+                <FolderTree
+                  key={childFolder.id}
+                  folder={childFolder}
+                  items={items}
+                  allFolders={allFolders}
+                  renderItem={renderItem}
+                  level={level + 1}
+                  listType={listType}
+                  sortOption={sortOption}
+                />
+              ))}
+              {sortedFolderItems.map((item, index) => renderItem(item, index))}
+            </>
+          )}
         </div>
       )}
     </div>
