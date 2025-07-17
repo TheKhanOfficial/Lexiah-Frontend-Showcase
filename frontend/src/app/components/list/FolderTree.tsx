@@ -59,26 +59,17 @@ export default function FolderTree<T extends ItemWithFolderId>({
   return (
     <div>
       {/* Folder header with click-to-expand */}
-      <div
-        onClick={handleToggle}
-        className="flex items-center gap-0 cursor-pointer select-none"
-      >
-        <div className="flex-shrink-0 flex items-center justify-center h-full pt-0.5">
-          <span className="text-3xl leading-[1]">
-            {isExpanded ? "📂" : "📁"}
-          </span>
-        </div>
-        <div className="flex-1">
-          {renderItem(
-            {
-              ...folder,
-              folder_id: folder.parent_id,
-              created_at: folder.created_at ?? "",
-              __isFolder: true,
-            } as any,
-            0
-          )}
-        </div>
+      <div onClick={handleToggle} className="cursor-pointer select-none">
+        {renderItem(
+          {
+            ...folder,
+            folder_id: folder.parent_id,
+            created_at: folder.created_at ?? "",
+            __isFolder: true,
+            __emoji: isExpanded ? "📂" : "📁", // 👈 pass emoji
+          } as any,
+          0
+        )}
       </div>
 
       {isExpanded && (
@@ -109,9 +100,9 @@ export default function FolderTree<T extends ItemWithFolderId>({
           />
 
           {/* Items inside this folder */}
-          <ul className="list-none p-0 m-0 space-y-1">
+          <div className="space-y-1">
             {folderItems.map((item, index) => renderItem(item, index))}
-          </ul>
+          </div>
 
           {/* Recursive children */}
           {children.map((childFolder, index) => (

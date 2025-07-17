@@ -19,6 +19,7 @@ interface ListItemProps {
   rightContent?: ReactNode;
   onRename?: (id: string) => void; // Changed to just trigger rename request
   onDelete?: (id: string) => void; // Changed to just trigger delete request
+  customEmoji?: string;
 }
 
 export function ListItem({
@@ -32,6 +33,7 @@ export function ListItem({
   rightContent,
   onRename,
   onDelete,
+  customEmoji,
 }: ListItemProps) {
   // Stop propagation to prevent triggering the list item click
   const handleDropdownClick = (e: React.MouseEvent) => {
@@ -79,7 +81,7 @@ export function ListItem({
           {/* Emoji block (matches folder emoji style exactly) */}
           <div className="flex-shrink-0 flex items-center justify-center h-full pt-0.5">
             <span className="text-3xl leading-[1]">
-              {getItemEmoji(itemType)}
+              {customEmoji || getItemEmoji(itemType)}
             </span>
           </div>
 
