@@ -25,9 +25,10 @@ interface ItemWithFolderId {
 interface FolderTreeProps<T extends ItemWithFolderId> {
   folder: FolderWithChildren;
   items: T[];
+  allFolders: Folder[]; // ✅ NEW
   renderItem: (item: T, index: number) => JSX.Element;
   level?: number;
-  listType: string; // <- required for reusability
+  listType: string;
 }
 
 export default function FolderTree<T extends ItemWithFolderId>({
@@ -36,6 +37,7 @@ export default function FolderTree<T extends ItemWithFolderId>({
   renderItem,
   level = 0,
   listType,
+  allFolders,
 }: FolderTreeProps<T>) {
   const [isExpanded, setIsExpanded] = useState(false);
   const queryClient = useQueryClient();
@@ -51,15 +53,7 @@ export default function FolderTree<T extends ItemWithFolderId>({
     items.filter((f) => f.parent_id === folder.id)
   );
 
-  const children = items
-    .filter(
-      (f): f is FolderWithChildren =>
-        f.parent_id === folder.id && f.list_type === listType
-    )
-    .map((child) => ({
-      ...child,
-      children: items.filter((grandchild) => grandchild.parent_id === child.id),
-    }));
+  const children = folder.children || [];
 
   return (
     <div className="ml-4">
@@ -103,6 +97,7 @@ export default function FolderTree<T extends ItemWithFolderId>({
               key={childFolder.id}
               folder={childFolder}
               items={items}
+              allFolders={allFolders} // ✅ NEW
               renderItem={renderItem}
               level={level + 1}
               listType={listType}

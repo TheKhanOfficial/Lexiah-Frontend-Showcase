@@ -3,6 +3,7 @@ import { ReactNode, useState, useEffect } from "react";
 import { AddNewItem, ItemType } from "./AddNewItem";
 import { AddNewFolder } from "./AddNewFolder";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { fetchAllFolders } from "@/utils/supabase/folders";
 import FolderTree from "./FolderTree";
 
 interface ListProps<T extends { id: string }> {
@@ -275,6 +276,7 @@ export function List<T extends { id: string }>({
                   key={folder.id}
                   folder={folder}
                   items={filteredItems}
+                  allFolders={fetchedFolders}
                   renderItem={renderItem}
                   level={1}
                   listType={listType}
