@@ -54,6 +54,19 @@ export function ListItem({
     }
   };
 
+  const getItemEmoji = (type: ItemType): string => {
+    switch (type) {
+      case "case":
+        return "💼";
+      case "document":
+        return "📖";
+      case "note":
+        return "📝";
+      default:
+        return "";
+    }
+  };
+
   return (
     <li
       className={`list-none p-0 m-0 rounded-md cursor-pointer transition-colors duration-150 ${
@@ -62,10 +75,19 @@ export function ListItem({
       onClick={onClick}
     >
       <div className="p-4 flex items-center justify-between">
-        <div className="flex-1 min-w-0">
-          <p className="text-base font-medium truncate">{title}</p>
+        <div className="flex items-start gap-2">
+          {/* Emoji block (matches folder emoji style exactly) */}
+          <div className="flex-shrink-0 flex items-center justify-center h-full pt-0.5">
+            <span className="text-3xl leading-[1]">
+              {getItemEmoji(itemType)}
+            </span>
+          </div>
 
-          {subtitle && <p className="text-xs truncate">{subtitle}</p>}
+          {/* Text block */}
+          <div className="flex-1 min-w-0">
+            <p className="text-base font-medium truncate">{title}</p>
+            {subtitle && <p className="text-xs truncate">{subtitle}</p>}
+          </div>
         </div>
 
         <div className="flex items-center">

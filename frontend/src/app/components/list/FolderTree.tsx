@@ -64,7 +64,7 @@ export default function FolderTree<T extends ItemWithFolderId>({
         className="flex items-center gap-0 cursor-pointer select-none"
       >
         <div className="flex-shrink-0 flex items-center justify-center h-full pt-0.5">
-          <span className="text-2x1 leading-[1]">
+          <span className="text-3xl leading-[1]">
             {isExpanded ? "📂" : "📁"}
           </span>
         </div>
@@ -82,7 +82,7 @@ export default function FolderTree<T extends ItemWithFolderId>({
       </div>
 
       {isExpanded && (
-        <div className="mt-1 space-y-1">
+        <div className="mt-1 space-y-1 border-b-4 border-[#111827] pb-2">
           <AddNewItem
             userId={folder.user_id}
             folderId={folder.id} // 🔥 pass the folder this case belongs in
