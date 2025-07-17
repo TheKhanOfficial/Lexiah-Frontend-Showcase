@@ -263,26 +263,15 @@ export function List<T extends { id: string }>({
               </ul>
 
               {/* Recursive folder rendering */}
-              {folderTree.map((folder, index) => (
-                <div key={folder.id}>
-                  {renderItem(
-                    {
-                      ...folder,
-                      folder_id: null, // prevent re-filtering
-                      created_at: folder.created_at ?? "",
-                      __isFolder: true, // flag if needed in renderItem
-                    } as any,
-                    index
-                  )}
-
-                  <FolderTree
-                    folder={folder}
-                    items={filteredItems}
-                    renderItem={renderItem}
-                    level={1}
-                    listType={listType}
-                  />
-                </div>
+              {folderTree.map((folder) => (
+                <FolderTree
+                  key={folder.id}
+                  folder={folder}
+                  items={filteredItems}
+                  renderItem={renderItem}
+                  level={1}
+                  listType={listType}
+                />
               ))}
             </>
           )}

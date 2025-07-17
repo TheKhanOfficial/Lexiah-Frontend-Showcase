@@ -10,6 +10,7 @@ interface Folder {
   user_id: string;
   case_id: string;
   parent_id: string | null;
+  list_type: string;
 }
 
 interface AddNewFolderProps {
@@ -17,6 +18,7 @@ interface AddNewFolderProps {
   caseId: string;
   parentId?: string | null;
   text?: string;
+  listType: string;
   onSuccess?: (newFolder: Folder) => void;
 }
 
@@ -25,14 +27,13 @@ async function addFolder(
   userId: string,
   caseId: string,
   name: string,
-  parentId: string | null = null
+  parentId: string | null = null,
+  listType: string
 ) {
-  const listType = "cases";
-
   if (parentId) {
-    return await addSubFolder(userId, listType, name, parentId);
+    return await addSubFolder(userId, listType, name, parentId, caseId);
   } else {
-    return await addTopLevelFolder(userId, listType, name);
+    return await addTopLevelFolder(userId, listType, name, caseId);
   }
 }
 
@@ -41,6 +42,7 @@ export function AddNewFolder({
   caseId,
   parentId = null,
   text = "New Folder 📁",
+  listType,
   onSuccess,
 }: AddNewFolderProps) {
   const queryClient = useQueryClient();
@@ -56,15 +58,27 @@ export function AddNewFolder({
 
   const mutation = useMutation({
     mutationFn: ({ name }: { name: string }) =>
-      addFolder(userId, caseId, name, parentId),
+      addFolder(userId, caseId, name, parentId, listType),
+
     onSuccess: (data) => {
       // Invalidate relevant queries
-      queryClient.invalidateQueries({ queryKey: ["folders", userId, "cases"] });
+      queryClient.invalidateQueries({
+        queryKey: ["folders", userId, listType],
+      });
 
       if (onSuccess) onSuccess(data);
       handleReset();
     },
     onError: (error) => {
+      if (error instanceof Error) {
+        console.error("Folder creation failed:", error);
+        if ("code" in error) {
+          console.error("Error code:", (error as any).code);
+        }
+      } else {
+        console.error("Unknown folder creation error:", error);
+      }
+
       const errorMsg =
         error instanceof Error ? error.message : "Failed to create folder";
       setErrorMessage(errorMsg);

@@ -1,6 +1,7 @@
 //components/list/FolderTree.tsx
 import React, { useState } from "react";
 import { AddNewFolder } from "./AddNewFolder";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface Folder {
   id: string;
@@ -8,6 +9,8 @@ interface Folder {
   user_id: string;
   case_id: string;
   parent_id: string | null;
+  list_type?: string;
+  created_at?: string;
 }
 
 interface FolderWithChildren extends Folder {
@@ -22,8 +25,9 @@ interface ItemWithFolderId {
 interface FolderTreeProps<T extends ItemWithFolderId> {
   folder: FolderWithChildren;
   items: T[];
-  renderItem: (item: T) => JSX.Element;
+  renderItem: (item: T, index: number) => JSX.Element;
   level?: number;
+  listType: string; // <- required for reusability
 }
 
 export default function FolderTree<T extends ItemWithFolderId>({
@@ -31,58 +35,67 @@ export default function FolderTree<T extends ItemWithFolderId>({
   items = [],
   renderItem,
   level = 0,
+  listType,
 }: FolderTreeProps<T>) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const queryClient = useQueryClient();
 
-  // Filter items that belong to this folder
+  const handleToggle = () => setIsExpanded(!isExpanded);
+
   const folderItems = items.filter((item) => item.folder_id === folder.id);
-  const children = folder.children || [];
+  const children = (folder.children || []).filter(
+    (child) => child.list_type === listType
+  );
 
   return (
-    <>
-      {/* Recursive rendering: subfolder and its items */}
-      {children.map((childFolder, index) => (
-        <div key={childFolder.id}>
-          {renderItem(
-            {
-              ...childFolder,
-              folder_id: folder.id,
-              created_at: childFolder.created_at ?? "",
-              __isFolder: true,
-            } as any,
-            index
-          )}
-
-          {isExpanded && (
-            <FolderTree
-              folder={childFolder}
-              items={items}
-              renderItem={renderItem}
-              level={level + 1}
-            />
-          )}
-        </div>
-      ))}
+    <div className="ml-4">
+      {/* Folder header with click-to-expand */}
+      <div onClick={handleToggle} className="cursor-pointer select-none">
+        {renderItem(
+          {
+            ...folder,
+            folder_id: folder.parent_id,
+            created_at: folder.created_at ?? "",
+            __isFolder: true,
+          } as any,
+          0
+        )}
+      </div>
 
       {isExpanded && (
-        <div>
+        <div className="ml-4 mt-1 space-y-1">
+          {/* Add Subfolder */}
+          <AddNewFolder
+            userId={folder.user_id}
+            caseId={folder.case_id}
+            parentId={folder.id}
+            text="Add Subfolder 📂"
+            listType={listType}
+            onSuccess={() => {
+              queryClient.invalidateQueries({
+                queryKey: ["folders", folder.user_id, listType],
+              });
+            }}
+          />
+
           {/* Items inside this folder */}
           {folderItems.map((item, index) => (
             <div key={item.id}>{renderItem(item, index)}</div>
           ))}
 
-          {/* Add new subfolder */}
-          <div className="pl-6 pr-2 mt-2">
-            <AddNewFolder
-              userId={folder.user_id}
-              caseId={folder.case_id}
-              parentId={folder.id}
-              text="Add Subfolder 📂"
-              onSuccess={() => {}}
+          {/* Recursive children */}
+          {children.map((childFolder, index) => (
+            <FolderTree
+              key={childFolder.id}
+              folder={childFolder}
+              items={items}
+              renderItem={renderItem}
+              level={level + 1}
+              listType={listType}
             />
-          </div>
+          ))}
         </div>
       )}
-    </>
+    </div>
   );
 }
