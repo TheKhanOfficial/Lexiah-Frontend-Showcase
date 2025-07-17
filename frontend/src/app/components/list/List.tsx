@@ -263,26 +263,39 @@ export function List<T extends { id: string }>({
             </div>
           ) : (
             <>
-              {/* Items not in folders */}
-              <ul className="space-y-1">
-                {filteredItems
-                  .filter((item) => !(item as any).folder_id)
-                  .map((item, index) => renderItem(item, index))}
-              </ul>
-
-              {/* Recursive folder rendering */}
               <div className="space-y-1">
-                {folderTree.map((folder) => (
-                  <FolderTree
-                    key={folder.id}
-                    folder={folder}
-                    items={filteredItems}
-                    allFolders={fetchedFolders}
-                    renderItem={renderItem}
-                    level={1}
-                    listType={listType}
-                  />
-                ))}
+                {[
+                  // 1. Unfoldered items
+                  ...filteredItems
+                    .filter((item) => !(item as any).folder_id)
+                    .map((item) => ({
+                      __type: "item",
+                      data: item,
+                    })),
+
+                  // 2. Top-level folders
+                  ...folderTree.map((folder) => ({
+                    __type: "folder",
+                    data: folder,
+                  })),
+                ].map((entry, index) => {
+                  if (entry.__type === "item") {
+                    return renderItem(entry.data, index);
+                  } else {
+                    return (
+                      <div key={entry.data.id} className="mb-1">
+                        <FolderTree
+                          folder={entry.data}
+                          items={filteredItems}
+                          allFolders={fetchedFolders}
+                          renderItem={renderItem}
+                          level={1}
+                          listType={listType}
+                        />
+                      </div>
+                    );
+                  }
+                })}
               </div>
             </>
           )}
