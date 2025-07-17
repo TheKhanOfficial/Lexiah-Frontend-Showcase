@@ -77,7 +77,7 @@ export default function FolderTree<T extends ItemWithFolderId>({
             userId={folder.user_id}
             caseId={folder.case_id}
             parentId={folder.id}
-            text="Add Subfolder 📂"
+            text="New Subfolder 📂"
             listType={listType}
             onSuccess={() => {
               queryClient.invalidateQueries({
