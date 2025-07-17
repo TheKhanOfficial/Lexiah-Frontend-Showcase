@@ -11,6 +11,7 @@ export type ItemType = "case" | "document" | "note";
 interface AddNewItemProps {
   userId: string;
   caseId?: string; // Optional - only needed for documents and notes
+  folderId?: string;
   itemType: ItemType;
   onSuccess?: (newItem: any) => void; // Callback after successful addition
   onError?: (error: Error) => void; // Callback for error handling
@@ -25,6 +26,7 @@ export function AddNewItem({
   itemType,
   onSuccess,
   onError,
+  folderId,
   text = "Add New",
   fileUploadEnabled = false,
   fileTypes = ".pdf",
@@ -58,7 +60,7 @@ export function AddNewItem({
 
   // Create mutations for different item types
   const caseMutation = useMutation({
-    mutationFn: ({ name }: { name: string }) => addCase(userId, name),
+    mutationFn: ({ name }: { name: string }) => addCase(userId, name, folderId),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["cases", userId] });
       if (onSuccess) onSuccess(data);

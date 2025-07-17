@@ -264,24 +264,26 @@ export function List<T extends { id: string }>({
           ) : (
             <>
               {/* Items not in folders */}
-              <ul className="space-y-1 mb-4">
+              <ul className="space-y-1">
                 {filteredItems
                   .filter((item) => !(item as any).folder_id)
                   .map((item, index) => renderItem(item, index))}
               </ul>
 
               {/* Recursive folder rendering */}
-              {folderTree.map((folder) => (
-                <FolderTree
-                  key={folder.id}
-                  folder={folder}
-                  items={filteredItems}
-                  allFolders={fetchedFolders}
-                  renderItem={renderItem}
-                  level={1}
-                  listType={listType}
-                />
-              ))}
+              <div className="space-y-1">
+                {folderTree.map((folder) => (
+                  <FolderTree
+                    key={folder.id}
+                    folder={folder}
+                    items={filteredItems}
+                    allFolders={fetchedFolders}
+                    renderItem={renderItem}
+                    level={1}
+                    listType={listType}
+                  />
+                ))}
+              </div>
             </>
           )}
         </div>

@@ -56,7 +56,7 @@ export function ListItem({
 
   return (
     <li
-      className={`rounded-md cursor-pointer transition-colors duration-150  ${
+      className={`list-none p-0 m-0 rounded-md cursor-pointer transition-colors duration-150 ${
         isSelected ? "on-click" : "hover:bg-[#111827] hover:text-[#f9fafb]"
       }`}
       onClick={onClick}

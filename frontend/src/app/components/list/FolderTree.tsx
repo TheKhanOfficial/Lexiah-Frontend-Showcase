@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { AddNewFolder } from "./AddNewFolder";
 import { useQueryClient } from "@tanstack/react-query";
+import { AddNewItem } from "./AddNewItem";
 
 interface Folder {
   id: string;
@@ -56,7 +57,7 @@ export default function FolderTree<T extends ItemWithFolderId>({
   const children = folder.children || [];
 
   return (
-    <div className="ml-4">
+    <div>
       {/* Folder header with click-to-expand */}
       <div onClick={handleToggle} className="cursor-pointer select-none">
         {renderItem(
@@ -71,7 +72,18 @@ export default function FolderTree<T extends ItemWithFolderId>({
       </div>
 
       {isExpanded && (
-        <div className="ml-4 mt-1 space-y-1">
+        <div className="mt-1 space-y-1">
+          <AddNewItem
+            userId={folder.user_id}
+            folderId={folder.id} // 🔥 pass the folder this case belongs in
+            itemType="case"
+            text="New Case in Folder 💼"
+            onSuccess={() => {
+              queryClient.invalidateQueries({
+                queryKey: ["cases", folder.user_id],
+              });
+            }}
+          />
           {/* Add Subfolder */}
           <AddNewFolder
             userId={folder.user_id}
@@ -87,9 +99,9 @@ export default function FolderTree<T extends ItemWithFolderId>({
           />
 
           {/* Items inside this folder */}
-          {folderItems.map((item, index) => (
-            <div key={item.id}>{renderItem(item, index)}</div>
-          ))}
+          <ul className="list-none p-0 m-0 space-y-1">
+            {folderItems.map((item, index) => renderItem(item, index))}
+          </ul>
 
           {/* Recursive children */}
           {children.map((childFolder, index) => (
