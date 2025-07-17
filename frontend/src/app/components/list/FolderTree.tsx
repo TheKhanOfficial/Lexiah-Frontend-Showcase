@@ -43,9 +43,23 @@ export default function FolderTree<T extends ItemWithFolderId>({
   const handleToggle = () => setIsExpanded(!isExpanded);
 
   const folderItems = items.filter((item) => item.folder_id === folder.id);
-  const children = (folder.children || []).filter(
-    (child) => child.list_type === listType
+
+  console.log("All items:", items);
+  console.log("Current folder ID:", folder.id);
+  console.log(
+    "Children found:",
+    items.filter((f) => f.parent_id === folder.id)
   );
+
+  const children = items
+    .filter(
+      (f): f is FolderWithChildren =>
+        f.parent_id === folder.id && f.list_type === listType
+    )
+    .map((child) => ({
+      ...child,
+      children: items.filter((grandchild) => grandchild.parent_id === child.id),
+    }));
 
   return (
     <div className="ml-4">

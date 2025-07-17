@@ -2,7 +2,7 @@
 import { ReactNode, useState, useEffect } from "react";
 import { AddNewItem, ItemType } from "./AddNewItem";
 import { AddNewFolder } from "./AddNewFolder";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import FolderTree from "./FolderTree";
 
 interface ListProps<T extends { id: string }> {
@@ -21,7 +21,6 @@ interface ListProps<T extends { id: string }> {
   isLoading?: boolean;
   onAddItemRequest?: () => void; // New prop to handle add item request externally
   onAddItemError?: (error: Error) => void; // Callback for error handling
-  folders?: Folder[];
   listType?: string;
 }
 
@@ -95,7 +94,15 @@ export function List<T extends { id: string }>({
       })
     : items;
 
-  const folderTree = buildFolderTree(folders || []);
+  const { data: fetchedFolders = [] } = useQuery({
+    queryKey: ["folders", userId, listType],
+    queryFn: () => fetchAllFolders(userId, listType),
+  });
+
+  const folderTree: FolderWithChildren[] = buildFolderTree(
+    fetchedFolders
+  ) as FolderWithChildren[];
+
   const filteredItems = sortedItems.filter((item) =>
     (item as any)?.name?.toLowerCase().includes(searchQuery.toLowerCase())
   );
