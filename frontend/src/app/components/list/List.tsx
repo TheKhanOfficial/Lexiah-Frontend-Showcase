@@ -68,6 +68,46 @@ export function List<T extends { id: string }>({
   const [sortOption, setSortOption] = useState<
     "newest" | "oldest" | "alpha" | "urgency"
   >("urgency");
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  // Helper to recursively gather all nested folder & item ids
+  function collectNestedIds(
+    folderId: string,
+    folders: Folder[],
+    items: any[]
+  ): string[] {
+    const childFolderIds = folders
+      .filter((f) => f.parent_id === folderId)
+      .map((f) => f.id);
+
+    const nestedIds = childFolderIds.flatMap((id) =>
+      collectNestedIds(id, folders, items)
+    );
+
+    const childItemIds = items
+      .filter((i) => i.folder_id === folderId)
+      .map((i) => i.id);
+
+    return [folderId, ...childItemIds, ...nestedIds];
+  }
+
+  function toggleSelect(id: string, isFolder: boolean) {
+    const newSet = new Set(selectedIds);
+
+    if (newSet.has(id)) {
+      newSet.delete(id);
+    } else {
+      if (isFolder) {
+        const allIds = collectNestedIds(id, fetchedFolders, sortedItems);
+        allIds.forEach((childId) => newSet.add(childId));
+      } else {
+        newSet.add(id);
+      }
+    }
+
+    setSelectedIds(newSet);
+  }
 
   // Sort items if sortBy is provided
   const sortedItems = sortBy
@@ -143,12 +183,14 @@ export function List<T extends { id: string }>({
       created_at: folder.created_at ?? "",
       name: folder.name,
     })),
-    ...sortedItems.map((item) => ({
-      ...item,
-      __isFolder: false,
-      created_at: (item as any).created_at ?? "",
-      name: (item as any).name ?? "",
-    })),
+    ...sortedItems
+      .filter((item) => !(item as any).folder_id) // ✅ EXCLUDE nested items
+      .map((item) => ({
+        ...item,
+        __isFolder: false,
+        created_at: (item as any).created_at ?? "",
+        name: (item as any).name ?? "",
+      })),
   ];
 
   const finalSortedList = [...normalizedData].sort((a, b) => {
@@ -298,10 +340,10 @@ export function List<T extends { id: string }>({
           </div>
         </div>
 
-        <div className="mt-1 px-2">
+        <div className="flex items-center justify-between mt-1 px-2">
           <label className="text-sm text-gray-600">Sort by:</label>
           <select
-            className="mt-1 block w-full text-sm border-gray-300 rounded-md shadow-sm"
+            className="text-sm border-gray-300 rounded-md shadow-sm"
             value={sortOption}
             onChange={(e) =>
               setSortOption(
@@ -314,6 +356,13 @@ export function List<T extends { id: string }>({
             <option value="oldest">Time: Oldest to Newest</option>
             <option value="alpha">Alphabetical</option>
           </select>
+
+          <button
+            onClick={() => setSelectMode(!selectMode)}
+            className="ml-2 px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100"
+          >
+            {selectMode ? "Cancel" : "Select"}
+          </button>
         </div>
 
         <div className="flex-grow overflow-y-auto">
@@ -342,7 +391,11 @@ export function List<T extends { id: string }>({
                       />
                     </div>
                   ) : (
-                    renderItem(entry, index)
+                    renderItem(entry, index, {
+                      selectMode,
+                      selectedIds,
+                      onSelect: toggleSelect,
+                    })
                   )
                 )}
               </div>

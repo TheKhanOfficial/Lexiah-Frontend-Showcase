@@ -20,6 +20,9 @@ interface ListItemProps {
   onRename?: (id: string) => void; // Changed to just trigger rename request
   onDelete?: (id: string) => void; // Changed to just trigger delete request
   customEmoji?: string;
+  selectMode?: boolean;
+  selected?: boolean;
+  onSelectToggle?: (id: string) => void;
 }
 
 export function ListItem({
@@ -34,6 +37,9 @@ export function ListItem({
   onRename,
   onDelete,
   customEmoji,
+  selectMode,
+  selected,
+  onSelectToggle,
 }: ListItemProps) {
   // Stop propagation to prevent triggering the list item click
   const handleDropdownClick = (e: React.MouseEvent) => {
@@ -93,6 +99,20 @@ export function ListItem({
         </div>
 
         <div className="flex items-center">
+          {selectMode && (
+            <input
+              type="checkbox"
+              checked={selected}
+              onChange={(e) => {
+                e.stopPropagation();
+                if (onSelectToggle) {
+                  onSelectToggle(id);
+                }
+              }}
+              className="mr-2"
+            />
+          )}
+
           {rightContent && (
             <div className="m-2 flex-shrink-0">{rightContent}</div>
           )}

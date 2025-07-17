@@ -31,6 +31,9 @@ interface FolderTreeProps<T extends ItemWithFolderId> {
   level?: number;
   listType: string;
   sortOption: "urgency" | "newest" | "oldest" | "alpha";
+  selectMode?: boolean;
+  selectedIds?: Set<string>;
+  onSelect?: (id: string, isFolder: boolean) => void;
 }
 
 export default function FolderTree<T extends ItemWithFolderId>({
@@ -41,6 +44,9 @@ export default function FolderTree<T extends ItemWithFolderId>({
   listType,
   allFolders,
   sortOption,
+  selectMode,
+  selectedIds,
+  onSelect,
 }: FolderTreeProps<T>) {
   const [isExpanded, setIsExpanded] = useState(false);
   const queryClient = useQueryClient();
@@ -99,9 +105,14 @@ export default function FolderTree<T extends ItemWithFolderId>({
             folder_id: folder.parent_id,
             created_at: folder.created_at ?? "",
             __isFolder: true,
-            __emoji: isExpanded ? "📂" : "📁", // 👈 pass emoji
+            __emoji: isExpanded ? "📂" : "📁",
           } as any,
-          0
+          0,
+          {
+            selectMode,
+            selectedIds,
+            onSelect: onSelect ? () => onSelect(folder.id, true) : undefined,
+          }
         )}
       </div>
 
