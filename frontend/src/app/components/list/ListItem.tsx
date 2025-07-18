@@ -100,17 +100,27 @@ export function ListItem({
 
         <div className="flex items-center">
           {selectMode && (
-            <label className="mr-2">
-              <input
-                type="checkbox"
-                checked={!!selected}
-                onClick={(e) => e.stopPropagation()}
-                onChange={(e) => {
-                  if (onSelectToggle) onSelectToggle(id);
-                }}
-                className="w-5 h-5 cursor-pointer accent-black"
-              />
-            </label>
+            <>
+              {console.log("[LOG] Rendering checkbox for", id, {
+                selected,
+                selectMode,
+              })}
+              <label className="mr-2">
+                <input
+                  type="checkbox"
+                  checked={!!selected}
+                  onClick={(e) => e.stopPropagation()}
+                  onChange={(e) => {
+                    console.log("[LOG] Checkbox changed for", id, {
+                      selected,
+                      selectMode,
+                    });
+                    if (onSelectToggle) onSelectToggle(id);
+                  }}
+                  className="w-5 h-5 cursor-pointer accent-black"
+                />
+              </label>
+            </>
           )}
 
           {rightContent && (

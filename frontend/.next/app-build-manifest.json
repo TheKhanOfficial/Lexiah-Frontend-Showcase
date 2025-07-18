@@ -10,12 +10,6 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/[userid]/page.js"
-    ],
-    "/[userid]/[caseid]/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/css/app/[userid]/[caseid]/page.css",
-      "static/chunks/app/[userid]/[caseid]/page.js"
     ]
   }
 }
