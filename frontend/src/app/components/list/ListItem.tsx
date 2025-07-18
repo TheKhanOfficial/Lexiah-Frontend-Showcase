@@ -76,22 +76,22 @@ export function ListItem({
   };
 
   return (
-    <li
-      className={`list-none p-0 m-0 rounded-md cursor-pointer transition-colors duration-150 ${
-        isSelected ? "on-click" : "hover:bg-[#111827] hover:text-[#f9fafb]"
-      }`}
-      onClick={onClick}
-    >
-      <div className="p-4 flex items-center justify-between">
+    <li className="list-none p-0 m-0 rounded-md transition-colors duration-150">
+      <div
+        className={`p-4 flex items-center justify-between ${
+          isSelected
+            ? "bg-gray-200"
+            : "hover:bg-[#111827] hover:text-[#f9fafb] cursor-pointer"
+        }`}
+        onClick={onClick}
+      >
         <div className="flex items-start gap-2">
-          {/* Emoji block (matches folder emoji style exactly) */}
           <div className="flex-shrink-0 flex items-center justify-center h-full pt-0.5">
             <span className="text-3xl leading-[1]">
               {customEmoji || getItemEmoji(itemType)}
             </span>
           </div>
 
-          {/* Text block */}
           <div className="flex-1 min-w-0">
             <p className="text-base font-medium truncate">{title}</p>
             {subtitle && <p className="text-xs truncate">{subtitle}</p>}
@@ -100,17 +100,17 @@ export function ListItem({
 
         <div className="flex items-center">
           {selectMode && (
-            <input
-              type="checkbox"
-              checked={selected}
-              onChange={(e) => {
-                e.stopPropagation();
-                if (onSelectToggle) {
-                  onSelectToggle(id);
-                }
-              }}
-              className="mr-2"
-            />
+            <label className="mr-2">
+              <input
+                type="checkbox"
+                checked={!!selected}
+                onClick={(e) => e.stopPropagation()}
+                onChange={(e) => {
+                  if (onSelectToggle) onSelectToggle(id);
+                }}
+                className="w-5 h-5 cursor-pointer accent-black"
+              />
+            </label>
           )}
 
           {rightContent && (

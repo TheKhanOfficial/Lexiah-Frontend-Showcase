@@ -69,7 +69,7 @@ export function List<T extends { id: string }>({
     "newest" | "oldest" | "alpha" | "urgency"
   >("urgency");
   const [selectMode, setSelectMode] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   // Helper to recursively gather all nested folder & item ids
   function collectNestedIds(
@@ -93,20 +93,28 @@ export function List<T extends { id: string }>({
   }
 
   function toggleSelect(id: string, isFolder: boolean) {
-    const newSet = new Set(selectedIds);
+    let newSelected: string[];
 
-    if (newSet.has(id)) {
-      newSet.delete(id);
+    if (selectedIds.includes(id)) {
+      if (isFolder) {
+        const deselectIds = collectNestedIds(id, fetchedFolders, sortedItems);
+        newSelected = selectedIds.filter((x) => !deselectIds.includes(x));
+      } else {
+        newSelected = selectedIds.filter((x) => x !== id);
+      }
     } else {
       if (isFolder) {
         const allIds = collectNestedIds(id, fetchedFolders, sortedItems);
-        allIds.forEach((childId) => newSet.add(childId));
+        newSelected = [
+          ...selectedIds,
+          ...allIds.filter((x) => !selectedIds.includes(x)),
+        ];
       } else {
-        newSet.add(id);
+        newSelected = [...selectedIds, id];
       }
     }
 
-    setSelectedIds(newSet);
+    setSelectedIds(newSelected);
   }
 
   // Sort items if sortBy is provided
@@ -388,13 +396,18 @@ export function List<T extends { id: string }>({
                         level={1}
                         listType={listType}
                         sortOption={sortOption}
+                        selectMode={selectMode}
+                        selectedIds={selectedIds}
+                        onSelect={toggleSelect}
                       />
                     </div>
                   ) : (
                     renderItem(entry, index, {
                       selectMode,
                       selectedIds,
-                      onSelect: toggleSelect,
+                      onSelectToggle: (id: string, isFolder: boolean) => {
+                        toggleSelect(id, isFolder);
+                      },
                     })
                   )
                 )}

@@ -111,7 +111,11 @@ export default function FolderTree<T extends ItemWithFolderId>({
           {
             selectMode,
             selectedIds,
-            onSelect: onSelect ? () => onSelect(folder.id, true) : undefined,
+            onSelectToggle: (id: string) => {
+              if (onSelect) {
+                onSelect(id, true);
+              }
+            },
           }
         )}
       </div>
@@ -156,6 +160,9 @@ export default function FolderTree<T extends ItemWithFolderId>({
                     level={level + 1}
                     listType={listType}
                     sortOption={sortOption}
+                    selectMode={selectMode}
+                    selectedIds={selectedIds}
+                    onSelect={onSelect}
                   />
                 ) : (
                   renderItem(entry as T, index)
@@ -166,14 +173,17 @@ export default function FolderTree<T extends ItemWithFolderId>({
             <>
               {sortedChildren.map((childFolder) => (
                 <FolderTree
-                  key={childFolder.id}
-                  folder={childFolder}
+                  key={entry.id}
+                  folder={entry}
                   items={items}
                   allFolders={allFolders}
                   renderItem={renderItem}
                   level={level + 1}
                   listType={listType}
                   sortOption={sortOption}
+                  selectMode={selectMode}
+                  selectedIds={selectedIds}
+                  onSelect={onSelect}
                 />
               ))}
               {sortedFolderItems.map((item, index) => renderItem(item, index))}
