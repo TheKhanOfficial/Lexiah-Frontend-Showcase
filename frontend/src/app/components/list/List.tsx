@@ -452,6 +452,7 @@ export function List<T extends { id: string }>({
             onClick={() => {
               if (selectMode) {
                 setSelectedIds([]); // ✅ Clear all selections when canceling
+                setSearchSelectedOnly(false);
               }
               setSelectMode(!selectMode);
             }}
