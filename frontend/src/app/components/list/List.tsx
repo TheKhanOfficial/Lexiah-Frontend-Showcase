@@ -92,31 +92,6 @@ export function List<T extends { id: string }>({
     return [folderId, ...childItemIds, ...nestedIds];
   }
 
-  function toggleSelect(id: string, isFolder: boolean) {
-    let newSelected: string[];
-
-    if (selectedIds.includes(id)) {
-      if (isFolder) {
-        const deselectIds = collectNestedIds(id, fetchedFolders, sortedItems);
-        newSelected = selectedIds.filter((x) => !deselectIds.includes(x));
-      } else {
-        newSelected = selectedIds.filter((x) => x !== id);
-      }
-    } else {
-      if (isFolder) {
-        const allIds = collectNestedIds(id, fetchedFolders, sortedItems);
-        newSelected = [
-          ...selectedIds,
-          ...allIds.filter((x) => !selectedIds.includes(x)),
-        ];
-      } else {
-        newSelected = [...selectedIds, id];
-      }
-    }
-
-    setSelectedIds(newSelected);
-  }
-
   // Sort items if sortBy is provided
   const sortedItems = sortBy
     ? [...items].sort((a, b) => {
@@ -151,6 +126,31 @@ export function List<T extends { id: string }>({
     queryKey: ["folders", userId, listType],
     queryFn: () => fetchAllFolders(userId, listType),
   });
+
+  function toggleSelect(id: string, isFolder: boolean) {
+    let newSelected: string[];
+
+    if (selectedIds.includes(id)) {
+      if (isFolder) {
+        const deselectIds = collectNestedIds(id, fetchedFolders, sortedItems);
+        newSelected = selectedIds.filter((x) => !deselectIds.includes(x));
+      } else {
+        newSelected = selectedIds.filter((x) => x !== id);
+      }
+    } else {
+      if (isFolder) {
+        const allIds = collectNestedIds(id, fetchedFolders, sortedItems);
+        newSelected = [
+          ...selectedIds,
+          ...allIds.filter((x) => !selectedIds.includes(x)),
+        ];
+      } else {
+        newSelected = [...selectedIds, id];
+      }
+    }
+
+    setSelectedIds(newSelected);
+  }
 
   const folderTree: FolderWithChildren[] = buildFolderTree(
     fetchedFolders
