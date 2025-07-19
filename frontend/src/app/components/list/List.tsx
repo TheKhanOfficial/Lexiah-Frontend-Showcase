@@ -86,6 +86,7 @@ export function List<T extends { id: string }>({
   const [searchSelectedOnly, setSearchSelectedOnly] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showMoveSelector, setShowMoveSelector] = useState(false);
 
   // Helper to recursively gather all nested folder & item ids
   function collectNestedIds(
@@ -218,6 +219,9 @@ export function List<T extends { id: string }>({
     }
 
     setSelectedIds(newSelected);
+    if (newSelected.length === 0) {
+      setShowMoveSelector(false); // ✅ Hide move options when nothing is selected
+    }
   }
 
   const folderTree: FolderWithChildren[] = buildFolderTree(
@@ -502,8 +506,9 @@ export function List<T extends { id: string }>({
           <button
             onClick={() => {
               if (selectMode) {
-                setSelectedIds([]); // ✅ Clear all selections when canceling
+                setSelectedIds([]);
                 setSearchSelectedOnly(false);
+                setShowMoveSelector(false); // ✅ Hide move options on cancel
               }
               setSelectMode(!selectMode);
             }}
@@ -515,7 +520,6 @@ export function List<T extends { id: string }>({
         {selectMode && selectedIds.length > 0 && (
           <div className="flex items-center space-x-2 mt-2 px-2">
             <span className="text-sm font-medium text-gray-700">Actions:</span>
-
             <button
               className={`px-2 py-1 text-sm border rounded ${
                 searchSelectedOnly
@@ -526,19 +530,33 @@ export function List<T extends { id: string }>({
             >
               Search
             </button>
-
+            <button
+              className={`px-2 py-1 text-sm border rounded ${
+                showMoveSelector
+                  ? "bg-black text-white border-black"
+                  : "border-gray-300 hover:bg-gray-100"
+              }`}
+              onClick={() => setShowMoveSelector((prev) => !prev)}
+            >
+              Move
+            </button>
             <button
               className="px-2 py-1 text-sm border border-red-500 text-red-500 rounded hover:bg-red-50"
               onClick={() => setShowDeleteModal(true)}
             >
               Delete
             </button>
+          </div>
+        )}
 
-            <button
-              className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100 text-gray-500 cursor-not-allowed"
-              disabled
-            >
-              Move
+        {showMoveSelector && (
+          <div className="flex items-center space-x-2 mt-2 px-2">
+            <span className="text-sm text-gray-600">Move to:</span>
+            <button className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100">
+              Top-level
+            </button>
+            <button className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100">
+              Another Folder
             </button>
           </div>
         )}
