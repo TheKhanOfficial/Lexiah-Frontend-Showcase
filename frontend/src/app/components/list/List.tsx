@@ -449,64 +449,70 @@ export function List<T extends { id: string }>({
             <div className="flex items-center justify-center h-full p-4">
               <div className="animate-spin rounded-full h-8 w-8"></div>
             </div>
-          ) : filteredItems.length === 0 ? (
+          ) : searchQuery.trim() !== "" ? (
+            filteredResults.length === 0 ? (
+              <div className="flex items-center justify-center h-full p-4 text-gray-500">
+                {emptyMessage}
+              </div>
+            ) : (
+              <div className="space-y-1">
+                {filteredResults.map((entry, index) =>
+                  entry.__isFolder ? (
+                    <FolderTree
+                      key={entry.id}
+                      folder={entry}
+                      items={items}
+                      allFolders={fetchedFolders}
+                      renderItem={renderItem}
+                      level={1}
+                      listType={listType}
+                      sortOption={sortOption}
+                      selectMode={selectMode}
+                      selectedIds={selectedIds}
+                      onSelect={toggleSelect}
+                    />
+                  ) : (
+                    renderItem(entry, index, {
+                      selectMode,
+                      selectedIds,
+                      onSelectToggle: (id: string, isFolder: boolean) =>
+                        toggleSelect(id, isFolder),
+                    })
+                  )
+                )}
+              </div>
+            )
+          ) : finalSortedList.length === 0 ? (
             <div className="flex items-center justify-center h-full p-4 text-gray-500">
               {emptyMessage}
             </div>
           ) : (
-            <>
-              <div className="space-y-1">
-                {searchQuery.trim() !== ""
-                  ? filteredResults.map((entry, index) =>
-                      entry.__isFolder ? (
-                        <FolderTree
-                          key={entry.id}
-                          folder={entry}
-                          items={items}
-                          allFolders={fetchedFolders}
-                          renderItem={renderItem}
-                          level={1}
-                          listType={listType}
-                          sortOption={sortOption}
-                          selectMode={selectMode}
-                          selectedIds={selectedIds}
-                          onSelect={toggleSelect}
-                        />
-                      ) : (
-                        renderItem(entry, index, {
-                          selectMode,
-                          selectedIds,
-                          onSelectToggle: (id: string, isFolder: boolean) =>
-                            toggleSelect(id, isFolder),
-                        })
-                      )
-                    )
-                  : finalSortedList.map((entry, index) =>
-                      entry.__isFolder ? (
-                        <FolderTree
-                          key={entry.id}
-                          folder={entry}
-                          items={items} // full item list
-                          allFolders={fetchedFolders}
-                          renderItem={renderItem}
-                          level={1}
-                          listType={listType}
-                          sortOption={sortOption}
-                          selectMode={selectMode}
-                          selectedIds={selectedIds}
-                          onSelect={toggleSelect}
-                        />
-                      ) : (
-                        renderItem(entry, index, {
-                          selectMode,
-                          selectedIds,
-                          onSelectToggle: (id: string, isFolder: boolean) =>
-                            toggleSelect(id, isFolder),
-                        })
-                      )
-                    )}
-              </div>
-            </>
+            <div className="space-y-1">
+              {finalSortedList.map((entry, index) =>
+                entry.__isFolder ? (
+                  <FolderTree
+                    key={entry.id}
+                    folder={entry}
+                    items={items}
+                    allFolders={fetchedFolders}
+                    renderItem={renderItem}
+                    level={1}
+                    listType={listType}
+                    sortOption={sortOption}
+                    selectMode={selectMode}
+                    selectedIds={selectedIds}
+                    onSelect={toggleSelect}
+                  />
+                ) : (
+                  renderItem(entry, index, {
+                    selectMode,
+                    selectedIds,
+                    onSelectToggle: (id: string, isFolder: boolean) =>
+                      toggleSelect(id, isFolder),
+                  })
+                )
+              )}
+            </div>
           )}
         </div>
       </div>
