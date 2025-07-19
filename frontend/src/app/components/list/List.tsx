@@ -4,7 +4,10 @@ import { AddNewItem, ItemType } from "./AddNewItem";
 import { AddNewFolder } from "./AddNewFolder";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchAllFolders } from "@/utils/supabase/folders";
-import { deleteFoldersAndItems } from "@/utils/supabase/deleteMove";
+import {
+  deleteFoldersAndItems,
+  moveSelectedItems,
+} from "@/utils/supabase/deleteMove";
 import FolderTree from "./FolderTree";
 
 interface ListProps<T extends { id: string }> {
@@ -368,6 +371,42 @@ export function List<T extends { id: string }>({
     }
   };
 
+  const handleMoveToTopLevel = async () => {
+    try {
+      const folderIdsToMove = selectedIds.filter((id) =>
+        fetchedFolders.some((f) => f.id === id)
+      );
+      const itemIdsToMove = selectedIds.filter((id) =>
+        items.some((item) => item.id === id)
+      );
+
+      await moveSelectedItems({
+        selectedIds,
+        allItems: items,
+        allFolders: fetchedFolders,
+        moveTarget: {
+          folderId: null,
+          userId,
+          listType: listType || "cases",
+        },
+      });
+
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ["folders", userId, listType],
+        }),
+        queryClient.invalidateQueries({ queryKey: [listType, userId] }),
+      ]);
+
+      // Reset UI
+      setSelectedIds([]);
+      setSelectMode(false);
+      setShowMoveSelector(false);
+    } catch (err) {
+      console.error("Move to top-level failed", err);
+    }
+  };
+
   return (
     <div className="flex flex-col h-full">
       {/* Error message display */}
@@ -552,7 +591,10 @@ export function List<T extends { id: string }>({
         {showMoveSelector && (
           <div className="flex items-center space-x-2 mt-2 px-2">
             <span className="text-sm text-gray-600">Move to:</span>
-            <button className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100">
+            <button
+              className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100"
+              onClick={handleMoveToTopLevel}
+            >
               Top-level
             </button>
             <button className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100">
