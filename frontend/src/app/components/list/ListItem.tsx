@@ -80,7 +80,7 @@ export function ListItem({
       <div
         className={`p-4 flex items-center justify-between ${
           isSelected
-            ? "bg-gray-200"
+            ? "bg-[#111827] text-[#f9fafb]"
             : "hover:bg-[#111827] hover:text-[#f9fafb] cursor-pointer"
         }`}
         onClick={onClick}
