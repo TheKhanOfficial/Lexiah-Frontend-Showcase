@@ -177,8 +177,8 @@ export default function FolderTree<T extends ItemWithFolderId>({
             <>
               {sortedChildren.map((childFolder) => (
                 <FolderTree
-                  key={entry.id}
-                  folder={entry}
+                  key={childFolder.id}
+                  folder={childFolder}
                   items={items}
                   allFolders={allFolders}
                   renderItem={renderItem}
