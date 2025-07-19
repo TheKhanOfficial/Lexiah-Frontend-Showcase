@@ -165,7 +165,11 @@ export default function FolderTree<T extends ItemWithFolderId>({
                     onSelect={onSelect}
                   />
                 ) : (
-                  renderItem(entry as T, index)
+                  renderItem(entry as T, index, {
+                    selectMode,
+                    selectedIds,
+                    onSelectToggle: (id: string) => onSelect?.(id, false),
+                  })
                 )
               )}
             </>
@@ -186,7 +190,13 @@ export default function FolderTree<T extends ItemWithFolderId>({
                   onSelect={onSelect}
                 />
               ))}
-              {sortedFolderItems.map((item, index) => renderItem(item, index))}
+              {sortedFolderItems.map((item, index) =>
+                renderItem(item, index, {
+                  selectMode,
+                  selectedIds,
+                  onSelectToggle: (id: string) => onSelect?.(id, false),
+                })
+              )}
             </>
           )}
         </div>
