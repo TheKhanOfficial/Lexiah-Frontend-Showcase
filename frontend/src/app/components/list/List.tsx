@@ -127,6 +127,12 @@ export function List<T extends { id: string }>({
     queryFn: () => fetchAllFolders(userId, listType),
   });
 
+  const matchedFolders = searchQuery.trim()
+    ? fetchedFolders.filter((folder) =>
+        folder.name.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : [];
+
   const parentMap = new Map<string, string | null>();
   fetchedFolders.forEach((f) => parentMap.set(f.id, f.parent_id));
 
@@ -196,9 +202,29 @@ export function List<T extends { id: string }>({
     fetchedFolders
   ) as FolderWithChildren[];
 
-  const filteredItems = sortedItems.filter((item) =>
-    (item as any)?.name?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredItems = searchQuery.trim()
+    ? items.filter((item) =>
+        (item as any)?.name?.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : sortedItems;
+
+  const filteredResults =
+    searchQuery.trim() === ""
+      ? []
+      : [
+          ...matchedFolders.map((folder) => ({
+            ...folder,
+            __isFolder: true,
+            created_at: folder.created_at ?? "",
+            name: folder.name,
+          })),
+          ...filteredItems.map((item) => ({
+            ...item,
+            __isFolder: false,
+            created_at: (item as any).created_at ?? "",
+            name: (item as any).name ?? "",
+          })),
+        ];
 
   // Handle successful item addition
   const handleItemAdded = (newItem: any) => {
@@ -430,32 +456,55 @@ export function List<T extends { id: string }>({
           ) : (
             <>
               <div className="space-y-1">
-                {finalSortedList.map((entry, index) =>
-                  entry.__isFolder ? (
-                    <div key={entry.id} className="mb-1">
-                      <FolderTree
-                        folder={entry}
-                        items={filteredItems}
-                        allFolders={fetchedFolders}
-                        renderItem={renderItem}
-                        level={1}
-                        listType={listType}
-                        sortOption={sortOption}
-                        selectMode={selectMode}
-                        selectedIds={selectedIds}
-                        onSelect={toggleSelect}
-                      />
-                    </div>
-                  ) : (
-                    renderItem(entry, index, {
-                      selectMode,
-                      selectedIds,
-                      onSelectToggle: (id: string, isFolder: boolean) => {
-                        toggleSelect(id, isFolder);
-                      },
-                    })
-                  )
-                )}
+                {searchQuery.trim() !== ""
+                  ? filteredResults.map((entry, index) =>
+                      entry.__isFolder ? (
+                        <FolderTree
+                          key={entry.id}
+                          folder={entry}
+                          items={items}
+                          allFolders={fetchedFolders}
+                          renderItem={renderItem}
+                          level={1}
+                          listType={listType}
+                          sortOption={sortOption}
+                          selectMode={selectMode}
+                          selectedIds={selectedIds}
+                          onSelect={toggleSelect}
+                        />
+                      ) : (
+                        renderItem(entry, index, {
+                          selectMode,
+                          selectedIds,
+                          onSelectToggle: (id: string, isFolder: boolean) =>
+                            toggleSelect(id, isFolder),
+                        })
+                      )
+                    )
+                  : finalSortedList.map((entry, index) =>
+                      entry.__isFolder ? (
+                        <FolderTree
+                          key={entry.id}
+                          folder={entry}
+                          items={items} // full item list
+                          allFolders={fetchedFolders}
+                          renderItem={renderItem}
+                          level={1}
+                          listType={listType}
+                          sortOption={sortOption}
+                          selectMode={selectMode}
+                          selectedIds={selectedIds}
+                          onSelect={toggleSelect}
+                        />
+                      ) : (
+                        renderItem(entry, index, {
+                          selectMode,
+                          selectedIds,
+                          onSelectToggle: (id: string, isFolder: boolean) =>
+                            toggleSelect(id, isFolder),
+                        })
+                      )
+                    )}
               </div>
             </>
           )}
