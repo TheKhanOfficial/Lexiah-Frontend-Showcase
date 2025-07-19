@@ -406,7 +406,12 @@ export function List<T extends { id: string }>({
           </select>
 
           <button
-            onClick={() => setSelectMode(!selectMode)}
+            onClick={() => {
+              if (selectMode) {
+                setSelectedIds([]); // ✅ Clear all selections when canceling
+              }
+              setSelectMode(!selectMode);
+            }}
             className="ml-2 px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100"
           >
             {selectMode ? "Cancel" : "Select"}
