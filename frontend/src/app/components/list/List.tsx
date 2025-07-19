@@ -43,6 +43,18 @@ function buildFolderTree(folders: Folder[]): Folder[] {
   return roots;
 }
 
+function findFolderInTree(
+  tree: FolderWithChildren[],
+  id: string
+): FolderWithChildren | null {
+  for (const folder of tree) {
+    if (folder.id === id) return folder;
+    const foundInChildren = findFolderInTree(folder.children || [], id);
+    if (foundInChildren) return foundInChildren;
+  }
+  return null;
+}
+
 export function List<T extends { id: string }>({
   title,
   items,
@@ -508,7 +520,9 @@ export function List<T extends { id: string }>({
                   entry.__isFolder ? (
                     <FolderTree
                       key={entry.id}
-                      folder={entry}
+                      folder={
+                        findFolderInTree(folderTree, entry.id) || (entry as any)
+                      }
                       items={items}
                       allFolders={fetchedFolders}
                       renderItem={renderItem}
@@ -540,7 +554,9 @@ export function List<T extends { id: string }>({
                 entry.__isFolder ? (
                   <FolderTree
                     key={entry.id}
-                    folder={entry}
+                    folder={
+                      findFolderInTree(folderTree, entry.id) || (entry as any)
+                    }
                     items={items}
                     allFolders={fetchedFolders}
                     renderItem={renderItem}
