@@ -127,17 +127,57 @@ export function List<T extends { id: string }>({
     queryFn: () => fetchAllFolders(userId, listType),
   });
 
+  const parentMap = new Map<string, string | null>();
+  fetchedFolders.forEach((f) => parentMap.set(f.id, f.parent_id));
+
+  function getFolderChildren(folderId: string): string[] {
+    const childFolderIds = fetchedFolders
+      .filter((f) => f.parent_id === folderId)
+      .map((f) => f.id);
+    const childItemIds = sortedItems
+      .filter((i) => i.folder_id === folderId)
+      .map((i) => i.id);
+    return [...childFolderIds, ...childItemIds];
+  }
+
+  function deselectParentChain(
+    startFolderId: string,
+    currentSelection: string[]
+  ): string[] {
+    let updatedSelection = [...currentSelection];
+    let currentFolderId: string | null | undefined = startFolderId;
+
+    while (currentFolderId) {
+      updatedSelection = updatedSelection.filter(
+        (id) => id !== currentFolderId
+      );
+      currentFolderId = parentMap.get(currentFolderId);
+    }
+
+    return updatedSelection;
+  }
+
   function toggleSelect(id: string, isFolder: boolean) {
     let newSelected: string[];
 
     if (selectedIds.includes(id)) {
+      // UNCHECK path
       if (isFolder) {
         const deselectIds = collectNestedIds(id, fetchedFolders, sortedItems);
         newSelected = selectedIds.filter((x) => !deselectIds.includes(x));
+        // ❗ Recursively deselect all parent folders
+        newSelected = deselectParentChain(id, newSelected);
       } else {
         newSelected = selectedIds.filter((x) => x !== id);
+
+        // Get the folder this item belongs to
+        const parentFolderId = sortedItems.find((i) => i.id === id)?.folder_id;
+        if (parentFolderId) {
+          newSelected = deselectParentChain(parentFolderId, newSelected);
+        }
       }
     } else {
+      // CHECK path
       if (isFolder) {
         const allIds = collectNestedIds(id, fetchedFolders, sortedItems);
         newSelected = [
