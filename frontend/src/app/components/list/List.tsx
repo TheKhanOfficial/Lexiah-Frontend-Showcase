@@ -4,7 +4,7 @@ import { AddNewItem, ItemType } from "./AddNewItem";
 import { AddNewFolder } from "./AddNewFolder";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchAllFolders } from "@/utils/supabase/folders";
-import { supabase } from "@/utils/supabase/client";
+import { deleteFoldersAndItems } from "@/utils/supabase/deleteMove";
 import FolderTree from "./FolderTree";
 
 interface ListProps<T extends { id: string }> {
@@ -336,26 +336,15 @@ export function List<T extends { id: string }>({
         fetchedFolders.some((f) => f.id === id)
       );
 
-      if (folderIdsToDelete.length > 0) {
-        await Promise.all(
-          folderIdsToDelete.map((folderId) =>
-            supabase.from("folders").delete().eq("id", folderId)
-          )
-        );
-      }
-
       const itemIdsToDelete = selectedIds.filter((id) =>
         items.some((item) => item.id === id)
       );
 
-      if (itemIdsToDelete.length > 0) {
-        const table = listType === "cases" ? "cases" : "notes";
-        await Promise.all(
-          itemIdsToDelete.map((itemId) =>
-            supabase.from(table).delete().eq("id", itemId)
-          )
-        );
-      }
+      await deleteFoldersAndItems({
+        folderIds: folderIdsToDelete,
+        itemIds: itemIdsToDelete,
+        listType: listType === "cases" ? "cases" : "notes",
+      });
 
       await Promise.all([
         queryClient.invalidateQueries({
@@ -364,13 +353,12 @@ export function List<T extends { id: string }>({
         queryClient.invalidateQueries({ queryKey: [listType, userId] }),
       ]);
 
-      // Reset
+      // Reset UI
       setSelectedIds([]);
       setSelectMode(false);
       setShowDeleteModal(false);
     } catch (err) {
       console.error("Delete failed", err);
-      // optionally show modalError here if needed
     } finally {
       setIsDeleting(false);
     }
