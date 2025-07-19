@@ -70,6 +70,7 @@ export function List<T extends { id: string }>({
   >("urgency");
   const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [searchSelectedOnly, setSearchSelectedOnly] = useState(false);
 
   // Helper to recursively gather all nested folder & item ids
   function collectNestedIds(
@@ -128,9 +129,15 @@ export function List<T extends { id: string }>({
   });
 
   const matchedFolders = searchQuery.trim()
-    ? fetchedFolders.filter((folder) =>
-        folder.name.toLowerCase().includes(searchQuery.toLowerCase())
-      )
+    ? fetchedFolders.filter((folder) => {
+        const matches = folder.name
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase());
+        const isSelectedScope =
+          !searchSelectedOnly || selectedIds.includes(folder.id);
+
+        return matches && isSelectedScope;
+      })
     : [];
 
   const parentMap = new Map<string, string | null>();
@@ -203,9 +210,15 @@ export function List<T extends { id: string }>({
   ) as FolderWithChildren[];
 
   const filteredItems = searchQuery.trim()
-    ? items.filter((item) =>
-        (item as any)?.name?.toLowerCase().includes(searchQuery.toLowerCase())
-      )
+    ? items.filter((item) => {
+        const matches = (item as any)?.name
+          ?.toLowerCase()
+          .includes(searchQuery.toLowerCase());
+        const isSelectedScope =
+          !searchSelectedOnly || selectedIds.includes(item.id);
+
+        return matches && isSelectedScope;
+      })
     : sortedItems;
 
   const filteredResults =
@@ -354,7 +367,11 @@ export function List<T extends { id: string }>({
           <div className="mt-2 px-2 relative">
             <input
               type="text"
-              placeholder="Search"
+              placeholder={
+                selectMode && selectedIds.length > 0 && searchSelectedOnly
+                  ? "Search selected items"
+                  : "Search"
+              }
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               onKeyDown={(e) => {
@@ -443,6 +460,36 @@ export function List<T extends { id: string }>({
             {selectMode ? "Cancel" : "Select"}
           </button>
         </div>
+        {selectMode && selectedIds.length > 0 && (
+          <div className="flex items-center space-x-2 mt-2 px-2">
+            <span className="text-sm font-medium text-gray-700">Actions:</span>
+
+            <button
+              className={`px-2 py-1 text-sm border rounded ${
+                searchSelectedOnly
+                  ? "bg-black text-white border-black"
+                  : "border-gray-300 hover:bg-gray-100"
+              }`}
+              onClick={() => setSearchSelectedOnly((prev) => !prev)}
+            >
+              Search
+            </button>
+
+            <button
+              className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100 text-gray-500 cursor-not-allowed"
+              disabled
+            >
+              Delete
+            </button>
+
+            <button
+              className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100 text-gray-500 cursor-not-allowed"
+              disabled
+            >
+              Move
+            </button>
+          </div>
+        )}
 
         <div className="flex-grow overflow-y-auto">
           {isLoading ? (

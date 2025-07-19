@@ -632,6 +632,9 @@
   .cursor-default {
     cursor: default;
   }
+  .cursor-not-allowed {
+    cursor: not-allowed;
+  }
   .cursor-pointer {
     cursor: pointer;
   }
@@ -850,6 +853,9 @@
   }
   .border-\[\#e8ddc7\] {
     border-color: #e8ddc7;
+  }
+  .border-black {
+    border-color: var(--color-black);
   }
   .border-blue-300 {
     border-color: var(--color-blue-300);
