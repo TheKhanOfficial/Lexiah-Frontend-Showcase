@@ -4,6 +4,7 @@ import { AddNewItem, ItemType } from "./AddNewItem";
 import { AddNewFolder } from "./AddNewFolder";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchAllFolders } from "@/utils/supabase/folders";
+import { supabase } from "@/utils/supabase/client";
 import FolderTree from "./FolderTree";
 
 interface ListProps<T extends { id: string }> {
@@ -83,6 +84,8 @@ export function List<T extends { id: string }>({
   const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchSelectedOnly, setSearchSelectedOnly] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Helper to recursively gather all nested folder & item ids
   function collectNestedIds(
@@ -325,6 +328,54 @@ export function List<T extends { id: string }>({
     }
   }, [searchInput]);
 
+  const handleDeleteConfirmed = async () => {
+    try {
+      setIsDeleting(true);
+
+      const folderIdsToDelete = selectedIds.filter((id) =>
+        fetchedFolders.some((f) => f.id === id)
+      );
+
+      if (folderIdsToDelete.length > 0) {
+        await Promise.all(
+          folderIdsToDelete.map((folderId) =>
+            supabase.from("folders").delete().eq("id", folderId)
+          )
+        );
+      }
+
+      const itemIdsToDelete = selectedIds.filter((id) =>
+        items.some((item) => item.id === id)
+      );
+
+      if (itemIdsToDelete.length > 0) {
+        const table = listType === "cases" ? "cases" : "notes";
+        await Promise.all(
+          itemIdsToDelete.map((itemId) =>
+            supabase.from(table).delete().eq("id", itemId)
+          )
+        );
+      }
+
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ["folders", userId, listType],
+        }),
+        queryClient.invalidateQueries({ queryKey: [listType, userId] }),
+      ]);
+
+      // Reset
+      setSelectedIds([]);
+      setSelectMode(false);
+      setShowDeleteModal(false);
+    } catch (err) {
+      console.error("Delete failed", err);
+      // optionally show modalError here if needed
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <div className="flex flex-col h-full">
       {/* Error message display */}
@@ -489,8 +540,8 @@ export function List<T extends { id: string }>({
             </button>
 
             <button
-              className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100 text-gray-500 cursor-not-allowed"
-              disabled
+              className="px-2 py-1 text-sm border border-red-500 text-red-500 rounded hover:bg-red-50"
+              onClick={() => setShowDeleteModal(true)}
             >
               Delete
             </button>
@@ -580,6 +631,70 @@ export function List<T extends { id: string }>({
           )}
         </div>
       </div>
+
+      {showDeleteModal && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]"
+          onClick={() => setShowDeleteModal(false)}
+        >
+          <div
+            className="bg-white rounded-lg w-full max-w-md mx-auto p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-xl font-semibold mb-2">
+              Are you absolutely sure?
+            </h2>
+            <p className="text-gray-600 mb-4">
+              This action cannot be undone. This will permanently remove the
+              selected items and folders from your account and our servers.
+            </p>
+
+            <div className="flex justify-end space-x-2">
+              <button
+                className="px-4 py-2 border border-gray-300 rounded-full hover:bg-gray-100 disabled:opacity-50"
+                onClick={() => setShowDeleteModal(false)}
+                disabled={isDeleting}
+              >
+                Cancel
+              </button>
+
+              <button
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-full disabled:bg-opacity-50 flex items-center justify-center"
+                onClick={handleDeleteConfirmed}
+                disabled={isDeleting}
+              >
+                {isDeleting ? (
+                  <>
+                    <svg
+                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Deleting...
+                  </>
+                ) : (
+                  "Delete"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
