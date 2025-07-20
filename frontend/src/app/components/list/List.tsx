@@ -8,6 +8,7 @@ import {
   deleteFoldersAndItems,
   moveSelectedItems,
 } from "@/utils/supabase/deleteMove";
+import { RenameDeleteModal } from "../modals/RenameDeleteModal";
 import FolderTree from "./FolderTree";
 
 interface ListProps<T extends { id: string }> {
@@ -90,6 +91,9 @@ export function List<T extends { id: string }>({
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showMoveSelector, setShowMoveSelector] = useState(false);
+  const [showMoveModal, setShowMoveModal] = useState(false);
+  const [isMoving, setIsMoving] = useState(false);
+  const [moveModalError, setMoveModalError] = useState<string | null>(null);
 
   // Helper to recursively gather all nested folder & item ids
   function collectNestedIds(
@@ -593,7 +597,7 @@ export function List<T extends { id: string }>({
             <span className="text-sm text-gray-600">Move to:</span>
             <button
               className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100"
-              onClick={handleMoveToTopLevel}
+              onClick={() => setShowMoveModal(true)}
             >
               Top-level
             </button>
@@ -679,6 +683,33 @@ export function List<T extends { id: string }>({
           )}
         </div>
       </div>
+
+      <RenameDeleteModal
+        showModal={showMoveModal}
+        onClose={() => {
+          setShowMoveModal(false);
+          setMoveModalError(null);
+        }}
+        onConfirm={async () => {
+          setIsMoving(true);
+          setMoveModalError(null);
+          try {
+            await handleMoveToTopLevel(); // ✅ reuse your existing logic
+            setShowMoveModal(false);
+          } catch (err) {
+            console.error("Move failed", err);
+            setMoveModalError(
+              err instanceof Error ? err.message : "Move operation failed."
+            );
+          } finally {
+            setIsMoving(false);
+          }
+        }}
+        isLoading={isMoving}
+        modalError={moveModalError}
+        type="move"
+        itemType="item"
+      />
 
       {showDeleteModal && (
         <div

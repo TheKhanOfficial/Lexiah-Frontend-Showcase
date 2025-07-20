@@ -10,7 +10,7 @@ interface RenameDeleteModalProps {
   onConfirm: () => Promise<void>;
   isLoading: boolean;
   modalError: string | null;
-  type: "rename" | "delete";
+  type: "rename" | "delete" | "move"; // <-- added "move"
   itemName?: string;
   itemType: "case" | "document" | "note";
   inputValue?: string;
@@ -77,7 +77,7 @@ export function RenameDeleteModal({
               />
             </div>
           </>
-        ) : (
+        ) : type === "delete" ? (
           <>
             <h2 className="text-xl font-semibold mb-2">
               Are you absolutely sure?
@@ -88,6 +88,14 @@ export function RenameDeleteModal({
               {itemType === "case" &&
                 " and all of its documents, notes, and chat"}{" "}
               from your account and our servers.
+            </p>
+          </>
+        ) : (
+          <>
+            <h2 className="text-xl font-semibold mb-2">Confirm Move</h2>
+            <p className="text-gray-600 mb-4">
+              Are you sure you want to move the selected items to the top level?
+              This won’t delete anything, but will change its organization.
             </p>
           </>
         )}
@@ -145,8 +153,10 @@ export function RenameDeleteModal({
               </>
             ) : type === "delete" ? (
               "Delete"
-            ) : (
+            ) : type === "rename" ? (
               "Save"
+            ) : (
+              "Move"
             )}
           </button>
         </div>
