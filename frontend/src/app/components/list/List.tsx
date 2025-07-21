@@ -94,6 +94,7 @@ export function List<T extends { id: string }>({
   const [showMoveModal, setShowMoveModal] = useState(false);
   const [isMoving, setIsMoving] = useState(false);
   const [moveModalError, setMoveModalError] = useState<string | null>(null);
+  const [moveTargetSelectionMode, setMoveTargetSelectionMode] = useState(false);
 
   // Helper to recursively gather all nested folder & item ids
   function collectNestedIds(
@@ -195,6 +196,12 @@ export function List<T extends { id: string }>({
 
   function toggleSelect(id: string, isFolder: boolean) {
     let newSelected: string[];
+
+    if (moveTargetSelectionMode && isFolder && !selectedIds.includes(id)) {
+      // trigger move
+      handleMoveToFolder(id);
+      return;
+    }
 
     if (selectedIds.includes(id)) {
       // UNCHECK path
@@ -411,6 +418,41 @@ export function List<T extends { id: string }>({
     }
   };
 
+  const handleMoveToFolder = async (targetFolderId: string) => {
+    try {
+      setIsMoving(true);
+      setMoveModalError(null);
+
+      await moveSelectedItems({
+        selectedIds,
+        allItems: items,
+        allFolders: fetchedFolders,
+        moveTarget: {
+          folderId: targetFolderId,
+          userId,
+          listType: listType || "cases",
+        },
+      });
+
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ["folders", userId, listType],
+        }),
+        queryClient.invalidateQueries({ queryKey: [listType, userId] }),
+      ]);
+
+      // Reset state
+      setSelectedIds([]);
+      setSelectMode(false);
+      setMoveTargetSelectionMode(false);
+    } catch (err) {
+      console.error("Move failed", err);
+      setMoveModalError(err instanceof Error ? err.message : "Move failed");
+    } finally {
+      setIsMoving(false);
+    }
+  };
+
   return (
     <div className="flex flex-col h-full">
       {/* Error message display */}
@@ -601,7 +643,13 @@ export function List<T extends { id: string }>({
             >
               Top-level
             </button>
-            <button className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100">
+            <button
+              className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100"
+              onClick={() => {
+                setMoveTargetSelectionMode(true);
+                setShowMoveSelector(false); // hide existing move UI
+              }}
+            >
               Another Folder
             </button>
           </div>
@@ -638,8 +686,13 @@ export function List<T extends { id: string }>({
                     />
                   ) : (
                     renderItem(entry, index, {
-                      selectMode,
-                      selectedIds,
+                      selectMode:
+                        selectMode &&
+                        (!moveTargetSelectionMode ||
+                          (moveTargetSelectionMode &&
+                            entry.__isFolder &&
+                            !selectedIds.includes(entry.id))),
+                      selectedIds: moveTargetSelectionMode ? [] : selectedIds,
                       onSelectToggle: (id: string, isFolder: boolean) =>
                         toggleSelect(id, isFolder),
                     })
@@ -672,8 +725,13 @@ export function List<T extends { id: string }>({
                   />
                 ) : (
                   renderItem(entry, index, {
-                    selectMode,
-                    selectedIds,
+                    selectMode:
+                      selectMode &&
+                      (!moveTargetSelectionMode ||
+                        (moveTargetSelectionMode &&
+                          entry.__isFolder &&
+                          !selectedIds.includes(entry.id))),
+                    selectedIds: moveTargetSelectionMode ? [] : selectedIds,
                     onSelectToggle: (id: string, isFolder: boolean) =>
                       toggleSelect(id, isFolder),
                   })
