@@ -28,6 +28,7 @@ interface ListProps<T extends { id: string }> {
   onAddItemRequest?: () => void; // New prop to handle add item request externally
   onAddItemError?: (error: Error) => void; // Callback for error handling
   listType?: string;
+  disableUrgencySort?: boolean;
 }
 
 function buildFolderTree(folders: Folder[]): Folder[] {
@@ -84,7 +85,7 @@ export function List<T extends { id: string }>({
   const [searchInput, setSearchInput] = useState("");
   const [sortOption, setSortOption] = useState<
     "newest" | "oldest" | "alpha" | "urgency"
-  >("urgency");
+  >(disableUrgencySort ? "newest" : "urgency");
   const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchSelectedOnly, setSearchSelectedOnly] = useState(false);
@@ -586,7 +587,9 @@ export function List<T extends { id: string }>({
               )
             }
           >
-            <option value="urgency">Urgency (default)</option>
+            {!disableUrgencySort && (
+              <option value="urgency">Urgency (default)</option>
+            )}
             <option value="newest">Time: Newest to Oldest</option>
             <option value="oldest">Time: Oldest to Newest</option>
             <option value="alpha">Alphabetical</option>

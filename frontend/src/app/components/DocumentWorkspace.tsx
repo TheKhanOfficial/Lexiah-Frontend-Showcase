@@ -222,6 +222,7 @@ export default function DocumentWorkspace({
         sortBy="created_at"
         sortDirection="desc"
         isLoading={isLoading}
+        disableUrgencySort={true}
         emptyMessage="No documents yet. Add your first document to get started."
         renderItem={(document) => (
           <div

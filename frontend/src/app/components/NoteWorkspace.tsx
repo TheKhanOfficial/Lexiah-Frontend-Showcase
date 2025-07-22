@@ -211,6 +211,7 @@ export default function NoteWorkspace({
         sortBy="updated_at"
         sortDirection="desc"
         isLoading={isLoading}
+        disableUrgencySort={true}
         emptyMessage="No notes yet. Add your first note to get started."
         renderItem={(note) => (
           <div
