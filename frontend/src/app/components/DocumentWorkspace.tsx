@@ -214,6 +214,7 @@ export default function DocumentWorkspace({
         userId={userId}
         caseId={caseId}
         itemType="document"
+        listType="documents"
         onItemAdded={handleDocumentAdded}
         onAddItemError={handleAddItemError}
         addItemText="New Document 📖"

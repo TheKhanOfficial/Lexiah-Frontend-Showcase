@@ -363,7 +363,7 @@ export function List<T extends { id: string }>({
       await deleteFoldersAndItems({
         folderIds: folderIdsToDelete,
         itemIds: itemIdsToDelete,
-        listType: listType === "cases" ? "cases" : "notes",
+        listType,
       });
 
       await Promise.all([
