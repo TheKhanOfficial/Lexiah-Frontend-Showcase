@@ -680,19 +680,20 @@ export function List<T extends { id: string }>({
                       level={1}
                       listType={listType}
                       sortOption={sortOption}
-                      selectMode={selectMode}
+                      selectMode={
+                        moveTargetSelectionMode
+                          ? !selectedIds.includes(entry.id)
+                          : selectMode
+                      }
                       selectedIds={selectedIds}
                       onSelect={toggleSelect}
                     />
                   ) : (
                     renderItem(entry, index, {
-                      selectMode:
-                        selectMode &&
-                        (!moveTargetSelectionMode ||
-                          (moveTargetSelectionMode &&
-                            entry.__isFolder &&
-                            !selectedIds.includes(entry.id))),
-                      selectedIds: moveTargetSelectionMode ? [] : selectedIds,
+                      selectMode: moveTargetSelectionMode
+                        ? entry.__isFolder && !selectedIds.includes(entry.id)
+                        : selectMode,
+                      selectedIds,
                       onSelectToggle: (id: string, isFolder: boolean) =>
                         toggleSelect(id, isFolder),
                     })
@@ -719,19 +720,20 @@ export function List<T extends { id: string }>({
                     level={1}
                     listType={listType}
                     sortOption={sortOption}
-                    selectMode={selectMode}
+                    selectMode={
+                      moveTargetSelectionMode
+                        ? !selectedIds.includes(entry.id)
+                        : selectMode
+                    }
                     selectedIds={selectedIds}
                     onSelect={toggleSelect}
                   />
                 ) : (
                   renderItem(entry, index, {
-                    selectMode:
-                      selectMode &&
-                      (!moveTargetSelectionMode ||
-                        (moveTargetSelectionMode &&
-                          entry.__isFolder &&
-                          !selectedIds.includes(entry.id))),
-                    selectedIds: moveTargetSelectionMode ? [] : selectedIds,
+                    selectMode: moveTargetSelectionMode
+                      ? entry.__isFolder && !selectedIds.includes(entry.id)
+                      : selectMode,
+                    selectedIds,
                     onSelectToggle: (id: string, isFolder: boolean) =>
                       toggleSelect(id, isFolder),
                   })
