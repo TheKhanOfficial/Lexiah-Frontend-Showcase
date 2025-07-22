@@ -34,6 +34,7 @@ interface FolderTreeProps<T extends ItemWithFolderId> {
   selectMode?: boolean;
   selectedIds?: Set<string>;
   onSelect?: (id: string, isFolder: boolean) => void;
+  moveTargetSelectionMode?: boolean;
 }
 
 export default function FolderTree<T extends ItemWithFolderId>({
@@ -47,6 +48,7 @@ export default function FolderTree<T extends ItemWithFolderId>({
   selectMode,
   selectedIds,
   onSelect,
+  moveTargetSelectionMode,
 }: FolderTreeProps<T>) {
   const [isExpanded, setIsExpanded] = useState(false);
   const queryClient = useQueryClient();
@@ -109,7 +111,10 @@ export default function FolderTree<T extends ItemWithFolderId>({
           } as any,
           0,
           {
-            selectMode,
+            selectMode:
+              moveTargetSelectionMode && !selectedIds?.includes(folder.id)
+                ? true
+                : !moveTargetSelectionMode && selectMode,
             selectedIds,
             onSelectToggle: (id: string) => {
               if (onSelect) {
@@ -163,10 +168,19 @@ export default function FolderTree<T extends ItemWithFolderId>({
                     selectMode={selectMode}
                     selectedIds={selectedIds}
                     onSelect={onSelect}
+                    moveTargetSelectionMode={moveTargetSelectionMode}
                   />
                 ) : (
                   renderItem(entry as T, index, {
-                    selectMode,
+                    selectMode:
+                      moveTargetSelectionMode &&
+                      !selectedIds?.includes(entry.id) &&
+                      false === (entry as any).__isFolder
+                        ? false
+                        : moveTargetSelectionMode
+                        ? (entry as any).__isFolder &&
+                          !selectedIds?.includes(entry.id)
+                        : selectMode,
                     selectedIds,
                     onSelectToggle: (id: string) => onSelect?.(id, false),
                   })
@@ -188,6 +202,7 @@ export default function FolderTree<T extends ItemWithFolderId>({
                   selectMode={selectMode}
                   selectedIds={selectedIds}
                   onSelect={onSelect}
+                  moveTargetSelectionMode={moveTargetSelectionMode}
                 />
               ))}
               {sortedFolderItems.map((item, index) =>

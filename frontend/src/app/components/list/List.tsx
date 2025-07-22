@@ -687,6 +687,7 @@ export function List<T extends { id: string }>({
                       }
                       selectedIds={selectedIds}
                       onSelect={toggleSelect}
+                      moveTargetSelectionMode={moveTargetSelectionMode}
                     />
                   ) : (
                     renderItem(entry, index, {
@@ -727,6 +728,7 @@ export function List<T extends { id: string }>({
                     }
                     selectedIds={selectedIds}
                     onSelect={toggleSelect}
+                    moveTargetSelectionMode={moveTargetSelectionMode}
                   />
                 ) : (
                   renderItem(entry, index, {
