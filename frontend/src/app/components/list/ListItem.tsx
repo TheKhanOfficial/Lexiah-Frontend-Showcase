@@ -98,9 +98,11 @@ export function ListItem({
           </div>
         </div>
 
-        <div className="flex items-center">
+        <div className="flex items-center gap-2">
+          {rightContent && <div className="flex-shrink-0">{rightContent}</div>}
+
           {selectMode && (
-            <label className="mr-2">
+            <label>
               <input
                 type="checkbox"
                 checked={!!selected}
@@ -111,10 +113,6 @@ export function ListItem({
                 className="w-5 h-5 cursor-pointer accent-black"
               />
             </label>
-          )}
-
-          {rightContent && (
-            <div className="m-2 flex-shrink-0">{rightContent}</div>
           )}
 
           <div onClick={handleDropdownClick}>

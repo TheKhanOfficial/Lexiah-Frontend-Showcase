@@ -709,6 +709,7 @@ export function List<T extends { id: string }>({
                       level={1}
                       listType={listType}
                       sortOption={sortOption}
+                      fileUploadEnabled={fileUploadEnabled}
                       selectMode={
                         moveTargetSelectionMode
                           ? !selectedIds.includes(entry.id)
@@ -831,69 +832,21 @@ export function List<T extends { id: string }>({
         itemType="item"
       />
 
-      {showDeleteModal && (
-        <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]"
-          onClick={() => setShowDeleteModal(false)}
-        >
-          <div
-            className="bg-white rounded-lg w-full max-w-md mx-auto p-6 shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 className="text-xl font-semibold mb-2">
-              Are you absolutely sure?
-            </h2>
-            <p className="text-gray-600 mb-4">
-              This action cannot be undone. This will permanently remove the
-              selected items and folders from your account and our servers.
-            </p>
-
-            <div className="flex justify-end space-x-2">
-              <button
-                className="px-4 py-2 border border-gray-300 rounded-full hover:bg-gray-100 disabled:opacity-50"
-                onClick={() => setShowDeleteModal(false)}
-                disabled={isDeleting}
-              >
-                Cancel
-              </button>
-
-              <button
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-full disabled:bg-opacity-50 flex items-center justify-center"
-                onClick={handleDeleteConfirmed}
-                disabled={isDeleting}
-              >
-                {isDeleting ? (
-                  <>
-                    <svg
-                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
-                    Deleting...
-                  </>
-                ) : (
-                  "Delete"
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <RenameDeleteModal
+        showModal={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDeleteConfirmed}
+        isLoading={isDeleting}
+        modalError={null} // or pass actual error if needed
+        type="delete"
+        itemType={
+          listType === "documents"
+            ? "document"
+            : listType === "notes"
+            ? "note"
+            : "case"
+        }
+      />
     </div>
   );
 }

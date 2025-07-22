@@ -224,30 +224,66 @@ export default function DocumentWorkspace({
         isLoading={isLoading}
         disableUrgencySort={true}
         emptyMessage="No documents yet. Add your first document to get started."
-        renderItem={(document) => (
-          <div
-            key={document.id}
-            className="block cursor-pointer"
-            onClick={() => handleDocumentClick(document.id)}
-          >
-            <ListItem
-              id={document.id}
-              userId={userId}
-              itemType="document"
-              title={document.name}
-              subtitle={`Added: ${formatDate(document.created_at)}`}
-              onRename={handleRenameRequest}
-              onDelete={handleDeleteRequest}
-              rightContent={
-                document.file_type && (
-                  <span className="px-2 py-1 text-xs text-[#2563eb] bg-[#F9FAFB] rounded-md">
-                    {document.file_type.split("/").pop()?.toUpperCase()}
-                  </span>
-                )
-              }
-            />
-          </div>
-        )}
+        renderItem={(item: any, index: number, renderOptions?: any) => {
+          if (item.__isFolder) {
+            return (
+              <ListItem
+                id={item.id}
+                userId={userId}
+                itemType="folder"
+                title={item.name}
+                subtitle={`Created: ${formatDate(item.created_at)}`}
+                customEmoji={item.__emoji}
+                onRename={() => {
+                  setSelectedDocumentId(item.id);
+                  setRenameValue(item.name);
+                  setShowRenameModal(true);
+                  setModalError(null);
+                }}
+                onDelete={() => {
+                  setSelectedDocumentId(item.id);
+                  setShowDeleteModal(true);
+                  setModalError(null);
+                }}
+                selectMode={renderOptions?.selectMode}
+                selected={renderOptions?.selectedIds?.includes(item.id)}
+                onSelectToggle={() =>
+                  renderOptions?.onSelectToggle?.(item.id, item.__isFolder)
+                }
+              />
+            );
+          }
+
+          return (
+            <div
+              key={item.id}
+              className="block cursor-pointer"
+              onClick={() => handleDocumentClick(item.id)}
+            >
+              <ListItem
+                id={item.id}
+                userId={userId}
+                itemType="document"
+                title={item.name}
+                subtitle={`Added: ${formatDate(item.created_at)}`}
+                onRename={handleRenameRequest}
+                onDelete={handleDeleteRequest}
+                rightContent={
+                  item.file_type && (
+                    <span className="px-2 py-1 text-xs text-[#2563eb] bg-[#F9FAFB] rounded-md">
+                      {item.file_type.split("/").pop()?.toUpperCase()}
+                    </span>
+                  )
+                }
+                selectMode={renderOptions?.selectMode}
+                selected={renderOptions?.selectedIds?.includes(item.id)}
+                onSelectToggle={() =>
+                  renderOptions?.onSelectToggle?.(item.id, false)
+                }
+              />
+            </div>
+          );
+        }}
       />
     );
   };

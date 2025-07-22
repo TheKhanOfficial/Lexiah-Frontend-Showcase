@@ -76,7 +76,7 @@ export function AddNewItem({
   const documentMutation = useMutation({
     mutationFn: ({ name, file }: { name: string; file?: File }) => {
       if (!caseId) throw new Error("Case ID is required for adding documents");
-      return addDocument(userId, caseId, name, file);
+      return addDocument(userId, caseId, name, file, folderId); // ✅ pass it now
     },
     onSuccess: (data) => {
       if (caseId) {

@@ -35,7 +35,29 @@ interface FolderTreeProps<T extends ItemWithFolderId> {
   selectedIds?: Set<string>;
   onSelect?: (id: string, isFolder: boolean) => void;
   moveTargetSelectionMode?: boolean;
+  fileUploadEnabled?: boolean;
 }
+
+const itemTypeFromListType = (
+  listType: string
+): "case" | "note" | "document" => {
+  switch (listType) {
+    case "cases":
+      return "case";
+    case "documents":
+      return "document";
+    case "notes":
+      return "note";
+    default:
+      throw new Error(`Unsupported listType: ${listType}`);
+  }
+};
+
+const emojiFromItemType = {
+  case: "💼",
+  document: "📖",
+  note: "📝",
+};
 
 export default function FolderTree<T extends ItemWithFolderId>({
   folder,
@@ -49,6 +71,7 @@ export default function FolderTree<T extends ItemWithFolderId>({
   selectedIds,
   onSelect,
   moveTargetSelectionMode,
+  fileUploadEnabled,
 }: FolderTreeProps<T>) {
   const [isExpanded, setIsExpanded] = useState(false);
   const queryClient = useQueryClient();
@@ -129,13 +152,30 @@ export default function FolderTree<T extends ItemWithFolderId>({
         <div className="mt-1 space-y-1 border-b-4 border-[#111827] pb-2">
           <AddNewItem
             userId={folder.user_id}
-            folderId={folder.id} // 🔥 pass the folder this case belongs in
-            itemType="case"
-            text="New Case in Folder 💼"
+            folderId={folder.id}
+            caseId={folder.case_id}
+            itemType={itemTypeFromListType(listType)}
+            fileUploadEnabled={itemTypeFromListType(listType) === "document"}
+            text={`New ${
+              itemTypeFromListType(listType)[0].toUpperCase() +
+              itemTypeFromListType(listType).slice(1)
+            } in Folder ${emojiFromItemType[itemTypeFromListType(listType)]}`}
             onSuccess={() => {
-              queryClient.invalidateQueries({
-                queryKey: ["cases", folder.user_id],
-              });
+              const itemType = itemTypeFromListType(listType);
+
+              if (itemType === "case") {
+                queryClient.invalidateQueries({
+                  queryKey: ["cases", folder.user_id],
+                });
+              } else if (itemType === "document") {
+                queryClient.invalidateQueries({
+                  queryKey: ["documents", folder.user_id, folder.case_id],
+                });
+              } else if (itemType === "note") {
+                queryClient.invalidateQueries({
+                  queryKey: ["notes", folder.user_id, folder.case_id],
+                });
+              }
             }}
           />
           {/* Add Subfolder */}
@@ -165,6 +205,7 @@ export default function FolderTree<T extends ItemWithFolderId>({
                     level={level + 1}
                     listType={listType}
                     sortOption={sortOption}
+                    fileUploadEnabled={fileUploadEnabled}
                     selectMode={selectMode}
                     selectedIds={selectedIds}
                     onSelect={onSelect}
@@ -201,6 +242,7 @@ export default function FolderTree<T extends ItemWithFolderId>({
                   sortOption={sortOption}
                   selectMode={selectMode}
                   selectedIds={selectedIds}
+                  fileUploadEnabled={fileUploadEnabled}
                   onSelect={onSelect}
                   moveTargetSelectionMode={moveTargetSelectionMode}
                 />
