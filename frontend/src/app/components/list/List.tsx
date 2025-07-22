@@ -445,6 +445,7 @@ export function List<T extends { id: string }>({
       setSelectedIds([]);
       setSelectMode(false);
       setMoveTargetSelectionMode(false);
+      setShowMoveSelector(false); // ✅ hide the "Move to:" bar
     } catch (err) {
       console.error("Move failed", err);
       setMoveModalError(err instanceof Error ? err.message : "Move failed");
@@ -593,7 +594,8 @@ export function List<T extends { id: string }>({
               if (selectMode) {
                 setSelectedIds([]);
                 setSearchSelectedOnly(false);
-                setShowMoveSelector(false); // ✅ Hide move options on cancel
+                setShowMoveSelector(false);
+                setMoveTargetSelectionMode(false); // ✅ Fully reset everything
               }
               setSelectMode(!selectMode);
             }}
@@ -621,7 +623,15 @@ export function List<T extends { id: string }>({
                   ? "bg-black text-white border-black"
                   : "border-gray-300 hover:bg-gray-100"
               }`}
-              onClick={() => setShowMoveSelector((prev) => !prev)}
+              onClick={() => {
+                setShowMoveSelector((prev) => {
+                  const newState = !prev;
+                  if (!newState) {
+                    setMoveTargetSelectionMode(false); // ✅ Reset on turning "Move" off
+                  }
+                  return newState;
+                });
+              }}
             >
               Move
             </button>
@@ -637,17 +647,29 @@ export function List<T extends { id: string }>({
         {showMoveSelector && (
           <div className="flex items-center space-x-2 mt-2 px-2">
             <span className="text-sm text-gray-600">Move to:</span>
+
+            {/* Top-level button */}
             <button
-              className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100"
+              className={`px-2 py-1 text-sm border rounded ${
+                showMoveModal
+                  ? "bg-black text-white border-black"
+                  : "border-gray-300 hover:bg-gray-100"
+              }`}
               onClick={() => setShowMoveModal(true)}
             >
               Top-level
             </button>
+
+            {/* Another Folder button */}
             <button
-              className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100"
+              className={`px-2 py-1 text-sm border rounded ${
+                moveTargetSelectionMode
+                  ? "bg-black text-white border-black"
+                  : "border-gray-300 hover:bg-gray-100"
+              }`}
               onClick={() => {
-                setMoveTargetSelectionMode(true);
-                setShowMoveSelector(false); // hide existing move UI
+                setMoveTargetSelectionMode((prev) => !prev);
+                setShowMoveSelector(true); // ✅ keep menu visible
               }}
             >
               Another Folder
