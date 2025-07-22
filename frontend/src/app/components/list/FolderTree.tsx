@@ -207,7 +207,9 @@ export default function FolderTree<T extends ItemWithFolderId>({
               ))}
               {sortedFolderItems.map((item, index) =>
                 renderItem(item, index, {
-                  selectMode,
+                  selectMode: moveTargetSelectionMode
+                    ? false // ✅ NEVER allow item checkboxes in moveTarget mode
+                    : selectMode,
                   selectedIds,
                   onSelectToggle: (id: string) => onSelect?.(id, false),
                 })
