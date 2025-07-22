@@ -94,8 +94,9 @@ export function RenameDeleteModal({
           <>
             <h2 className="text-xl font-semibold mb-2">Confirm Move</h2>
             <p className="text-gray-600 mb-4">
-              Are you sure you want to move the selected items to the top level?
-              This won’t delete anything, but will change its organization.
+              Are you sure you want to move the selected items to the
+              destination selected? This won’t delete anything, but will change
+              its organization.
             </p>
           </>
         )}

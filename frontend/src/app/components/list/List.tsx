@@ -95,6 +95,9 @@ export function List<T extends { id: string }>({
   const [isMoving, setIsMoving] = useState(false);
   const [moveModalError, setMoveModalError] = useState<string | null>(null);
   const [moveTargetSelectionMode, setMoveTargetSelectionMode] = useState(false);
+  const [pendingMoveFolderId, setPendingMoveFolderId] = useState<string | null>(
+    null
+  );
 
   // Helper to recursively gather all nested folder & item ids
   function collectNestedIds(
@@ -198,8 +201,7 @@ export function List<T extends { id: string }>({
     let newSelected: string[];
 
     if (moveTargetSelectionMode && isFolder && !selectedIds.includes(id)) {
-      // trigger move
-      handleMoveToFolder(id);
+      setPendingMoveFolderId(id); // Open modal instead of triggering immediately
       return;
     }
 
@@ -413,6 +415,7 @@ export function List<T extends { id: string }>({
       setSelectedIds([]);
       setSelectMode(false);
       setShowMoveSelector(false);
+      setMoveTargetSelectionMode(false); // ✅ Fully reset folder-selection state
     } catch (err) {
       console.error("Move to top-level failed", err);
     }
@@ -780,6 +783,35 @@ export function List<T extends { id: string }>({
           try {
             await handleMoveToTopLevel(); // ✅ reuse your existing logic
             setShowMoveModal(false);
+          } catch (err) {
+            console.error("Move failed", err);
+            setMoveModalError(
+              err instanceof Error ? err.message : "Move operation failed."
+            );
+          } finally {
+            setIsMoving(false);
+          }
+        }}
+        isLoading={isMoving}
+        modalError={moveModalError}
+        type="move"
+        itemType="item"
+      />
+
+      <RenameDeleteModal
+        showModal={!!pendingMoveFolderId}
+        onClose={() => {
+          setPendingMoveFolderId(null);
+          setMoveModalError(null);
+        }}
+        onConfirm={async () => {
+          if (!pendingMoveFolderId) return;
+          setIsMoving(true);
+          setMoveModalError(null);
+
+          try {
+            await handleMoveToFolder(pendingMoveFolderId);
+            setPendingMoveFolderId(null);
           } catch (err) {
             console.error("Move failed", err);
             setMoveModalError(
