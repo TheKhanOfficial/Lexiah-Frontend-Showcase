@@ -79,6 +79,7 @@ export function List<T extends { id: string }>({
   fileUploadEnabled = false,
   isLoading = false,
   listType,
+  disableUrgencySort,
 }: ListProps<T>) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -152,8 +153,8 @@ export function List<T extends { id: string }>({
     : items;
 
   const { data: fetchedFolders = [] } = useQuery({
-    queryKey: ["folders", userId, listType],
-    queryFn: () => fetchAllFolders(userId, listType),
+    queryKey: ["folders", userId, listType, caseId],
+    queryFn: () => fetchAllFolders(userId, listType, caseId ?? null),
   });
 
   const matchedFolders = searchQuery.trim()
