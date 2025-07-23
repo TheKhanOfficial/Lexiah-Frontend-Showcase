@@ -40,6 +40,7 @@ export function ListItem({
   selectMode,
   selected,
   onSelectToggle,
+  urgencyColor,
 }: ListItemProps) {
   // Stop propagation to prevent triggering the list item click
   const handleDropdownClick = (e: React.MouseEvent) => {
@@ -100,6 +101,14 @@ export function ListItem({
 
         <div className="flex items-center gap-2">
           {rightContent && <div className="flex-shrink-0">{rightContent}</div>}
+
+          {urgencyColor && (
+            <div
+              className="w-2.5 h-2.5 rounded-full mr-2"
+              style={{ backgroundColor: urgencyColor }}
+              title={`Urgency: ${urgencyColor}`}
+            />
+          )}
 
           {selectMode && (
             <label>

@@ -26,7 +26,7 @@ interface Task {
   name: string;
   due_date: string | null;
   completed: boolean;
-  manual_color: "green" | "yellow" | "red" | "darkred" | null;
+  manual_color: "green" | "yellow" | "orange" | "red" | null;
   auto_urgency: boolean;
   created_at: string;
 }
@@ -48,7 +48,7 @@ interface CalendarWorkspaceProps {
   splitscreenCount: number;
 }
 
-type UrgencyColor = "green" | "yellow" | "red" | "darkred";
+type UrgencyColor = "green" | "yellow" | "orange" | "red";
 type CalendarView = "dayGridMonth" | "timeGridWeek";
 
 function toLocalISOString(date: Date) {
@@ -75,8 +75,8 @@ function getTaskUrgencyColor(task: Task): UrgencyColor {
 
   const daysUntil = getDaysUntilDue(task.due_date);
 
-  if (daysUntil <= 0) return "darkred"; // Today or overdue
-  if (daysUntil <= 2) return "red"; // 1-2 days
+  if (daysUntil <= 0) return "red"; // Today or overdue
+  if (daysUntil <= 2) return "orange"; // 1-2 days
   if (daysUntil <= 5) return "yellow"; // 3-5 days
   return "green"; // >5 days
 }
@@ -90,9 +90,9 @@ function formatMonthYear(date: Date) {
 
 function getTaskEventColor(urgency: UrgencyColor): string {
   switch (urgency) {
-    case "darkred":
-      return "#991B1B"; // Tailwind red-800
     case "red":
+      return "#991B1B"; // Tailwind red-800
+    case "orange":
       return "#FB923C"; // Tailwind orange-400
     case "yellow":
       return "#FCD34D"; // Tailwind yellow-300

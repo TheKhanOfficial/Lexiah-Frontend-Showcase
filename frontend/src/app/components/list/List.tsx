@@ -319,10 +319,11 @@ export function List<T extends { id: string }>({
 
   const finalSortedList = [...normalizedData].sort((a, b) => {
     if (sortOption === "urgency") {
-      // TEMP: Just default to time desc, folders & items mixed
-      const timeA = new Date(a.created_at).getTime();
-      const timeB = new Date(b.created_at).getTime();
-      return timeB - timeA;
+      const urgencyRank = ["red", "orange", "yellow", "green"];
+      const getRank = (item) =>
+        urgencyRank.indexOf(item.urgencyColor || "green");
+
+      return getRank(a) - getRank(b);
     }
 
     // FOLDERS FIRST

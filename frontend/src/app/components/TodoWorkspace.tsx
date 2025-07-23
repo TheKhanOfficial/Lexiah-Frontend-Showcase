@@ -15,11 +15,12 @@ import {
 // Types
 interface Task {
   id: string;
+  user_id: string;
   case_id: string;
   name: string;
   due_date: string | null;
   completed: boolean;
-  manual_color: "green" | "yellow" | "red" | "darkred" | null;
+  manual_color: "green" | "yellow" | "orange" | "red" | null;
   auto_urgency: boolean;
   created_at: string;
 }
@@ -29,7 +30,7 @@ interface TodoWorkspaceProps {
   caseId: string;
 }
 
-type UrgencyColor = "green" | "yellow" | "red" | "darkred";
+type UrgencyColor = "green" | "yellow" | "orange" | "red";
 type SortOption = "urgency" | "date";
 
 // Helper functions
@@ -41,7 +42,7 @@ function getDaysUntilDue(dueDate: string): number {
   return Math.ceil((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 }
 
-function getUrgencyColor(task: Task): UrgencyColor {
+export function getUrgencyColor(task: Task): UrgencyColor {
   if (task.completed) return "green"; // Will be rendered as gray/empty
 
   if (!task.due_date || task.auto_urgency === false) {
@@ -50,17 +51,17 @@ function getUrgencyColor(task: Task): UrgencyColor {
 
   const daysUntil = getDaysUntilDue(task.due_date);
 
-  if (daysUntil <= 0) return "darkred"; // Today or overdue
-  if (daysUntil <= 2) return "red"; // 1-2 days
+  if (daysUntil <= 0) return "red"; // Today or overdue
+  if (daysUntil <= 2) return "orange"; // 1-2 days
   if (daysUntil <= 5) return "yellow"; // 3-5 days
   return "green"; // >5 days
 }
 
 function getUrgencyOrder(color: UrgencyColor): number {
   switch (color) {
-    case "darkred":
-      return 0;
     case "red":
+      return 0;
+    case "orange":
       return 1;
     case "yellow":
       return 2;
@@ -164,6 +165,7 @@ export default function TodoWorkspace({ userId, caseId }: TodoWorkspaceProps) {
     mutationFn: createTask,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks", caseId] });
+      queryClient.invalidateQueries({ queryKey: ["allTasks", userId] });
       setShowAddModal(false);
       resetForm();
       setError(null);
@@ -190,6 +192,7 @@ export default function TodoWorkspace({ userId, caseId }: TodoWorkspaceProps) {
     }) => updateTask(id, updates),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks", caseId] });
+      queryClient.invalidateQueries({ queryKey: ["allTasks", userId] });
       setShowEditModal(false);
       setEditingTask(null);
       resetForm();
@@ -205,8 +208,10 @@ export default function TodoWorkspace({ userId, caseId }: TodoWorkspaceProps) {
     mutationFn: deleteTask,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks", caseId] });
+      queryClient.invalidateQueries({ queryKey: ["allTasks", userId] });
       setError(null);
     },
+
     onError: (err) => {
       setError(err instanceof Error ? err.message : "Failed to delete task");
     },
@@ -216,6 +221,7 @@ export default function TodoWorkspace({ userId, caseId }: TodoWorkspaceProps) {
     mutationFn: () => deleteAllTasks(caseId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks", caseId] });
+      queryClient.invalidateQueries({ queryKey: ["allTasks", userId] });
       setError(null);
     },
     onError: (err) => {
@@ -268,6 +274,7 @@ export default function TodoWorkspace({ userId, caseId }: TodoWorkspaceProps) {
     }
 
     const sanitized = {
+      user_id: userId,
       case_id: caseId,
       name: formData.name.trim(),
       due_date: formData.due_date || null,
@@ -325,7 +332,7 @@ export default function TodoWorkspace({ userId, caseId }: TodoWorkspaceProps) {
   const cycleManualColor = (task: Task) => {
     if (task.completed || (task.due_date && task.auto_urgency)) return;
 
-    const colors: UrgencyColor[] = ["green", "yellow", "red", "darkred"];
+    const colors: UrgencyColor[] = ["green", "yellow", "orange", "red"];
     const currentIndex = colors.indexOf(task.manual_color || "green");
     const nextColor = colors[(currentIndex + 1) % colors.length];
 
@@ -351,10 +358,10 @@ export default function TodoWorkspace({ userId, caseId }: TodoWorkspaceProps) {
         case "yellow":
           bgColor = "bg-yellow-300";
           break;
-        case "red":
+        case "orange":
           bgColor = "bg-orange-400";
           break;
-        case "darkred":
+        case "red":
           bgColor = "bg-red-800";
           break;
       }
