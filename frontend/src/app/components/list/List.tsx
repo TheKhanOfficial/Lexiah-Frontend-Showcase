@@ -306,6 +306,7 @@ export function List<T extends { id: string }>({
       __isFolder: true,
       created_at: folder.created_at ?? "",
       name: folder.name,
+      urgencyColor: "green",
     })),
     ...sortedItems
       .filter((item) => !(item as any).folder_id) // ✅ EXCLUDE nested items

@@ -12,6 +12,7 @@ interface Folder {
   parent_id: string | null;
   list_type?: string;
   created_at?: string;
+  color?: string; // ✅ add this
 }
 
 interface FolderWithChildren extends Folder {
@@ -131,6 +132,7 @@ export default function FolderTree<T extends ItemWithFolderId>({
             created_at: folder.created_at ?? "",
             __isFolder: true,
             __emoji: isExpanded ? "📂" : "📁",
+            urgencyColor: "green",
           } as any,
           0,
           {
