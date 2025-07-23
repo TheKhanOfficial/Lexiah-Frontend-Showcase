@@ -97,7 +97,7 @@ export function AddNewItem({
   const noteMutation = useMutation({
     mutationFn: ({ name }: { name: string }) => {
       if (!caseId) throw new Error("Case ID is required for adding notes");
-      return addNote(userId, caseId, name);
+      return addNote(userId, caseId, name, folderId);
     },
     onSuccess: (data) => {
       if (caseId) {

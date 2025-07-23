@@ -211,27 +211,64 @@ export default function NoteWorkspace({
         sortBy="updated_at"
         sortDirection="desc"
         isLoading={isLoading}
+        listType="notes"
         disableUrgencySort={true}
         emptyMessage="No notes yet. Add your first note to get started."
-        renderItem={(note) => (
-          <div
-            key={note.id}
-            className="block cursor-pointer"
-            onClick={() => handleNoteClick(note.id)}
-          >
-            <ListItem
-              id={note.id}
-              userId={userId}
-              itemType="note"
-              title={note.name}
-              subtitle={`Updated: ${formatDate(
-                note.updated_at || note.created_at
-              )}`}
-              onRename={handleRenameRequest}
-              onDelete={handleDeleteRequest}
-            />
-          </div>
-        )}
+        renderItem={(item: any, index: number, renderOptions?: any) => {
+          if (item.__isFolder) {
+            return (
+              <ListItem
+                id={item.id}
+                userId={userId}
+                itemType="folder"
+                title={item.name}
+                subtitle={`Created: ${formatDate(item.created_at)}`}
+                customEmoji={item.__emoji}
+                onRename={() => {
+                  setSelectedNoteId(item.id);
+                  setRenameValue(item.name);
+                  setShowRenameModal(true);
+                  setModalError(null);
+                }}
+                onDelete={() => {
+                  setSelectedNoteId(item.id);
+                  setShowDeleteModal(true);
+                  setModalError(null);
+                }}
+                selectMode={renderOptions?.selectMode}
+                selected={renderOptions?.selectedIds?.includes(item.id)}
+                onSelectToggle={() =>
+                  renderOptions?.onSelectToggle?.(item.id, true)
+                }
+              />
+            );
+          }
+
+          return (
+            <div
+              key={item.id}
+              className="block cursor-pointer"
+              onClick={() => handleNoteClick(item.id)}
+            >
+              <ListItem
+                id={item.id}
+                userId={userId}
+                itemType="note"
+                title={item.name}
+                subtitle={`Updated: ${formatDate(
+                  item.updated_at || item.created_at
+                )}`}
+                onRename={handleRenameRequest}
+                onDelete={handleDeleteRequest}
+                selectMode={renderOptions?.selectMode}
+                selected={renderOptions?.selectedIds?.includes(item.id)}
+                onSelectToggle={() =>
+                  renderOptions?.onSelectToggle?.(item.id, false)
+                }
+              />
+            </div>
+          );
+        }}
       />
     );
   };
