@@ -75,6 +75,10 @@ export default function FolderTree<T extends ItemWithFolderId>({
   fileUploadEnabled,
 }: FolderTreeProps<T>) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [folderColor, setFolderColor] = useState<
+    "green" | "yellow" | "orange" | "red"
+  >("green");
+
   const queryClient = useQueryClient();
 
   const handleToggle = () => setIsExpanded(!isExpanded);
@@ -132,7 +136,7 @@ export default function FolderTree<T extends ItemWithFolderId>({
             created_at: folder.created_at ?? "",
             __isFolder: true,
             __emoji: isExpanded ? "📂" : "📁",
-            urgencyColor: "green",
+            urgencyColor: folderColor,
           } as any,
           0,
           {
