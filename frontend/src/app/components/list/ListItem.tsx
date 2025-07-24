@@ -104,7 +104,7 @@ export function ListItem({
 
           {urgencyColor && (
             <div
-              className="w-2.5 h-2.5 rounded-full mr-2"
+              className="w-4 h-4 mr-2 border border-black"
               style={{ backgroundColor: urgencyColor }}
               title={`Urgency: ${urgencyColor}`}
             />
