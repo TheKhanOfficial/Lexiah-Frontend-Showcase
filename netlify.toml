@@ -3,8 +3,6 @@ base = "frontend"                    # 👈 Tells Netlify to cd into frontend/
 publish = ".next"                    # 👈 Matches the output inside frontend/.next
 command = "npm install && npm run build"
 
-[[plugins]]
-package = "@netlify/next"
 
 [build.environment]
 NODE_VERSION = "20"
