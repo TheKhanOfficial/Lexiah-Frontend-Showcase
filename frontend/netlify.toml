@@ -1,7 +1,5 @@
 [build]
-base = "frontend"
 command = "npm install && npm run build"
-publish = "out"  # ← 👈 Dummy folder to prevent crash (won't be used)
 
 [[plugins]]
 package = "@netlify/plugin-nextjs"
