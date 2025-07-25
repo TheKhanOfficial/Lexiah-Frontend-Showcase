@@ -1,5 +1,8 @@
 //frontend/src/app/page.tsx
 import Link from "next/link";
+import Image from "next/image";
+
+const userId = "53917586-97ad-49b6-9bd6-51c441316425";
 
 export default function Home() {
   return (
@@ -8,9 +11,15 @@ export default function Home() {
       <nav className="fixed top-0 w-full bg-white/80 backdrop-blur-md z-50 border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
           <div className="flex justify-between items-center h-16">
-            <div className="font-bold text-2xl text-gray-900">Lexiah</div>
+            <Image
+              src="/lexiah.svg"
+              alt="Lexiah logo"
+              width={240}
+              height={64}
+            />
+
             <Link
-              href="/[userid]"
+              href={`/${userId}`}
               className="px-5 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-full hover:bg-gray-800 transition-colors"
             >
               Get Started
@@ -39,7 +48,7 @@ export default function Home() {
           </p>
           <div className="mt-10">
             <Link
-              href="/[userid]"
+              href={`/${userId}`}
               className="inline-flex items-center px-8 py-4 bg-gray-900 text-white text-lg font-medium rounded-full hover:bg-gray-800 transition-colors"
             >
               Start Using Lexiah
@@ -365,7 +374,7 @@ export default function Home() {
                   </li>
                 </ul>
                 <Link
-                  href="/[userid]"
+                  href={`/${userId}`}
                   className="mt-8 w-full flex justify-center items-center px-6 py-3 bg-gray-900 text-white font-medium rounded-full hover:bg-gray-800 transition-colors"
                 >
                   Get Started Free
