@@ -1,0 +1,10 @@
+[build]
+base = "frontend"
+command = "mkdir -p .dummy && npm install && npm run build"
+publish = ".dummy"
+
+[[plugins]]
+package = "@netlify/plugin-nextjs"
+
+[build.environment]
+NODE_VERSION = "20"
