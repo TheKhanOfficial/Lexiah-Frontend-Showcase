@@ -1,8 +1,6 @@
 [build]
-
- base = "frontend"
- publish = "frontend/.next"
-
+# Don't set base if UI is already pointing to `frontend/`
+publish = ".next"
 command = "npm install --legacy-peer-deps && npm run build"
 
 [build.environment]
