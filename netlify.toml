@@ -1,6 +1,7 @@
 [build]
 base = "frontend"
 command = "npm install && npm run build"
+publish = "out"  # ← 👈 Dummy folder to prevent crash (won't be used)
 
 [[plugins]]
 package = "@netlify/plugin-nextjs"
@@ -8,3 +9,7 @@ package = "@netlify/plugin-nextjs"
 [build.environment]
 NODE_VERSION = "20"
 
+[[redirects]]
+from = "/"
+to = "/53917586-97ad-49b6-9bd6-51c441316425"
+status = 302
