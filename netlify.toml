@@ -1,7 +1,8 @@
 [build]
 base = "frontend"                    # 👈 Tells Netlify to cd into frontend/
 publish = ".next"                    # 👈 Matches the output inside frontend/.next
-command = "npm install --legacy-peer-deps && npm run build"
+command = "npm config set legacy-peer-deps true && npm install && npm run build"
+
 
 [build.environment]
 NODE_VERSION = "20"
