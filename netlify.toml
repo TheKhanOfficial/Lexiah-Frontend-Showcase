@@ -1,0 +1,9 @@
+[build]
+# REMOVE these two lines since they're already configured in the UI
+# base = "frontend"
+# publish = "frontend/.next"
+
+command = "npm install --legacy-peer-deps && npm run build"
+
+[build.environment]
+NODE_VERSION = "20"
