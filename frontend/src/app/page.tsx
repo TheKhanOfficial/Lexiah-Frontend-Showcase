@@ -10,10 +10,14 @@ export default function Home() {
     <ClientWrapper>
       <div className="min-h-screen bg-white overflow-x-hidden">
         {/* Navigation */}
-        <nav className="fixed top-0 w-full bg-white/70 glass-effect z-50 border-b border-gray-100/50">
+        <nav className="fixed top-0 w-full bg-white/70 glass-effect z-50 border-b border-gray-100/50 backdrop-blur-sm">
           <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
             <div className="flex justify-between items-center h-20">
-              <div className="transform transition-transform duration-300 hover:scale-105">
+              {/* Logo (always visible) */}
+              <a
+                href="#top"
+                className="transform transition-transform duration-300 hover:scale-105"
+              >
                 <Image
                   src="/lexiah.svg"
                   alt="Lexiah logo"
@@ -21,15 +25,45 @@ export default function Home() {
                   height={64}
                   className="w-48 lg:w-60"
                 />
-              </div>
+              </a>
 
-              <Link
-                href={`/${userId}`}
-                className="group relative px-6 py-3 bg-gray-900 text-white text-sm font-semibold rounded-full overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-xl"
-              >
-                <span className="relative z-10">Get Started</span>
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              </Link>
+              {/* Desktop Nav Links */}
+              <div className="hidden md:flex items-center gap-8">
+                <Link
+                  href="#features"
+                  className="text-gray-800 hover:text-black text-sm font-medium transition-all duration-300 hover:scale-105"
+                >
+                  Features
+                </Link>
+
+                <Link
+                  href="#pricing"
+                  className="text-gray-800 hover:text-black text-sm font-medium transition-all duration-300 hover:scale-105"
+                >
+                  Pricing
+                </Link>
+                <Link
+                  href="/upgrade"
+                  className="text-gray-800 hover:text-black text-sm font-medium transition-all duration-300 hover:scale-105"
+                >
+                  Upgrade
+                </Link>
+                <Link
+                  href="/about"
+                  className="text-gray-800 hover:text-black text-sm font-medium transition-all duration-300 hover:scale-105"
+                >
+                  About Us
+                </Link>
+
+                {/* CTA Button (invisible on mobile) */}
+                <Link
+                  href={`/${userId}`}
+                  className="hidden md:inline-block group relative px-6 py-3 bg-gray-900 text-white text-sm font-semibold rounded-full overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-xl"
+                >
+                  <span className="relative z-10">Get Started</span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                </Link>
+              </div>
             </div>
           </div>
         </nav>
@@ -84,7 +118,10 @@ export default function Home() {
         </section>
 
         {/* Features Section */}
-        <section className="py-24 sm:py-32 lg:py-40 bg-gradient-to-b from-gray-50 to-white">
+        <section
+          id="features"
+          className="py-24 sm:py-32 lg:py-40 bg-gradient-to-b from-gray-50 to-white"
+        >
           <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
             <div className="text-center mb-20">
               <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 tracking-tight">
@@ -284,7 +321,10 @@ export default function Home() {
         </section>
 
         {/* Pricing Section */}
-        <section className="py-24 sm:py-32 lg:py-40 bg-gradient-to-b from-gray-50 to-white">
+        <section
+          id="pricing"
+          className="py-24 sm:py-32 lg:py-40 bg-gradient-to-b from-gray-50 to-white"
+        >
           <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
             <div className="text-center mb-20">
               <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 tracking-tight">
@@ -301,14 +341,15 @@ export default function Home() {
             <div className="max-w-2xl mx-auto">
               <div className="fade-up bg-white rounded-3xl shadow-2xl overflow-hidden transition-all duration-500 hover:scale-[1.02] hover:shadow-3xl border border-gray-100">
                 <div className="bg-gradient-to-br from-gray-900 to-gray-800 text-white p-10 text-center">
-                  <h3 className="text-3xl font-bold mb-2">Professional Plan</h3>
+                  <h3 className="text-3xl font-bold mb-2">Free Plan</h3>
                   <div className="text-6xl font-bold mb-2">$0</div>
                   <p className="text-gray-300">per month, forever</p>
                 </div>
                 <div className="p-10">
                   <ul className="space-y-4">
                     {[
-                      "Unlimited cases & documents",
+                      "Free Forever-No Gimmicks",
+                      "Unlimited cases & documents (250 GB storage per user)",
                       "AI-powered legal assistant",
                       "Smart document analysis",
                       "Automated billing & invoicing",
@@ -319,7 +360,7 @@ export default function Home() {
                     ].map((feature, index) => (
                       <li key={index} className="flex items-start">
                         <svg
-                          className="w-6 h-6 text-green-500 mt-0.5 mr-3 flex-shrink-0"
+                          className="w-6 h-6 text-purple-500 mt-0.5 mr-3 flex-shrink-0"
                           fill="currentColor"
                           viewBox="0 0 20 20"
                         >
@@ -342,6 +383,55 @@ export default function Home() {
                   </Link>
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Upgrade Teaser Section */}
+          <div className="mt-24 text-center max-w-3xl mx-auto">
+            <h3 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-6">
+              Need more power?
+            </h3>
+            <p className="text-lg text-gray-600 mb-10">
+              Lexiah is free forever — but you can mix and match powerful
+              upgrades to fit your firm. Just pay for what you need.
+            </p>
+
+            <ul className="text-left space-y-4 text-gray-700 text-lg max-w-xl mx-auto">
+              {[
+                "Upgraded AI capabilities (multiple tiers available)",
+                "Premium 24/7 tech support",
+                "One-time onboarding help",
+                "HIPAA compliance upgrade",
+                "Data backup & recovery",
+                "White labeling (your logo & colors)",
+                "Private server licensing",
+                "Certified consultant training",
+              ].map((item, idx) => (
+                <li key={idx} className="flex items-start">
+                  <svg
+                    className="w-6 h-6 text-purple-500 mt-0.5 mr-3 flex-shrink-0"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+
+            <div className="mt-10">
+              <Link
+                href="/upgrade"
+                className="inline-flex items-center px-8 py-4 bg-gray-900 text-white text-lg font-semibold rounded-full transition-all duration-300 hover:scale-105 hover:shadow-2xl relative overflow-hidden group"
+              >
+                <span className="relative z-10">View All Upgrades</span>
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              </Link>
             </div>
           </div>
         </section>
