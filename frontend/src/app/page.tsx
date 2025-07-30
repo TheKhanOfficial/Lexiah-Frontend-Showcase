@@ -1,13 +1,13 @@
 //frontend/src/app/page.tsx
 import Link from "next/link";
 import Image from "next/image";
-import ClientWrapper from "@/app/components/ClientWrapper";
+import ScrollClient from "@/app/components/ScrollClient";
 
 const userId = "53917586-97ad-49b6-9bd6-51c441316425";
 
 export default function Home() {
   return (
-    <ClientWrapper>
+    <>
       <div className="min-h-screen bg-white overflow-x-hidden">
         {/* Navigation */}
         <nav className="fixed top-0 w-full bg-white/70 glass-effect z-50 border-b border-gray-100/50 backdrop-blur-sm">
@@ -489,6 +489,8 @@ export default function Home() {
           </div>
         </footer>
       </div>
-    </ClientWrapper>
+      {/* 👇 this runs scroll effects on client only */}
+      <ScrollClient />
+    </>
   );
 }
