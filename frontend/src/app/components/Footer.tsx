@@ -7,12 +7,8 @@ function getLinkHref(label: string): string {
       return "/#features";
     case "pricing":
       return "/#pricing";
-    case "security":
-      return "/security";
     case "about":
       return "/about";
-    case "careers":
-      return "/careers";
     case "privacy":
       return "/privacy";
     case "terms":
@@ -40,15 +36,15 @@ export default function Footer() {
           {[
             {
               title: "Product",
-              links: ["Features", "Pricing", "Security"],
+              links: ["Features", "Pricing"],
             },
             {
               title: "Company",
-              links: ["About", "Careers"],
+              links: ["About", "Contact"],
             },
             {
               title: "Legal",
-              links: ["Privacy", "Terms", "Contact"],
+              links: ["Privacy", "Terms"],
             },
           ].map((section, index) => (
             <div key={index}>
