@@ -9,8 +9,8 @@ export default function SalesPageHeader() {
     <nav className="fixed top-0 w-full bg-white/70 glass-effect z-50 border-b border-gray-100/50 backdrop-blur-sm">
       <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
         <div className="flex justify-between items-center h-20">
-          <a
-            href="#top"
+          <Link
+            href="/#top"
             className="transform transition-transform duration-300 hover:scale-105"
           >
             <Image
@@ -21,17 +21,17 @@ export default function SalesPageHeader() {
               className="w-48 lg:w-60"
               priority
             />
-          </a>
+          </Link>
 
           <div className="hidden md:flex items-center gap-8">
             <Link
-              href="#features"
+              href="/#features"
               className="text-gray-800 hover:text-black text-sm font-medium transition-all duration-300 hover:scale-105"
             >
               Features
             </Link>
             <Link
-              href="#pricing"
+              href="/#pricing"
               className="text-gray-800 hover:text-black text-sm font-medium transition-all duration-300 hover:scale-105"
             >
               Pricing
