@@ -1,7 +1,7 @@
 //frontend/src/app/page.tsx
 import Link from "next/link";
-import Image from "next/image";
 import ScrollClient from "@/app/components/ScrollClient";
+import SalesPageHeader from "@/app/components/SalesPageHeader";
 
 const userId = "53917586-97ad-49b6-9bd6-51c441316425";
 
@@ -10,63 +10,7 @@ export default function Home() {
     <>
       <div className="min-h-screen bg-white overflow-x-hidden">
         {/* Navigation */}
-        <nav className="fixed top-0 w-full bg-white/70 glass-effect z-50 border-b border-gray-100/50 backdrop-blur-sm">
-          <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
-            <div className="flex justify-between items-center h-20">
-              {/* Logo (always visible) */}
-              <a
-                href="#top"
-                className="transform transition-transform duration-300 hover:scale-105"
-              >
-                <Image
-                  src="/lexiah.svg"
-                  alt="Lexiah logo"
-                  width={240}
-                  height={64}
-                  className="w-48 lg:w-60"
-                />
-              </a>
-
-              {/* Desktop Nav Links */}
-              <div className="hidden md:flex items-center gap-8">
-                <Link
-                  href="#features"
-                  className="text-gray-800 hover:text-black text-sm font-medium transition-all duration-300 hover:scale-105"
-                >
-                  Features
-                </Link>
-
-                <Link
-                  href="#pricing"
-                  className="text-gray-800 hover:text-black text-sm font-medium transition-all duration-300 hover:scale-105"
-                >
-                  Pricing
-                </Link>
-                <Link
-                  href="/upgrade"
-                  className="text-gray-800 hover:text-black text-sm font-medium transition-all duration-300 hover:scale-105"
-                >
-                  Upgrade
-                </Link>
-                <Link
-                  href="/about"
-                  className="text-gray-800 hover:text-black text-sm font-medium transition-all duration-300 hover:scale-105"
-                >
-                  About Us
-                </Link>
-
-                {/* CTA Button (invisible on mobile) */}
-                <Link
-                  href={`/${userId}`}
-                  className="hidden md:inline-block group relative px-6 py-3 bg-gray-900 text-white text-sm font-semibold rounded-full overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-xl"
-                >
-                  <span className="relative z-10">Get Started</span>
-                  <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                </Link>
-              </div>
-            </div>
-          </div>
-        </nav>
+        <SalesPageHeader />
 
         {/* Hero Section */}
         <section className="relative pt-36 pb-24 sm:pt-44 sm:pb-32 lg:pt-52 lg:pb-40 overflow-hidden">
@@ -87,7 +31,7 @@ export default function Home() {
             <p className="hero-subtitle mt-10 text-xl sm:text-2xl lg:text-3xl text-gray-600 max-w-4xl mx-auto leading-relaxed font-light">
               The future of legal case management. Infinite folders, AI-powered
               insights, seamless document handling, and intelligent billing —
-              all in one beautiful app.
+              all in one beautiful app. No login required. Try it now.
             </p>
 
             <div className="hero-cta mt-12">
