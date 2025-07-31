@@ -49,6 +49,12 @@ export default function SalesPageHeader() {
               About Us
             </Link>
             <Link
+              href="/login"
+              className="text-gray-800 hover:text-black text-sm font-medium transition-all duration-300 hover:scale-105"
+            >
+              Login / Sign-Up
+            </Link>
+            <Link
               href={`/${userId}`}
               className="hidden md:inline-block group relative px-6 py-3 bg-gray-900 text-white text-sm font-semibold rounded-full overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-xl"
             >

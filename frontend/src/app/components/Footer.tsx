@@ -1,4 +1,29 @@
 // frontend/src/app/components/Footer.tsx
+import Link from "next/link";
+
+function getLinkHref(label: string): string {
+  switch (label.toLowerCase()) {
+    case "features":
+      return "/#features";
+    case "pricing":
+      return "/#pricing";
+    case "security":
+      return "/security";
+    case "about":
+      return "/about";
+    case "careers":
+      return "/careers";
+    case "privacy":
+      return "/privacy";
+    case "terms":
+      return "/terms";
+    case "contact":
+      return "/contact";
+    default:
+      return "#";
+  }
+}
+
 export default function Footer() {
   return (
     <footer className="bg-gradient-to-b from-gray-900 to-black text-white py-16">
@@ -19,7 +44,7 @@ export default function Footer() {
             },
             {
               title: "Company",
-              links: ["About", "Blog", "Careers"],
+              links: ["About", "Careers"],
             },
             {
               title: "Legal",
@@ -31,12 +56,12 @@ export default function Footer() {
               <ul className="space-y-3">
                 {section.links.map((link, linkIndex) => (
                   <li key={linkIndex}>
-                    <a
-                      href="#"
+                    <Link
+                      href={getLinkHref(link)}
                       className="text-gray-400 transition-all duration-300 hover:text-white hover:translate-x-1 inline-block"
                     >
                       {link}
-                    </a>
+                    </Link>
                   </li>
                 ))}
               </ul>

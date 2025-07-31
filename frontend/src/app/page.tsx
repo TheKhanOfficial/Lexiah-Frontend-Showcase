@@ -275,7 +275,7 @@ export default function Home() {
               <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 tracking-tight">
                 Free Forever.
                 <span className="block mt-2 text-3xl sm:text-4xl lg:text-5xl bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  No catches. No limits.
+                  No catches.
                 </span>
               </h2>
               <p className="mt-6 text-xl sm:text-2xl text-gray-600 font-light">
@@ -284,7 +284,7 @@ export default function Home() {
             </div>
 
             <div className="max-w-2xl mx-auto">
-              <div className="fade-up bg-white rounded-3xl shadow-2xl overflow-hidden transition-all duration-500 hover:scale-[1.02] hover:shadow-3xl border border-gray-100">
+              <div className="bg-white rounded-3xl shadow-2xl overflow-hidden transition-all duration-500 hover:scale-[1.02] hover:shadow-3xl border border-gray-100">
                 <div className="bg-gradient-to-br from-gray-900 to-gray-800 text-white p-10 text-center">
                   <h3 className="text-3xl font-bold mb-2">Free Plan</h3>
                   <div className="text-6xl font-bold mb-2">$0</div>
@@ -347,10 +347,10 @@ export default function Home() {
                 "Premium 24/7 tech support",
                 "One-time onboarding help",
                 "HIPAA compliance upgrade",
+                "Extra Storage",
                 "Data backup & recovery",
                 "White labeling (your logo & colors)",
-                "Private server licensing",
-                "Certified consultant training",
+                "Enterprise Deployment",
               ].map((item, idx) => (
                 <li key={idx} className="flex items-start">
                   <svg
