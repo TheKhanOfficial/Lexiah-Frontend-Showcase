@@ -12,8 +12,6 @@ export const metadata: Metadata = {
     "Sign in to your Lexiah account to access your legal AI workspace.",
 };
 
-const userId = "53917586-97ad-49b6-9bd6-51c441316425";
-
 export default function LoginPage() {
   return (
     <>
@@ -48,14 +46,6 @@ export default function LoginPage() {
 
             {/* CTA Buttons */}
             <div className="space-y-4">
-              <Link
-                href={`/${userId}`}
-                className="group relative block w-full px-8 py-4 bg-gray-900 text-white font-semibold rounded-full overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-xl"
-              >
-                <span className="relative z-10">Try Lexiah Demo</span>
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              </Link>
-
               <Link
                 href="/#features"
                 className="block w-full px-8 py-4 text-gray-700 font-semibold rounded-full border border-gray-300 hover:border-gray-400 transition-all duration-300 hover:scale-105"

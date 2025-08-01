@@ -6,14 +6,13 @@ import SalesPageHeader from "@/app/components/SalesPageHeader";
 import ScrollClient from "@/app/components/ScrollClient";
 import Footer from "@/app/components/Footer";
 import Link from "next/link";
+import UseLexiah from "@/app/components/ui/UseLexiah";
 
 export const metadata: Metadata = {
   title: "About Us - Lexiah",
   description:
     "Learn about Lexiah's mission to transform legal workflows through intelligent AI assistance and thoughtful design.",
 };
-
-const userId = "53917586-97ad-49b6-9bd6-51c441316425";
 
 export default function AboutPage() {
   return (
@@ -126,13 +125,7 @@ export default function AboutPage() {
               craft and precision that defines exceptional legal work.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Link
-                href={`/${userId}`}
-                className="group relative px-8 py-4 bg-gray-900 text-white font-semibold rounded-full overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-xl"
-              >
-                <span className="relative z-10">Start Your Journey</span>
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              </Link>
+              <UseLexiah text="Start Your Journey" widthClass="px-8 py-4" />
               <Link
                 href="/#features"
                 className="px-8 py-4 text-gray-700 font-semibold rounded-full border border-gray-300 hover:border-gray-400 transition-all duration-300 hover:scale-105"

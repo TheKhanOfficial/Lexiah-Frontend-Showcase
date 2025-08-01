@@ -3,8 +3,7 @@ import Link from "next/link";
 import ScrollClient from "@/app/components/ScrollClient";
 import SalesPageHeader from "@/app/components/SalesPageHeader";
 import Footer from "@/app/components/Footer";
-
-const userId = "53917586-97ad-49b6-9bd6-51c441316425";
+import UseLexiah from "@/app/components/ui/UseLexiah";
 
 export default function Home() {
   return (
@@ -36,28 +35,9 @@ export default function Home() {
             </p>
 
             <div className="hero-cta mt-12">
-              <Link
-                href={`/${userId}`}
-                className="group inline-flex items-center px-8 py-4 bg-gray-900 text-white text-lg font-semibold rounded-full transition-all duration-300 hover:scale-105 hover:shadow-2xl relative overflow-hidden"
-              >
-                <span className="relative z-10 flex items-center">
-                  Start Using Lexiah
-                  <svg
-                    className="ml-3 w-5 h-5 transition-transform duration-300 group-hover:translate-x-1"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5l7 7-7 7"
-                    />
-                  </svg>
-                </span>
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              </Link>
+              <div className="hero-cta mt-12">
+                <UseLexiah text="Start Using Lexiah" />
+              </div>
             </div>
           </div>
         </section>
@@ -319,13 +299,9 @@ export default function Home() {
                       </li>
                     ))}
                   </ul>
-                  <Link
-                    href={`/${userId}`}
-                    className="mt-10 w-full flex justify-center items-center px-8 py-4 bg-gradient-to-r from-gray-900 to-gray-800 text-white font-semibold text-lg rounded-full transition-all duration-300 hover:scale-105 hover:shadow-xl relative overflow-hidden group"
-                  >
-                    <span className="relative z-10">Get Started Free</span>
-                    <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  </Link>
+                  <div className="hero-cta mt-12">
+                    <UseLexiah text="Get Started Free" widthClass="w-full" />
+                  </div>
                 </div>
               </div>
             </div>

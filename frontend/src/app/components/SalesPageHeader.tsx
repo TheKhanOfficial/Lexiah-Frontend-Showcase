@@ -1,8 +1,7 @@
 //frontend/src/app/SalesPageHeader.tsx
 import Link from "next/link";
 import Image from "next/image";
-
-const userId = "53917586-97ad-49b6-9bd6-51c441316425";
+import UseLexiah from "@/app/components/ui/UseLexiah";
 
 export default function SalesPageHeader() {
   return (
@@ -54,13 +53,12 @@ export default function SalesPageHeader() {
             >
               Login / Sign-Up
             </Link>
-            <Link
-              href={`/${userId}`}
-              className="hidden md:inline-block group relative px-6 py-3 bg-gray-900 text-white text-sm font-semibold rounded-full overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-xl"
-            >
-              <span className="relative z-10">Use Lexiah</span>
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            </Link>
+            <div className="hidden md:inline-block">
+              <UseLexiah
+                text="Use Lexiah"
+                widthClass="w-fit px-6 py-3 text-sm"
+              />
+            </div>
           </div>
         </div>
       </div>

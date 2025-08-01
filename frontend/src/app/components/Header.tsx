@@ -4,6 +4,7 @@ import { ToggleFullscreen } from "./ToggleFullscreen";
 import { ToggleHideShow } from "./ToggleHideShow";
 import { ToggleSplitscreen } from "./ToggleSplitscreen";
 import Image from "next/image";
+import Link from "next/link";
 
 interface HeaderProps {
   children?: React.ReactNode;
@@ -26,9 +27,12 @@ export function Header({
       <div className="border-gray-200 h-16 px-4 flex justify-between items-center">
         {/* Logo on the left */}
         <div className="flex items-center">
-          <h1 className="text-xl font-bold text-red-600">
+          <Link
+            href="/"
+            className="hover:scale-105 transition-transform duration-200"
+          >
             <Image src="/lexiah.svg" alt="Lexiah AI" width={200} height={60} />
-          </h1>
+          </Link>
         </div>
 
         {/* Case name in the middle (children prop) */}

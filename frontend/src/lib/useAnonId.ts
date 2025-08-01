@@ -1,3 +1,4 @@
+//frontend/src/app/lib/useAnonId.ts
 "use client";
 
 import { useEffect, useState } from "react";
@@ -14,10 +15,13 @@ export function useAnonId(): string | null {
       localStorage.setItem("lexiah_anon_id", newId);
       existing = newId;
 
-      // Optional: create anon user row in Supabase
+      // Register anon user in Supabase
       fetch("/api/create-anon-user", {
         method: "POST",
         body: JSON.stringify({ anonId: newId }),
+        headers: {
+          "Content-Type": "application/json",
+        },
       });
     }
 
