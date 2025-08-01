@@ -3,6 +3,7 @@ import React from "react";
 import SalesPageHeader from "@/app/components/SalesPageHeader";
 import ScrollClient from "@/app/components/ScrollClient";
 import Footer from "@/app/components/Footer";
+import Link from "next/link";
 
 export default function PrivacyPage() {
   const lastUpdated = "December 20, 2024";
@@ -249,13 +250,12 @@ export default function PrivacyPage() {
                   handle your data, please reach out.
                 </p>
                 <div className="flex items-center space-x-2 text-lg">
-                  <span>Email us at</span>
-                  <a
-                    href="mailto:privacy@lexiah.ai"
+                  <Link
+                    href="/contact"
                     className="text-blue-600 hover:text-blue-700 font-medium"
                   >
-                    privacy@lexiah.ai
-                  </a>
+                    Contact us
+                  </Link>
                 </div>
               </div>
             </section>
