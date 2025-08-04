@@ -692,29 +692,21 @@ Remember, Your goal is to write the single best document summary in the history 
                     </div>
                   }
                 >
-                  {Array.from(new Array(numPages), (_, index) => {
-                    const isNearViewport =
-                      Math.abs(index + 1 - pageNumber) <= 5; // only render +/-5 pages
-
-                    return (
-                      <div
-                        key={`page_container_${index + 1}`}
-                        ref={(el) => (pageRefs.current[index] = el)}
-                        style={{ minHeight: `${scale * 900}px` }} // reserve space
-                      >
-                        {isNearViewport && (
-                          <Page
-                            key={`page_${index + 1}`}
-                            pageNumber={index + 1}
-                            scale={scale}
-                            renderTextLayer={true}
-                            renderAnnotationLayer={true}
-                            className="shadow-lg mb-4"
-                          />
-                        )}
-                      </div>
-                    );
-                  })}
+                  {Array.from(new Array(numPages), (_, index) => (
+                    <div
+                      key={`page_container_${index + 1}`}
+                      ref={(el) => (pageRefs.current[index] = el)}
+                    >
+                      <Page
+                        key={`page_${index + 1}`}
+                        pageNumber={index + 1}
+                        scale={scale}
+                        renderTextLayer={true}
+                        renderAnnotationLayer={true}
+                        className="shadow-lg mb-4"
+                      />
+                    </div>
+                  ))}
                 </Document>
               )}
             </div>
