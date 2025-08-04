@@ -140,11 +140,17 @@ export function AddNewItem({
           caseMutation.mutate({ name: inputValue.trim() });
           break;
         case "document":
+          if (!selectedFile) {
+            setErrorMessage("Please attach a document before creating.");
+            return;
+          }
+
           documentMutation.mutate({
             name: inputValue.trim(),
-            file: selectedFile || undefined,
+            file: selectedFile,
           });
           break;
+
         case "note":
           noteMutation.mutate({
             name: inputValue.trim(),
