@@ -716,10 +716,14 @@ Remember, Your goal is to write the single best document summary in the history 
         {/* Toggle button and AI Summary */}
         {showAISummary ? (
           <div className="flex flex-col flex-1 h-full">
-            {/* Toggle button positioned higher up */}
-
             {/* AI Summary content */}
             <div className="h-full border-l border-gray-300 overflow-auto bg-white px-8 py-4">
+              <div className="mb-4 text-sm text-gray-600 italic">
+                Larger PDFs about 100 pages long or longer may take a while to
+                properly load the text onto the blank pdf pages— please be
+                patient.
+              </div>
+
               <div className="mb-3 flex items-center justify-between">
                 <div className="flex items-center">
                   <h3 className="text-lg font-semibold text-gray-700">
