@@ -669,7 +669,7 @@ Remember, Your goal is to write the single best document summary in the history 
 
           <div
             ref={viewerContainerRef}
-            className="h-full overflow-auto bg-gray-200 flex justify-center"
+            className="h-full overflow-y-auto overflow-x-hidden bg-gray-200 flex justify-center"
           >
             <div className="p-4">
               {/* Don't even try rendering Document if pdfData is missing */}
