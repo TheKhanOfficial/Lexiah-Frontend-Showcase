@@ -126,7 +126,6 @@ export function AddNewItem({
   };
 
   const handleCloseModal = () => {
-    if (isLoading) return; // Prevent closing while loading
     setShowModal(false);
   };
 
